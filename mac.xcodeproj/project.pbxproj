@@ -233,12 +233,12 @@
 		41B5AAEC22DB8BB300347CC8 /* interface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = interface.cpp; sourceTree = "<group>"; };
 		41B5AAED22DB8BB400347CC8 /* interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = interface.h; sourceTree = "<group>"; };
 		AA012113224C24D4000F4F82 /* wxmac.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = wxmac.icns; sourceTree = "<group>"; };
-		AA1D0F4E222A09A600678304 /* macDynamic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macDynamic.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA1D0F4E222A09A600678304 /* FatFileFinder Dynamic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FatFileFinder Dynamic.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA1D0F63222A0A1D00678304 /* wxcocoa.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = wxcocoa.xcodeproj; path = wxWidgets/build/osx/wxcocoa.xcodeproj; sourceTree = SOURCE_ROOT; };
 		AA1D0FC9222A0A4A00678304 /* wxrelease.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxrelease.xcconfig; path = wxWidgets/build/osx/wxrelease.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA1D0FCA222A0A4B00678304 /* wxcocoa.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxcocoa.xcconfig; path = wxWidgets/build/osx/wxcocoa.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA1D0FCB222A0A4B00678304 /* wxdebug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxdebug.xcconfig; path = wxWidgets/build/osx/wxdebug.xcconfig; sourceTree = SOURCE_ROOT; };
-		AAD015CD222B2FE300E25CB7 /* macStatic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macStatic.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAD015CD222B2FE300E25CB7 /* FatFileFinder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FatFileFinder.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADF6A0B222B359700991DD2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		AADF6A26222B35B300991DD2 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		AADF6A28222B35DA00991DD2 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
@@ -310,8 +310,8 @@
 		AA1D0F4F222A09A600678304 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AA1D0F4E222A09A600678304 /* macDynamic.app */,
-				AAD015CD222B2FE300E25CB7 /* macStatic.app */,
+				AA1D0F4E222A09A600678304 /* FatFileFinder Dynamic.app */,
+				AAD015CD222B2FE300E25CB7 /* FatFileFinder.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -370,9 +370,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AA1D0F4D222A09A600678304 /* macDynamic */ = {
+		AA1D0F4D222A09A600678304 /* FatFileFinder Dynamic */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AA1D0F5F222A09A800678304 /* Build configuration list for PBXNativeTarget "macDynamic" */;
+			buildConfigurationList = AA1D0F5F222A09A800678304 /* Build configuration list for PBXNativeTarget "FatFileFinder Dynamic" */;
 			buildPhases = (
 				AA1D0F4A222A09A600678304 /* Sources */,
 				AA1D0F4B222A09A600678304 /* Frameworks */,
@@ -384,14 +384,14 @@
 			dependencies = (
 				AA14A0F0222A1217002C4553 /* PBXTargetDependency */,
 			);
-			name = macDynamic;
+			name = "FatFileFinder Dynamic";
 			productName = wxTest;
-			productReference = AA1D0F4E222A09A600678304 /* macDynamic.app */;
+			productReference = AA1D0F4E222A09A600678304 /* FatFileFinder Dynamic.app */;
 			productType = "com.apple.product-type.application";
 		};
-		AAD015BC222B2FE300E25CB7 /* macStatic */ = {
+		AAD015BC222B2FE300E25CB7 /* FatFileFinder */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AAD015CA222B2FE300E25CB7 /* Build configuration list for PBXNativeTarget "macStatic" */;
+			buildConfigurationList = AAD015CA222B2FE300E25CB7 /* Build configuration list for PBXNativeTarget "FatFileFinder" */;
 			buildPhases = (
 				AAD015BF222B2FE300E25CB7 /* Sources */,
 				AAD015C1222B2FE300E25CB7 /* Frameworks */,
@@ -401,9 +401,9 @@
 			);
 			dependencies = (
 			);
-			name = macStatic;
+			name = FatFileFinder;
 			productName = wxTest;
-			productReference = AAD015CD222B2FE300E25CB7 /* macStatic.app */;
+			productReference = AAD015CD222B2FE300E25CB7 /* FatFileFinder.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -439,8 +439,8 @@
 			);
 			projectRoot = "";
 			targets = (
-				AA1D0F4D222A09A600678304 /* macDynamic */,
-				AAD015BC222B2FE300E25CB7 /* macStatic */,
+				AA1D0F4D222A09A600678304 /* FatFileFinder Dynamic */,
+				AAD015BC222B2FE300E25CB7 /* FatFileFinder */,
 			);
 		};
 /* End PBXProject section */
@@ -921,7 +921,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AA1D0F5F222A09A800678304 /* Build configuration list for PBXNativeTarget "macDynamic" */ = {
+		AA1D0F5F222A09A800678304 /* Build configuration list for PBXNativeTarget "FatFileFinder Dynamic" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA1D0F60222A09A800678304 /* Debug */,
@@ -930,7 +930,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AAD015CA222B2FE300E25CB7 /* Build configuration list for PBXNativeTarget "macStatic" */ = {
+		AAD015CA222B2FE300E25CB7 /* Build configuration list for PBXNativeTarget "FatFileFinder" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AAD015CB222B2FE300E25CB7 /* Debug */,

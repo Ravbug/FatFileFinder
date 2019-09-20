@@ -15,9 +15,10 @@
 #include <wx/font.h>
 #include <wx/colour.h>
 #include <wx/settings.h>
-#include <wx/sizer.h>
+#include <wx/gbsizer.h>
 #include <wx/panel.h>
 #include <wx/treelist.h>
+#include <wx/sizer.h>
 #include <wx/splitter.h>
 #include <wx/statusbr.h>
 #include <wx/bitmap.h>
@@ -38,15 +39,16 @@ class MainFrameBase : public wxFrame
 
 	protected:
 		wxSplitterWindow* mainSplitter;
-		wxPanel* m_panel1;
-		wxDataViewListCtrl* m_dataViewListCtrl3;
-		wxDataViewColumn* m_dataViewListColumn1;
-		wxDataViewColumn* m_dataViewListColumn2;
-		wxPanel* m_panel2;
-		wxTreeListCtrl* m_treeListCtrl3;
+		wxPanel* propertyPanel;
+		wxDataViewListCtrl* propertyList;
+		wxDataViewColumn* PLPropertyCol;
+		wxDataViewColumn* PLValueCol;
+		wxPanel* directoryPanel;
+		wxTreeListCtrl* fileBrowser;
 		wxStatusBar* statusBar;
 		wxMenuBar* menuBar;
 		wxMenu* menuFile;
+		wxMenu* menuWindow;
 
 	public:
 

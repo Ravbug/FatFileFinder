@@ -8,6 +8,9 @@
 //
 #include <wx/wx.h>
 
+static inline const std::string AppName = "FatFileFinder";
+static inline const std::string AppVersion = "1.0";
+
 /**
 Fits a wxWindow to its contents, and then sets that size as the window's minimum size.
 This function ignores and overwrites the window's previous size or size hints.

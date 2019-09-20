@@ -10,15 +10,16 @@
 
 #include "interface.h"
 
-//// end generated include
+using namespace std;
 
 class MainFrame : public MainFrameBase
 {
 public:
 	MainFrame(wxWindow* parent = NULL);
 private:
-	void OnHello(wxCommandEvent& event);
+	string GetPathFromDialog(const string& message);
 	void OnExit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
+	void OnOpenFolder(wxCommandEvent& event);
 	wxDECLARE_EVENT_TABLE();
 };
