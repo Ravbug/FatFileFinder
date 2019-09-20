@@ -59,8 +59,16 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	menuBar = new wxMenuBar( 0 );
 	menuFile = new wxMenu();
 	wxMenuItem* openFolderMenu;
-	openFolderMenu = new wxMenuItem( menuFile, wxID_OPEN, wxString( wxT("Open Folder") ) + wxT('\t') + wxT("Ctrl-O"), wxT("Size a folder"), wxITEM_NORMAL );
+	openFolderMenu = new wxMenuItem( menuFile, wxID_OPEN, wxString( wxT("Open Folder") ) + wxT('\t') + wxT("Ctrl-O"), wxT("Calculate the size a folder, and its sub folders"), wxITEM_NORMAL );
 	menuFile->Append( openFolderMenu );
+
+	wxMenuItem* reloadFolderMenu;
+	reloadFolderMenu = new wxMenuItem( menuFile, wxID_REFRESH, wxString( wxT("Reload Folder") ) + wxT('\t') + wxT("Ctrl-R"), wxT("Recalculate the selected folder's size"), wxITEM_NORMAL );
+	menuFile->Append( reloadFolderMenu );
+
+	wxMenuItem* stopSizingMenu;
+	stopSizingMenu = new wxMenuItem( menuFile, wxID_STOP, wxString( wxT("Stop Sizing Folder") ) , wxT("Stop the current size calculation"), wxITEM_NORMAL );
+	menuFile->Append( stopSizingMenu );
 
 	menuBar->Append( menuFile, wxT("File") );
 

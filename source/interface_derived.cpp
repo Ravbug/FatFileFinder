@@ -63,7 +63,9 @@ string MainFrame::GetPathFromDialog(const string& message)
 void MainFrame::OnOpenFolder(wxCommandEvent& event){
 	string path = GetPathFromDialog("Select a folder to size");
 	if (path != ""){
-		
+		//begin sizing folder
+		FolderData fd = sizer.SizeFolder(path, nullptr);
+		cout << fd.total_size << endl;
 	}
 }
 /**

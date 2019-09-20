@@ -13,6 +13,8 @@
 		AA012115224C24D4000F4F82 /* wxmac.icns in Resources */ = {isa = PBXBuildFile; fileRef = AA012113224C24D4000F4F82 /* wxmac.icns */; };
 		AA14A0EE222A1217002C4553 /* libwx_osx_cocoa.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = AA1D0F81222A0A1D00678304 /* libwx_osx_cocoa.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AA14A0F3222A1219002C4553 /* libwx_osx_cocoa.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1D0F81222A0A1D00678304 /* libwx_osx_cocoa.dylib */; };
+		AA897A6023355BE8002C9756 /* folder_sizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA897A5E23355BE8002C9756 /* folder_sizer.cpp */; };
+		AA897A6123355BE8002C9756 /* folder_sizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA897A5E23355BE8002C9756 /* folder_sizer.cpp */; };
 		AAD015C0222B2FE300E25CB7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAF9D87B222B14E900437548 /* main.cpp */; };
 		AAD015CF222B328200E25CB7 /* libwx_osx_cocoa_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1D0F83222A0A1D00678304 /* libwx_osx_cocoa_static.a */; };
 		AADF6A25222B359700991DD2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADF6A0B222B359700991DD2 /* CoreFoundation.framework */; };
@@ -238,6 +240,8 @@
 		AA1D0FC9222A0A4A00678304 /* wxrelease.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxrelease.xcconfig; path = wxWidgets/build/osx/wxrelease.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA1D0FCA222A0A4B00678304 /* wxcocoa.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxcocoa.xcconfig; path = wxWidgets/build/osx/wxcocoa.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA1D0FCB222A0A4B00678304 /* wxdebug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxdebug.xcconfig; path = wxWidgets/build/osx/wxdebug.xcconfig; sourceTree = SOURCE_ROOT; };
+		AA897A5E23355BE8002C9756 /* folder_sizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = folder_sizer.cpp; sourceTree = "<group>"; };
+		AA897A5F23355BE8002C9756 /* folder_sizer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = folder_sizer.hpp; sourceTree = "<group>"; };
 		AAD015CD222B2FE300E25CB7 /* FatFileFinder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FatFileFinder.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADF6A0B222B359700991DD2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		AADF6A26222B35B300991DD2 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -326,6 +330,8 @@
 				41B5AAEC22DB8BB300347CC8 /* interface.cpp */,
 				AAE2C4282326D967003C381B /* interface_derived.h */,
 				AAE2C4272326D967003C381B /* interface_derived.cpp */,
+				AA897A5E23355BE8002C9756 /* folder_sizer.cpp */,
+				AA897A5F23355BE8002C9756 /* folder_sizer.hpp */,
 				AAE2C40B2326D46A003C381B /* globals.cpp */,
 				AA1D0FCA222A0A4B00678304 /* wxcocoa.xcconfig */,
 				AA1D0FCB222A0A4B00678304 /* wxdebug.xcconfig */,
@@ -650,6 +656,7 @@
 				AAE2C40C2326D46A003C381B /* globals.cpp in Sources */,
 				AAE2C4292326D967003C381B /* interface_derived.cpp in Sources */,
 				AAF9D87D222B14E900437548 /* main.cpp in Sources */,
+				AA897A6023355BE8002C9756 /* folder_sizer.cpp in Sources */,
 				41B5AAEE22DB8BB400347CC8 /* interface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -661,6 +668,7 @@
 				AAE2C40D2326D46A003C381B /* globals.cpp in Sources */,
 				AAE2C42A2326D967003C381B /* interface_derived.cpp in Sources */,
 				AAD015C0222B2FE300E25CB7 /* main.cpp in Sources */,
+				AA897A6123355BE8002C9756 /* folder_sizer.cpp in Sources */,
 				41B5AAEF22DB8BB400347CC8 /* interface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -868,6 +876,7 @@
 					"\"$(WXROOT)/src/png\"",
 					"\"$(WXROOT)/src/jpeg\"",
 					"\"$(WXROOT)/src/zlib\"",
+					"\"$(BOOSTROOT)/unix/include\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/source/Info_cocoa.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -897,6 +906,7 @@
 					"\"$(WXROOT)/src/png\"",
 					"\"$(WXROOT)/src/jpeg\"",
 					"\"$(WXROOT)/src/zlib\"",
+					"\"$(BOOSTROOT)/unix/include\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/source/Info_cocoa.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
