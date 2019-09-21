@@ -53,6 +53,8 @@ class MainFrameBase : public wxFrame
 		wxDataViewListCtrl* propertyList;
 		wxDataViewColumn* PLPropertyCol;
 		wxDataViewColumn* PLValueCol;
+		wxButton* copyPathBtn;
+		wxButton* revealBtn;
 		wxPanel* directoryPanel;
 		wxTreeListCtrl* fileBrowser;
 

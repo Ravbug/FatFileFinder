@@ -25,6 +25,7 @@ EVT_MENU(wxID_EXIT,  MainFrame::OnExit)
 EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
 EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
 EVT_COMMAND(wxID_ANY, progEvt, MainFrame::OnUpdateUI)
+EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
 wxEND_EVENT_TABLE()
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
@@ -43,7 +44,18 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	#elif __linux
 		SetIcon(wxIcon(wxICON(wxlin)));
 	#endif
-
+	
+	//set up the default values for the left side table
+	string properties[] = {"Name","Size","Type","Items","Modified","Created","Is System","Is Hidden", "Is Read Only", "Full Path"};
+	for (const string& p : properties){
+		//pairs, because 2 columns
+		wxVector<wxVariant> items;
+		items.push_back(p);
+		items.push_back("");
+		//add to the view
+		propertyList->AppendItem(items);
+	}
+	
 }
 
 /**
@@ -72,12 +84,22 @@ void MainFrame::SizeRootFolder(const string& folder){
  Refresh the UI on progress updates
  */
 void MainFrame::OnUpdateUI(wxCommandEvent& event){
+	//update pointer
 	FolderData* fd = (FolderData*)event.GetClientData();
 	folderData = fd;
+	//update progress
 	int prog = event.GetInt();
 	progressBar->SetValue(prog);
 	if (prog == 100){
 		cout << fd->total_size << endl;
+	}
+	//set titelbar
+	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path.string());
+	
+	//update tree view (make this not refresh every time)
+	fileBrowser->DeleteAllItems();
+	for(FolderData d : fd->subFolders){
+		fileBrowser->AppendItem(fileBrowser->GetRootItem(),d.Path.leaf().string(),wxDataViewTreeCtrl::NO_IMAGE,wxDataViewTreeCtrl::NO_IMAGE);
 	}
 }
 
@@ -102,6 +124,8 @@ string MainFrame::GetPathFromDialog(const string& message)
 void MainFrame::OnOpenFolder(wxCommandEvent& event){
 	string path = GetPathFromDialog("Select a folder to size");
 	if (path != ""){
+		//deallocate old data
+		delete folderData;
 		//begin sizing folder
 		SizeRootFolder(path);
 	}

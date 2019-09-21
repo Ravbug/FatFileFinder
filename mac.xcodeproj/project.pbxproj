@@ -29,6 +29,7 @@
 		AAE2C40D2326D46A003C381B /* globals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAE2C40B2326D46A003C381B /* globals.cpp */; };
 		AAE2C4292326D967003C381B /* interface_derived.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAE2C4272326D967003C381B /* interface_derived.cpp */; };
 		AAE2C42A2326D967003C381B /* interface_derived.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAE2C4272326D967003C381B /* interface_derived.cpp */; };
+		AAF0562A233682620024DFEE /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAF05610233682610024DFEE /* WebKit.framework */; };
 		AAF9D87D222B14E900437548 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAF9D87B222B14E900437548 /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -254,6 +255,7 @@
 		AAE2C40B2326D46A003C381B /* globals.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = globals.cpp; sourceTree = "<group>"; };
 		AAE2C4272326D967003C381B /* interface_derived.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = interface_derived.cpp; sourceTree = "<group>"; };
 		AAE2C4282326D967003C381B /* interface_derived.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interface_derived.h; sourceTree = "<group>"; };
+		AAF05610233682610024DFEE /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		AAF9D87A222B14E900437548 /* Info_cocoa.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info_cocoa.plist; path = source/Info_cocoa.plist; sourceTree = SOURCE_ROOT; };
 		AAF9D87B222B14E900437548 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = source/main.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -271,6 +273,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AAF0562A233682620024DFEE /* WebKit.framework in Frameworks */,
 				AADF6A33222B360C00991DD2 /* Foundation.framework in Frameworks */,
 				AADF6A31222B360700991DD2 /* AppKit.framework in Frameworks */,
 				AADF6A2F222B360200991DD2 /* IOKit.framework in Frameworks */,
@@ -289,6 +292,7 @@
 		AA14A0F2222A1219002C4553 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				AAF05610233682610024DFEE /* WebKit.framework */,
 				AADF6A32222B360C00991DD2 /* Foundation.framework */,
 				AADF6A30222B360700991DD2 /* AppKit.framework */,
 				AADF6A2E222B360200991DD2 /* IOKit.framework */,
