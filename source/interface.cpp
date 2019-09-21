@@ -13,8 +13,65 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 
-	wxBoxSizer* baseSizer;
-	baseSizer = new wxBoxSizer( wxVERTICAL );
+	statusBar = this->CreateStatusBar( 1, wxSTB_DEFAULT_STYLE, wxID_ANY );
+	menuBar = new wxMenuBar( 0 );
+	menuFile = new wxMenu();
+	wxMenuItem* openFolderMenu;
+	openFolderMenu = new wxMenuItem( menuFile, wxID_OPEN, wxString( wxT("Open Folder") ) + wxT('\t') + wxT("Ctrl-O"), wxT("Calculate the size a folder, and its sub folders"), wxITEM_NORMAL );
+	menuFile->Append( openFolderMenu );
+
+	wxMenuItem* reloadFolderMenu;
+	reloadFolderMenu = new wxMenuItem( menuFile, wxID_REFRESH, wxString( wxT("Reload Folder") ) + wxT('\t') + wxT("Ctrl-R"), wxT("Recalculate the selected folder's size"), wxITEM_NORMAL );
+	menuFile->Append( reloadFolderMenu );
+
+	wxMenuItem* stopSizingMenu;
+	stopSizingMenu = new wxMenuItem( menuFile, wxID_STOP, wxString( wxT("Stop Sizing Folder") ) , wxT("Stop the current size calculation"), wxITEM_NORMAL );
+	menuFile->Append( stopSizingMenu );
+
+	menuBar->Append( menuFile, wxT("File") );
+
+	menuWindow = new wxMenu();
+	wxMenuItem* menuAbout;
+	menuAbout = new wxMenuItem( menuWindow, wxID_ABOUT, wxString( wxT("About FatFileFinder") ) , wxT("Show information about this application"), wxITEM_NORMAL );
+	menuWindow->Append( menuAbout );
+
+	wxMenuItem* menuQuit;
+	menuQuit = new wxMenuItem( menuWindow, wxID_EXIT, wxString( wxT("Close") ) + wxT('\t') + wxT("Ctrl-W"), wxT("Close FatFileFilder"), wxITEM_NORMAL );
+	menuWindow->Append( menuQuit );
+
+	menuBar->Append( menuWindow, wxT("Window") );
+
+	this->SetMenuBar( menuBar );
+
+	wxFlexGridSizer* mainSizer;
+	mainSizer = new wxFlexGridSizer( 0, 1, 0, 0 );
+	mainSizer->AddGrowableCol( 0 );
+	mainSizer->AddGrowableRow( 1 );
+	mainSizer->SetFlexibleDirection( wxBOTH );
+	mainSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+
+	wxGridBagSizer* toolbarSizer;
+	toolbarSizer = new wxGridBagSizer( 0, 0 );
+	toolbarSizer->SetFlexibleDirection( wxBOTH );
+	toolbarSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+
+	openFolderBtn = new wxButton( this, wxID_OPEN, wxT("📂"), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE|wxBU_EXACTFIT );
+	toolbarSizer->Add( openFolderBtn, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL|wxALIGN_BOTTOM, 5 );
+
+	reloadFolderBtn = new wxButton( this, wxID_ANY, wxT("🔄"), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE|wxBU_EXACTFIT );
+	toolbarSizer->Add( reloadFolderBtn, wxGBPosition( 0, 1 ), wxGBSpan( 1, 1 ), wxALL|wxALIGN_BOTTOM, 5 );
+
+	stopSizeBtn = new wxButton( this, wxID_ANY, wxT("🛑"), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE|wxBU_EXACTFIT );
+	toolbarSizer->Add( stopSizeBtn, wxGBPosition( 0, 2 ), wxGBSpan( 1, 1 ), wxALL|wxALIGN_BOTTOM, 5 );
+
+	progressBar = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
+	progressBar->SetValue( 0 );
+	toolbarSizer->Add( progressBar, wxGBPosition( 0, 3 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND|wxALIGN_BOTTOM, 5 );
+
+
+	toolbarSizer->AddGrowableCol( 3 );
+
+	mainSizer->Add( toolbarSizer, 1, wxEXPAND|wxALIGN_BOTTOM, 5 );
 
 	mainSplitter = new wxSplitterWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE|wxSP_NOBORDER|wxSP_PERMIT_UNSPLIT|wxSP_THIN_SASH );
 	mainSplitter->Connect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::mainSplitterOnIdle ), NULL, this );
@@ -50,41 +107,11 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	directoryPanel->Layout();
 	browserSizer->Fit( directoryPanel );
 	mainSplitter->SplitVertically( propertyPanel, directoryPanel, 0 );
-	baseSizer->Add( mainSplitter, 1, wxEXPAND, 5 );
+	mainSizer->Add( mainSplitter, 1, wxEXPAND, 5 );
 
 
-	this->SetSizer( baseSizer );
+	this->SetSizer( mainSizer );
 	this->Layout();
-	statusBar = this->CreateStatusBar( 1, wxSTB_DEFAULT_STYLE, wxID_ANY );
-	menuBar = new wxMenuBar( 0 );
-	menuFile = new wxMenu();
-	wxMenuItem* openFolderMenu;
-	openFolderMenu = new wxMenuItem( menuFile, wxID_OPEN, wxString( wxT("Open Folder") ) + wxT('\t') + wxT("Ctrl-O"), wxT("Calculate the size a folder, and its sub folders"), wxITEM_NORMAL );
-	menuFile->Append( openFolderMenu );
-
-	wxMenuItem* reloadFolderMenu;
-	reloadFolderMenu = new wxMenuItem( menuFile, wxID_REFRESH, wxString( wxT("Reload Folder") ) + wxT('\t') + wxT("Ctrl-R"), wxT("Recalculate the selected folder's size"), wxITEM_NORMAL );
-	menuFile->Append( reloadFolderMenu );
-
-	wxMenuItem* stopSizingMenu;
-	stopSizingMenu = new wxMenuItem( menuFile, wxID_STOP, wxString( wxT("Stop Sizing Folder") ) , wxT("Stop the current size calculation"), wxITEM_NORMAL );
-	menuFile->Append( stopSizingMenu );
-
-	menuBar->Append( menuFile, wxT("File") );
-
-	menuWindow = new wxMenu();
-	wxMenuItem* menuAbout;
-	menuAbout = new wxMenuItem( menuWindow, wxID_ABOUT, wxString( wxT("About FatFileFinder") ) , wxT("Show information about this application"), wxITEM_NORMAL );
-	menuWindow->Append( menuAbout );
-
-	wxMenuItem* menuQuit;
-	menuQuit = new wxMenuItem( menuWindow, wxID_EXIT, wxString( wxT("Close") ) + wxT('\t') + wxT("Ctrl-W"), wxT("Close FatFileFilder"), wxITEM_NORMAL );
-	menuWindow->Append( menuQuit );
-
-	menuBar->Append( menuWindow, wxT("Window") );
-
-	this->SetMenuBar( menuBar );
-
 
 	this->Centre( wxBOTH );
 }

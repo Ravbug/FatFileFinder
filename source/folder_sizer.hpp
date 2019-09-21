@@ -23,24 +23,23 @@ using namespace std;
 //structure definitions
 struct FileData{
 	path Path;
-	double size;
+	unsigned long size;
 };
 struct FolderData{
 	path Path;
 	unsigned long files_size = 0;
 	unsigned long num_items = 0;
 	unsigned long total_size = 0;
-	bool root = false;
 	vector<FolderData> subFolders;
 	vector<FileData> files;
 };
 
 //callback definitions
-typedef function<void(float progress)> progCallback;
+typedef function<void(float progress, FolderData* data)> progCallback;
 
 class folderSizer{
 public:
 	folderSizer();
 	~folderSizer();
-	FolderData SizeFolder(const string& folder, const progCallback& progress);
+	FolderData* SizeFolder(const string& folder, const progCallback& progress);
 };

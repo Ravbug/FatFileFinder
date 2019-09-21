@@ -10,6 +10,7 @@
 
 #include "interface.h"
 #include "folder_sizer.hpp"
+#include <thread>
 
 using namespace std;
 
@@ -19,9 +20,14 @@ public:
 	MainFrame(wxWindow* parent = NULL);
 private:
 	folderSizer sizer;
+	FolderData* folderData;
 	string GetPathFromDialog(const string& message);
+	thread worker;
+	void SizeRootFolder(const string& folder);
 	void OnExit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
 	void OnOpenFolder(wxCommandEvent& event);
+	void OnStopSizing(wxCommandEvent& event);
+	void OnUpdateUI(wxCommandEvent& event);
 	wxDECLARE_EVENT_TABLE();
 };

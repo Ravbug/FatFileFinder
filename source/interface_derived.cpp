@@ -16,11 +16,15 @@
 #include "wxlin.xpm"
 #endif
 
+wxDEFINE_EVENT(progEvt, wxCommandEvent);
+wxDEFINE_EVENT(errorEvt, wxCommandEvent);
+
 //Declare event mapping here
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 EVT_MENU(wxID_EXIT,  MainFrame::OnExit)
 EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
 EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
+EVT_COMMAND(wxID_ANY, progEvt, MainFrame::OnUpdateUI)
 wxEND_EVENT_TABLE()
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
@@ -40,6 +44,41 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 		SetIcon(wxIcon(wxICON(wxlin)));
 	#endif
 
+}
+
+/**
+ Size a folder on a background thread
+ @param folder the path to the folder to size
+ */
+void MainFrame::SizeRootFolder(const string& folder){
+	//deallocate existing data
+	
+	worker = thread([&](string folder){
+		//called on progress updates
+		progCallback callback = [&](float progress, FolderData* data){			
+			wxCommandEvent event(progEvt);
+			event.SetInt(progress * 100);
+			event.SetClientData(data);
+			
+			//invoke event to notify needs to update UI
+			wxPostEvent(this, event);
+		};
+		sizer.SizeFolder(folder, callback);
+	},folder);
+	worker.detach();
+}
+
+/**
+ Refresh the UI on progress updates
+ */
+void MainFrame::OnUpdateUI(wxCommandEvent& event){
+	FolderData* fd = (FolderData*)event.GetClientData();
+	folderData = fd;
+	int prog = event.GetInt();
+	progressBar->SetValue(prog);
+	if (prog == 100){
+		cout << fd->total_size << endl;
+	}
 }
 
 /** Brings up a folder selection dialog with a prompt
@@ -64,8 +103,7 @@ void MainFrame::OnOpenFolder(wxCommandEvent& event){
 	string path = GetPathFromDialog("Select a folder to size");
 	if (path != ""){
 		//begin sizing folder
-		FolderData fd = sizer.SizeFolder(path, nullptr);
-		cout << fd.total_size << endl;
+		SizeRootFolder(path);
 	}
 }
 /**
@@ -88,4 +126,10 @@ void MainFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.SetWebSite("https://github.com/ravbug/FatFileFinderCPP");
 	aboutInfo.AddDeveloper("Ravbug");
 	wxAboutBox(aboutInfo);
+}
+/**
+ Aborts the background sizing operation
+ */
+void MainFrame::OnStopSizing(wxCommandEvent& event){
+	//update the UI
 }

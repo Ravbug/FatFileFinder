@@ -73,6 +73,8 @@ inline void dpi_scale(wxWindow* window) {
 
 #elif defined __APPLE__
 //place macOS-specific globals here
+//skip paths longer than this length to avoid errors
+static inline const int maxPathLength = 260;
 
 #elif defined __linux__
 //place linux-specific globals here
