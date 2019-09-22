@@ -130,7 +130,7 @@ void MainFrame::OnListExpanding(wxTreeListEvent& event){
 void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
 	for(FolderData* d : data->subFolders){
 		//add the item, with its client data pointer
-		wxTreeListItem added = fileBrowser->AppendItem(item,d->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
+		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + d->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
 		//set the other strings on the item
 		fileBrowser->SetItemText(added, 1, folderSizer::sizeToString(d->total_size));
 		
@@ -141,7 +141,7 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
 //
 		//add this items' files
 		for(FileData* f : d->files){
-			wxTreeListItem fileItem = fileBrowser->AppendItem(added,f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
+			wxTreeListItem fileItem = fileBrowser->AppendItem(added,iconForExtension(f->Path.extension().string()) + "\t" + f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
 			fileBrowser->SetItemText(fileItem, 1, folderSizer::sizeToString(f->size));
 		}
 	}

@@ -12,6 +12,7 @@
 #include "folder_sizer.hpp"
 #include <thread>
 #include <unordered_set>
+#include <unordered_map>
 #include <wx/treebase.h>
 
 using namespace std;
@@ -35,6 +36,31 @@ private:
 	void OnUpdateUI(wxCommandEvent& event);
 	void OnListExpanding(wxTreeListEvent& event);
 	wxDECLARE_EVENT_TABLE();
+	
+	//for drawing icons next to items in the list
+	unordered_map<string,string> icons = {
+		{".exe", "💾" },{".dll", "💾" },{".bat", "💾" },{".jar", "💾" },
+		{".iso", "💿" },{".bin", "💿"},
+		{".ai","🎨" },{".bmp","🎨" },{".gif","🎨" },{".ico","🎨" },{".jpeg","🎨" },{".jpg","🎨" },{".png","🎨" },{".psd","🎨" },{".svg","🎨" },{".tif","🎨" },
+		{".mp3","🎵" },{".aif","🎵" },{".ogg","🎵" },{".wav","🎵" },{".wma","🎵" },
+		{ ".mp4","🎞"},{ ".avi","🎞"},{ ".flv","🎞"},{ ".h264","🎞"},{ ".m4v","🎞"},{ ".mkv","🎞"},{ ".mov","🎞"},{ ".mpg","🎞"},{ ".wmv","🎞"},
+		{ ".7z","📦"},{ ".arj","📦"},{ ".pkg","📦"},{ ".rar","📦"},{ ".rpm","📦"},{ ".tar.gz","📦"},{ ".z","📦"},{ ".zip","📦"},
+		{ ".doc","📝"},{ ".docx","📝"},{ ".odt","📝"},{ ".pdf","📝"},{ ".rtf","📝"},{ ".tex","📝"}
+	};
+	const string FolderIcon = "📁";
+	/**
+	 Return the icon for a file type
+	 @param extension the extension of the file
+	 @returns an emoji representing the file type
+	 */
+	string iconForExtension(const string& extension){
+		try{
+			return icons.at(extension);
+		}
+		catch(exception e){
+			return "📄";
+		}
+	}
 };
 
 /**
