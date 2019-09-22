@@ -23,15 +23,26 @@ using namespace std;
 //structure definitions
 struct FileData{
 	path Path;
-	unsigned long size;
+	unsigned long size = 0;
 };
 struct FolderData{
 	path Path;
 	unsigned long files_size = 0;
 	unsigned long num_items = 0;
 	unsigned long total_size = 0;
-	vector<FolderData> subFolders;
-	vector<FileData> files;
+	vector<FolderData*> subFolders;
+	vector<FileData*> files;
+	//destructor
+	~FolderData(){
+		//deallocate each of the files
+		for(FileData* file : files){
+			delete file;
+		}
+		//deallocate each of the subfolders
+		for(FolderData* folder : subFolders){
+			delete folder;
+		}
+	}
 };
 
 //callback definitions

@@ -37,8 +37,8 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 			}
 			else{
 				//size the file, add its details to the structure
-				FileData file = {p,file_size(p)};
-				fd->files_size += file.size;
+				FileData* file = new FileData{p,file_size(p)};
+				fd->files_size += file->size;
 				fd->files.push_back(file);
 			}
 		}
@@ -61,10 +61,8 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 			if (progress != nullptr){
 				progress(num / folders.size(),fd);
 			}
-			fd->subFolders.push_back(*d);
+			fd->subFolders.push_back(d);
 		}
-		//clean up unused data
-		delete d;
 	}
 
 	return fd;

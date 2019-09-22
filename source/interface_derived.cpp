@@ -65,6 +65,10 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
  */
 void MainFrame::SizeRootFolder(const string& folder){
 	//deallocate existing data
+	delete folderData;
+	
+	//clear old cells
+	fileBrowser->DeleteAllItems();
 	
 	worker = thread([&](string folder){
 		//called on progress updates
@@ -96,37 +100,51 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 		
 		//update tree view (make this not refresh every time)
 		fileBrowser->DeleteAllItems();
-		/**
-		 Recursively populate the table view with the contents of the folder
-		 param data the FolderData root structure (for the current folder)
-		 param root the root wxTreeListItem to add subitems to
-		 */
-		function<void(FolderData,wxTreeListItem)> populate = [&](FolderData data, wxTreeListItem root){
-			for(FolderData& d : data.subFolders){
-				//add the item
-				wxClientDataContainer* cdc = new wxClientDataContainer();
-				cdc->SetClientData(&data);
-				
-				//add the item, with its client data pointer
-				wxTreeListItem added = fileBrowser->AppendItem(root,d.Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,(wxClientData*)cdc);
-				//set the other strings on the item
-				fileBrowser->SetItemText(added, 1, folderSizer::sizeToString(d.total_size));
-				
-				//add the item's sub items
-				if (d.subFolders.size() > 0){
-					populate(d, added);
-				}
-			}
-		};
-		//begin populating
-		populate(*fd,fileBrowser->GetRootItem());
+		
+		AddSubItems(fileBrowser->GetRootItem(),fd);
+		
 	}
 	//set titelbar
 	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path.string());
 }
 
 void MainFrame::OnListExpanding(wxTreeListEvent& event){
-	
+	wxTreeListItem item = event.GetItem();
+	// add this item's immediate sub-items to the list
+	StructurePtrData* spd = (StructurePtrData*)fileBrowser->GetItemData(item);
+	FolderData* data = spd->folderData;
+	string key = data->Path.string();
+	//prevent trying to load already loaded items
+	if (loaded.find(key) == loaded.end()){
+		//remove the placeholder item
+		wxTreeListItem placeholder = fileBrowser->GetFirstChild(item);
+		if (placeholder.IsOk()){
+			fileBrowser->DeleteItem(placeholder);
+		}
+		AddSubItems(item,data);
+	}
+	//mark as loaded
+	loaded.insert(key);
+}
+
+void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
+	for(FolderData* d : data->subFolders){
+		//add the item, with its client data pointer
+		wxTreeListItem added = fileBrowser->AppendItem(item,d->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
+		//set the other strings on the item
+		fileBrowser->SetItemText(added, 1, folderSizer::sizeToString(d->total_size));
+		
+		//add placeholder to get disclosure triangle if there are sub items to show
+		if(d->subFolders.size() > 0 || d->files.size() > 0){
+			fileBrowser->AppendItem(added, "placeholder");
+		}
+//
+		//add this items' files
+		for(FileData* f : d->files){
+			wxTreeListItem fileItem = fileBrowser->AppendItem(added,f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
+			fileBrowser->SetItemText(fileItem, 1, folderSizer::sizeToString(f->size));
+		}
+	}
 }
 
 /** Brings up a folder selection dialog with a prompt
@@ -150,8 +168,6 @@ string MainFrame::GetPathFromDialog(const string& message)
 void MainFrame::OnOpenFolder(wxCommandEvent& event){
 	string path = GetPathFromDialog("Select a folder to size");
 	if (path != ""){
-		//deallocate old data
-		delete folderData;
 		//begin sizing folder
 		SizeRootFolder(path);
 	}

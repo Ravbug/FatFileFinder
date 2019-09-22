@@ -11,6 +11,8 @@
 #include "interface.h"
 #include "folder_sizer.hpp"
 #include <thread>
+#include <unordered_set>
+#include <wx/treebase.h>
 
 using namespace std;
 
@@ -23,6 +25,8 @@ private:
 	FolderData* folderData = NULL;
 	string GetPathFromDialog(const string& message);
 	thread worker;
+	unordered_set<string> loaded;
+	void AddSubItems(const wxTreeListItem& item,FolderData* data);
 	void SizeRootFolder(const string& folder);
 	void OnExit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
@@ -31,4 +35,21 @@ private:
 	void OnUpdateUI(wxCommandEvent& event);
 	void OnListExpanding(wxTreeListEvent& event);
 	wxDECLARE_EVENT_TABLE();
+};
+
+/**
+ Class for storing data within the tree.
+ This class does not delete its pointers when it is deallocated. Those must be deleted manually.
+ */
+class StructurePtrData : public wxTreeItemData{
+public:
+	FolderData* folderData = NULL;
+	FileData* fileData = NULL;
+	//constructors
+	StructurePtrData(FolderData* data):wxTreeItemData(){
+		folderData = data;
+	}
+	StructurePtrData(FileData* data):wxTreeItemData(){
+		fileData = data;
+	}
 };
