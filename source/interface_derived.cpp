@@ -27,6 +27,7 @@ EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
 EVT_COMMAND(wxID_ANY, progEvt, MainFrame::OnUpdateUI)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
 EVT_TREELIST_ITEM_EXPANDING(TREELIST,MainFrame::OnListExpanding)
+EVT_TREELIST_SELECTION_CHANGED(TREELIST,MainFrame::OnListSelection)
 wxEND_EVENT_TABLE()
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
@@ -47,7 +48,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	#endif
 	
 	//set up the default values for the left side table
-	string properties[] = {"Name","Size","Type","Items","Modified","Created","Is System","Is Hidden", "Is Read Only", "Full Path"};
+	string properties[] = {"Name","Size","Type","Items","Modified","Is System","Is Hidden", "Is Read Only"};
 	for (const string& p : properties){
 		//pairs, because 2 columns
 		wxVector<wxVariant> items;
@@ -57,6 +58,8 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 		propertyList->AppendItem(items);
 	}
 	
+	//create the sorting object
+	fileBrowser->SetItemComparator(new sizeComparator());
 }
 
 /**
@@ -83,6 +86,61 @@ void MainFrame::SizeRootFolder(const string& folder){
 		sizer.SizeFolder(folder, callback);
 	},folder);
 	worker.detach();
+}
+
+/**
+ Populates a tree item's immediate sub-items
+ @param item the tree item to add sub items
+ @param data the FolderData pointer representing the data for the item
+ */
+void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
+	for(FolderData* d : data->subFolders){
+		//add the item, with its client data pointer
+		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + d->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
+		//set the other strings on the item
+		fileBrowser->SetItemText(added, 1, folderSizer::sizeToString(d->total_size));
+		
+		//add placeholder to get disclosure triangle if there are sub items to show
+		if(d->subFolders.size() > 0 || d->files.size() > 0){
+			fileBrowser->AppendItem(added, "placeholder");
+		}
+		//add this items' files
+		for(FileData* f : d->files){
+			wxTreeListItem fileItem = fileBrowser->AppendItem(added,iconForExtension(f->Path.extension().string()) + "\t" + f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
+			fileBrowser->SetItemText(fileItem, 1, folderSizer::sizeToString(f->size));
+		}
+	}
+}
+
+void MainFrame::PopulateSidebar(StructurePtrData* spd){
+	path p;
+	if (spd->fileData != NULL){
+		p = spd->fileData->Path;
+		propertyList->SetTextValue(folderSizer::sizeToString(spd->fileData->size), 1, 1);
+		string ext = p.extension().string();
+		propertyList->SetTextValue(iconForExtension(ext) + " " + ext.substr(1) + " File", 2, 1);
+		propertyList->SetTextValue("",3,1);
+	}
+	else{
+		p = spd->folderData->Path;
+		propertyList->SetTextValue(folderSizer::sizeToString(spd->folderData->total_size), 1, 1);
+		propertyList->SetTextValue(FolderIcon + " Folder", 2, 1);
+		propertyList->SetTextValue(to_string(spd->folderData->num_items),3,1);
+		
+	}
+	propertyList->SetTextValue(p.leaf().string(), 0, 1);
+		
+	//modified date
+	tm* time;
+	time_t tm = last_write_time(p);
+	time = localtime(&tm);
+	char dateString[100];
+	strftime(dateString,50,"%x %X",time);
+	propertyList->SetTextValue(dateString,4,1);
+	
+	//also show selected item in the status bar
+	statusBar->SetStatusText(p.string());
+	
 }
 
 /**
@@ -127,24 +185,14 @@ void MainFrame::OnListExpanding(wxTreeListEvent& event){
 	loaded.insert(key);
 }
 
-void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
-	for(FolderData* d : data->subFolders){
-		//add the item, with its client data pointer
-		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + d->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
-		//set the other strings on the item
-		fileBrowser->SetItemText(added, 1, folderSizer::sizeToString(d->total_size));
-		
-		//add placeholder to get disclosure triangle if there are sub items to show
-		if(d->subFolders.size() > 0 || d->files.size() > 0){
-			fileBrowser->AppendItem(added, "placeholder");
-		}
-//
-		//add this items' files
-		for(FileData* f : d->files){
-			wxTreeListItem fileItem = fileBrowser->AppendItem(added,iconForExtension(f->Path.extension().string()) + "\t" + f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
-			fileBrowser->SetItemText(fileItem, 1, folderSizer::sizeToString(f->size));
-		}
-	}
+void MainFrame::OnListSelection(wxTreeListEvent& event){
+	//get selection information
+	wxTreeListItem item = event.GetItem();
+	// add this item's immediate sub-items to the list
+	StructurePtrData* spd = (StructurePtrData*)fileBrowser->GetItemData(item);
+	//populate the sidebar
+	PopulateSidebar(spd);
+	
 }
 
 /** Brings up a folder selection dialog with a prompt

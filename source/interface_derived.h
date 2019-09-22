@@ -17,6 +17,8 @@
 
 using namespace std;
 
+class StructurePtrData;
+
 class MainFrame : public MainFrameBase
 {
 public:
@@ -29,12 +31,14 @@ private:
 	unordered_set<string> loaded;
 	void AddSubItems(const wxTreeListItem& item,FolderData* data);
 	void SizeRootFolder(const string& folder);
+	void PopulateSidebar(StructurePtrData* data);
 	void OnExit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
 	void OnOpenFolder(wxCommandEvent& event);
 	void OnStopSizing(wxCommandEvent& event);
 	void OnUpdateUI(wxCommandEvent& event);
 	void OnListExpanding(wxTreeListEvent& event);
+	void OnListSelection(wxTreeListEvent& event);
 	wxDECLARE_EVENT_TABLE();
 	
 	//for drawing icons next to items in the list
@@ -77,5 +81,37 @@ public:
 	}
 	StructurePtrData(FileData* data):wxTreeItemData(){
 		fileData = data;
+	}
+};
+
+/**
+ Class for defining custom sorting in a wxTreeListCtrl.
+ Overrides the Compare method.
+ */
+class sizeComparator : public wxTreeListItemComparator{
+public:
+	int Compare(wxTreeListCtrl *treelist, unsigned column, wxTreeListItem first, wxTreeListItem second){
+		//get client data
+		StructurePtrData* item1 = (StructurePtrData*)treelist->GetItemData(first);
+		StructurePtrData* item2 = (StructurePtrData*)treelist->GetItemData(first);
+		
+		//get the size to use
+		unsigned long size1;
+		unsigned long size2;
+		if (item1->folderData != NULL){
+			size1 = item1->folderData->total_size;
+		}
+		else{
+			size1 = item1->fileData->size;
+		}
+		if (item2->folderData != NULL){
+			size2 = item2->folderData->total_size;
+		}
+		else{
+			size2 = item2->fileData->size;
+		}
+		
+		//negative = sort first, positive = sort second
+		return (size1 > size2)? 1 : -1;
 	}
 };

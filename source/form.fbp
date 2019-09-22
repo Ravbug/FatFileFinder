@@ -662,7 +662,7 @@
                                             <object class="dataViewListColumn" expanded="1">
                                                 <property name="align">wxALIGN_LEFT</property>
                                                 <property name="ellipsize"></property>
-                                                <property name="flags">wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_SORTABLE</property>
+                                                <property name="flags">wxDATAVIEW_COL_RESIZABLE</property>
                                                 <property name="label">Value</property>
                                                 <property name="mode">wxDATAVIEW_CELL_ACTIVATABLE</property>
                                                 <property name="name">PLValueCol</property>
@@ -945,7 +945,7 @@
                                                 <property name="width">wxCOL_WIDTH_AUTOSIZE</property>
                                             </object>
                                             <object class="wxTreeListCtrlColumn" expanded="1">
-                                                <property name="alignment">wxALIGN_LEFT</property>
+                                                <property name="alignment">wxALIGN_RIGHT</property>
                                                 <property name="flag">wxCOL_RESIZABLE|wxCOL_SORTABLE</property>
                                                 <property name="name">Size</property>
                                                 <property name="width">wxCOL_WIDTH_AUTOSIZE</property>

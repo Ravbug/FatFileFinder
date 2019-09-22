@@ -90,7 +90,9 @@ string folderSizer::sizeToString(const unsigned long& fileSize){
 				minus = 1;
 			}
 			//round to 2 decimal places, then attach unit
-			formatted = to_string(roundf((fileSize / pow(size, i - minus))*100)/100) + suffix[i - minus];
+			char buffer[10];
+			sprintf(buffer,"%.2f",fileSize / pow(size,i-minus));
+			formatted = string(buffer) + suffix[i - minus];
 			break;
 		}
 	}
