@@ -7,6 +7,7 @@
 
 #include "folder_sizer.hpp"
 #include "globals.cpp"
+#include <array>
 
 //constructor and destructor
 folderSizer::folderSizer(){}
@@ -67,4 +68,34 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 	}
 
 	return fd;
+}
+
+/**
+ Formats a raw file size to a string with a unit
+ @param fileSize the size of the item in bytes
+ @returns unitized string, example "12 KB"
+ */
+string folderSizer::sizeToString(const unsigned long& fileSize){
+	string formatted = "";
+	int size = 1000;		//MB = 100, MiB = 1024
+	array<string,5> suffix { " bytes", " KB", " MB", " GB", " TB" };
+
+	
+	for (int i = 0; i < suffix.size(); i++)
+	{
+		double compare = pow(size, i);
+		if (fileSize <= compare)
+		{
+			int minus = 0;
+			if (i > 0)
+			{
+				minus = 1;
+			}
+			//round to 2 decimal places, then attach unit
+			formatted = to_string(roundf((fileSize / pow(size, i - minus))*100)/100) + suffix[i - minus];
+			break;
+		}
+	}
+
+	return formatted;
 }

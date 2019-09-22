@@ -26,6 +26,7 @@ EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
 EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
 EVT_COMMAND(wxID_ANY, progEvt, MainFrame::OnUpdateUI)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
+EVT_TREELIST_ITEM_EXPANDING(TREELIST,MainFrame::OnListExpanding)
 wxEND_EVENT_TABLE()
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
@@ -92,15 +93,40 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	progressBar->SetValue(prog);
 	if (prog == 100){
 		cout << fd->total_size << endl;
+		
+		//update tree view (make this not refresh every time)
+		fileBrowser->DeleteAllItems();
+		/**
+		 Recursively populate the table view with the contents of the folder
+		 param data the FolderData root structure (for the current folder)
+		 param root the root wxTreeListItem to add subitems to
+		 */
+		function<void(FolderData,wxTreeListItem)> populate = [&](FolderData data, wxTreeListItem root){
+			for(FolderData& d : data.subFolders){
+				//add the item
+				wxClientDataContainer* cdc = new wxClientDataContainer();
+				cdc->SetClientData(&data);
+				
+				//add the item, with its client data pointer
+				wxTreeListItem added = fileBrowser->AppendItem(root,d.Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,(wxClientData*)cdc);
+				//set the other strings on the item
+				fileBrowser->SetItemText(added, 1, folderSizer::sizeToString(d.total_size));
+				
+				//add the item's sub items
+				if (d.subFolders.size() > 0){
+					populate(d, added);
+				}
+			}
+		};
+		//begin populating
+		populate(*fd,fileBrowser->GetRootItem());
 	}
 	//set titelbar
 	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path.string());
+}
+
+void MainFrame::OnListExpanding(wxTreeListEvent& event){
 	
-	//update tree view (make this not refresh every time)
-	fileBrowser->DeleteAllItems();
-	for(FolderData d : fd->subFolders){
-		fileBrowser->AppendItem(fileBrowser->GetRootItem(),d.Path.leaf().string(),wxDataViewTreeCtrl::NO_IMAGE,wxDataViewTreeCtrl::NO_IMAGE);
-	}
 }
 
 /** Brings up a folder selection dialog with a prompt

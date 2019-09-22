@@ -20,7 +20,7 @@ public:
 	MainFrame(wxWindow* parent = NULL);
 private:
 	folderSizer sizer;
-	FolderData* folderData;
+	FolderData* folderData = NULL;
 	string GetPathFromDialog(const string& message);
 	thread worker;
 	void SizeRootFolder(const string& folder);
@@ -29,5 +29,6 @@ private:
 	void OnOpenFolder(wxCommandEvent& event);
 	void OnStopSizing(wxCommandEvent& event);
 	void OnUpdateUI(wxCommandEvent& event);
+	void OnListExpanding(wxTreeListEvent& event);
 	wxDECLARE_EVENT_TABLE();
 };
