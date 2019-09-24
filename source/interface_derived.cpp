@@ -123,12 +123,14 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
  @param spd the StructurePtrData object stored in the tree cell
  */
 void MainFrame::PopulateSidebar(StructurePtrData* spd){
+	if (spd == NULL){return;}
 	path p;
 	if (spd->fileData != NULL){
 		p = spd->fileData->Path;
 		propertyList->SetTextValue(folderSizer::sizeToString(spd->fileData->size), 1, 1);
 		string ext = p.extension().string();
-		propertyList->SetTextValue(iconForExtension(ext) + " " + ext.substr(1) + " File", 2, 1);
+		//special case for files with no extension
+		propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "binary" : ext.substr(1)) + " File", 2, 1);
 		propertyList->SetTextValue("",3,1);
 	}
 	else{
@@ -181,7 +183,7 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 		unsigned long totalSize = fd->subFolders[progIndex]->total_size;
 		fileBrowser->SetItemText(lastUpdateItem, 1, folderSizer::sizeToString(totalSize));
 		fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
-		if (totalSize > 0){
+		if (fd->subFolders[progIndex]->num_items > 0){
 			fileBrowser->AppendItem(lastUpdateItem, "");
 		}
 	}

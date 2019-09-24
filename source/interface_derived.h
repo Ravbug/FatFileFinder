@@ -62,6 +62,10 @@ private:
 	 @returns an emoji representing the file type
 	 */
 	string iconForExtension(const string& extension){
+		//avoid crash checking unordered map for empty string
+		if (extension.size() == 0){
+			return "📟";
+		}
 		try{
 			return icons.at(extension);
 		}
