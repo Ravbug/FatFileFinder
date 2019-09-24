@@ -26,6 +26,7 @@ EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
 EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
 EVT_COMMAND(wxID_ANY, progEvt, MainFrame::OnUpdateUI)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
+EVT_BUTTON(COPYPATH, MainFrame::OnCopy)
 EVT_TREELIST_ITEM_EXPANDING(TREELIST,MainFrame::OnListExpanding)
 EVT_TREELIST_SELECTION_CHANGED(TREELIST,MainFrame::OnListSelection)
 wxEND_EVENT_TABLE()
@@ -69,6 +70,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 void MainFrame::SizeRootFolder(const string& folder){
 	//deallocate existing data
 	delete folderData;
+	progIndex = 0;
 	
 	//clear old cells
 	fileBrowser->DeleteAllItems();
@@ -98,11 +100,16 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
 		//add the item, with its client data pointer
 		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + d->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
 		//set the other strings on the item
-		fileBrowser->SetItemText(added, 1, folderSizer::sizeToString(d->total_size));
+		if (d->total_size > 0){
+			fileBrowser->SetItemText(added, 1, folderSizer::sizeToString(d->total_size));
+		}
+		else{
+			fileBrowser->SetItemText(added,1,"[sizing]");
+		}
 		
 		//add placeholder to get disclosure triangle if there are sub items to show
 		if(d->subFolders.size() > 0 || d->files.size() > 0){
-			fileBrowser->AppendItem(added, "placeholder");
+			fileBrowser->AppendItem(added, "");
 		}
 		//add this items' files
 		for(FileData* f : d->files){
@@ -111,7 +118,10 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
 		}
 	}
 }
-
+/**
+ Populate the sidebar with info about a particular item in the tree
+ @param spd the StructurePtrData object stored in the tree cell
+ */
 void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	path p;
 	if (spd->fileData != NULL){
@@ -153,17 +163,35 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	//update progress
 	int prog = event.GetInt();
 	progressBar->SetValue(prog);
-	if (prog == 100){
-		cout << fd->total_size << endl;
+	
+	//if this is first progress update, populate the whole table
+	if(progIndex == 0){
+		AddSubItems(fileBrowser->GetRootItem(), fd);
+		lastUpdateItem = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
 		
-		//update tree view (make this not refresh every time)
-		fileBrowser->DeleteAllItems();
-		
-		AddSubItems(fileBrowser->GetRootItem(),fd);
-		
+		//populate files
+		for(FileData* f : fd->files){
+			wxTreeListItem fileItem = fileBrowser->AppendItem(fileBrowser->GetRootItem(),iconForExtension(f->Path.extension().string()) + "\t" + f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
+			fileBrowser->SetItemText(fileItem, 1, folderSizer::sizeToString(f->size));
+		}
 	}
-	//set titelbar
-	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path.string());
+	else{
+		//update the most recent leaf
+		lastUpdateItem = fileBrowser->GetNextSibling(lastUpdateItem);
+		unsigned long totalSize = fd->subFolders[progIndex]->total_size;
+		fileBrowser->SetItemText(lastUpdateItem, 1, folderSizer::sizeToString(totalSize));
+		fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
+		if (totalSize > 0){
+			fileBrowser->AppendItem(lastUpdateItem, "");
+		}
+	}
+	progIndex++;
+	//set titlebar
+	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path.string() + " [" + folderSizer::sizeToString(fd->total_size) + "]");
+}
+
+void MainFrame::OnCopy(wxCommandEvent& event){
+	//platform specific code
 }
 
 void MainFrame::OnListExpanding(wxTreeListEvent& event){

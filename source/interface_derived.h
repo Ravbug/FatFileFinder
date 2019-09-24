@@ -29,6 +29,9 @@ private:
 	string GetPathFromDialog(const string& message);
 	thread worker;
 	unordered_set<string> loaded;
+	int progIndex = 0;
+	wxTreeListItem lastUpdateItem;
+
 	void AddSubItems(const wxTreeListItem& item,FolderData* data);
 	void SizeRootFolder(const string& folder);
 	void PopulateSidebar(StructurePtrData* data);
@@ -39,6 +42,7 @@ private:
 	void OnUpdateUI(wxCommandEvent& event);
 	void OnListExpanding(wxTreeListEvent& event);
 	void OnListSelection(wxTreeListEvent& event);
+	void OnCopy(wxCommandEvent& event);
 	wxDECLARE_EVENT_TABLE();
 	
 	//for drawing icons next to items in the list

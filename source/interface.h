@@ -31,7 +31,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-#define TREELIST 1000
+#define COPYPATH 1000
+#define TREELIST 1001
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class MainFrameBase
@@ -61,7 +62,7 @@ class MainFrameBase : public wxFrame
 
 	public:
 
-		MainFrameBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Fat File Finder"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+		MainFrameBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Fat File Finder"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 640,400 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 
 		~MainFrameBase();
 

@@ -87,7 +87,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	PLValueCol = propertyList->AppendTextColumn( wxT("Value"), wxDATAVIEW_CELL_ACTIVATABLE, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	propertySizer->Add( propertyList, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
 
-	copyPathBtn = new wxButton( propertyPanel, wxID_ANY, wxT("Copy File Path"), wxDefaultPosition, wxDefaultSize, 0 );
+	copyPathBtn = new wxButton( propertyPanel, COPYPATH, wxT("Copy File Path"), wxDefaultPosition, wxDefaultSize, 0 );
 	propertySizer->Add( copyPathBtn, wxGBPosition( 1, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
 
 	revealBtn = new wxButton( propertyPanel, wxID_ANY, wxT("Reveal In Explorer"), wxDefaultPosition, wxDefaultSize, 0 );

@@ -27,13 +27,14 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 	FolderData* fd = new FolderData{};
 	fd->Path = path(folder);
 	
-	vector<path> folders;
 	// iterate through the items in the folder
 	try{
 		for(auto& p : directory_iterator(folder)){
 			//is the item a folder? if so, defer sizing it
 			if (is_directory(p)){
-				folders.push_back(p);
+				FolderData* sub = new FolderData{};
+				sub->Path = p;
+				fd->subFolders.push_back(sub);
 			}
 			else{
 				//size the file, add its details to the structure
@@ -52,16 +53,20 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 	
 	//recursively size the folders in the folder
 	float num = 0;
-	for(path& p : folders){
-		FolderData* d = SizeFolder(p.string(), nullptr);
-		if (d != NULL){
-			fd->num_items += d->num_items + 1;
-			fd->total_size += d->total_size;
+	for (int i = 0; i < fd->subFolders.size(); i++){
+		fd->subFolders[i] = SizeFolder(fd->subFolders[i]->Path.string(), nullptr);
+		if (fd->subFolders[i] != NULL){
+			fd->num_items += fd->subFolders[i]->num_items + 1;
+			fd->total_size += fd->subFolders[i]->total_size;
 			num++;
-			if (progress != nullptr){
-				progress(num / folders.size(),fd);
+			//check for zero size
+			if (fd->total_size == 0){
+				fd->total_size = 1;
 			}
-			fd->subFolders.push_back(d);
+			
+			if (progress != nullptr){
+				progress(num / fd->subFolders.size(),fd);
+			}
 		}
 	}
 
@@ -78,7 +83,6 @@ string folderSizer::sizeToString(const unsigned long& fileSize){
 	int size = 1000;		//MB = 100, MiB = 1024
 	array<string,5> suffix { " bytes", " KB", " MB", " GB", " TB" };
 
-	
 	for (int i = 0; i < suffix.size(); i++)
 	{
 		double compare = pow(size, i);
