@@ -27,27 +27,15 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 	FolderData* fd = new FolderData{};
 	fd->Path = path(folder);
 	
-	// iterate through the items in the folder
+	//calculate the size of the immediate files in the folder
 	try{
-		for(auto& p : directory_iterator(folder)){
-			//is the item a folder? if so, defer sizing it
-			if (is_directory(p)){
-				FolderData* sub = new FolderData{};
-				sub->Path = p;
-				fd->subFolders.push_back(sub);
-			}
-			else{
-				//size the file, add its details to the structure
-				FileData* file = new FileData{p,file_size(p)};
-				fd->files_size += file->size;
-				fd->files.push_back(file);
-			}
-		}
+		sizeImmediate(fd);
 	}
 	catch(exception){
 		//notify user?
 		return NULL;
 	}
+	
 	fd->total_size = fd->files_size;
 	fd->num_items = fd->files.size();
 	
@@ -55,6 +43,8 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 	float num = 0;
 	for (int i = 0; i < fd->subFolders.size(); i++){
 		fd->subFolders[i] = SizeFolder(fd->subFolders[i]->Path.string(), nullptr);
+		//update parent
+		fd->subFolders[i]->parent = fd;
 		if (fd->subFolders[i] != NULL){
 			fd->num_items += fd->subFolders[i]->num_items + 1;
 			fd->total_size += fd->subFolders[i]->total_size;
@@ -71,6 +61,37 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 	}
 
 	return fd;
+}
+
+/**
+ Calculate the size of the immediate files in the folder
+ @param data the FolderData struct to calculate
+ */
+void folderSizer::sizeImmediate(FolderData* data, const bool& skipFolders){
+	//clear to prevent dupes
+	data->files.clear();
+	data->files_size = 0;
+	if (!skipFolders){
+		data->subFolders.clear();
+	}
+	
+	// iterate through the items in the folder
+	for(auto& p : directory_iterator(data->Path)){
+		//is the item a folder? if so, defer sizing it
+		if (is_directory(p)){
+			if (!skipFolders){
+				FolderData* sub = new FolderData{};
+				sub->Path = p;
+				data->subFolders.push_back(sub);
+			}
+		}
+		else{
+			//size the file, add its details to the structure
+			FileData* file = new FileData{p,file_size(p)};
+			data->files_size += file->size;
+			data->files.push_back(file);
+		}
+	}
 }
 
 /**
@@ -125,3 +146,24 @@ void folderSizer::recalculateStats(FolderData* data){
 	}
 }
 
+/**
+ Find all the single super-items on this tree
+ @param data the node to find the super items for
+ @returns vector of all the pointers that make up a single chain to data
+ */
+vector<FolderData*> folderSizer::getSuperFolders(FolderData* data){
+	vector<FolderData*> folders;
+	//recursively advance up the hierarchy
+	function<FolderData*(FolderData*)> recurse = [&](FolderData* d) -> FolderData* {
+		if (d->parent != NULL){
+			folders.push_back(d->parent);
+			return recurse(d->parent);
+		}
+		else{
+			return d;
+		}
+	};
+	recurse(data);
+	
+	return folders;
+}

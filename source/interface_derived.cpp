@@ -76,7 +76,7 @@ void MainFrame::SizeRootFolder(const string& folder){
 	//deallocate existing data
 	delete folderData;
 	progIndex = 0;
-	
+	loaded.clear();
 	//clear old cells
 	fileBrowser->DeleteAllItems();
 	
@@ -173,6 +173,7 @@ void MainFrame::AddFiles(wxTreeListItem root, FolderData* data){
 
 /**
  Refresh the UI on progress updates
+ @param event the command event from the sender. Must have client data set on it.
  */
 void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	//update pointer
@@ -213,20 +214,38 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 	fileBrowser->SetClientData(wrapper->folderData);
 	
 	//hook up the new pointer
+	wrapper->folderData->parent = wrapper->reloadData->parent;
 	wrapper->reloadData = wrapper->folderData;
+	
+	//get the super folders that need to check for moves
+	vector<FolderData*> superItems = sizer.getSuperFolders(wrapper->reloadData);
+	
+	//update file sizes
+	for(FolderData* i : superItems){
+		sizer.sizeImmediate(i,true);
+	}
+	
+	//recalculate the items, size values
+	folderSizer::recalculateStats(folderData);
 	
 	//redraw the view
 	fileBrowser->DeleteAllItems();
 	
+	//clear the cache
+	loaded.clear();
+	
 	AddSubItems(fileBrowser->GetRootItem(),folderData);
 	AddFiles(fileBrowser->GetRootItem(),folderData);
-	
 }
 
 void MainFrame::OnCopy(wxCommandEvent& event){
 	//platform specific code
 }
 
+/**
+ Called when the reload button or reload menu is selected
+ @param event (unused) command event from sender
+ */
 void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	//Get selected item
 	wxTreeListItem selected = fileBrowser->GetSelection();
@@ -273,12 +292,15 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	else{
 		//remove the item if it does not exist
 		fileBrowser->DeleteItem(selected);
+		//recalculate the items, size values
+		folderSizer::recalculateStats(ptr->folderData);
 	}
-	
-	//recalculate the items, size values
-	folderSizer::recalculateStats(ptr->folderData);
 }
 
+/**
+ Called when a folder item is expanding. This will load the immediate sub items for that folder.
+ @param event the wxTreeListEvent sent by the item that is expanding
+ */
 void MainFrame::OnListExpanding(wxTreeListEvent& event){
 	wxTreeListItem item = event.GetItem();
 	// add this item's immediate sub-items to the list
@@ -298,6 +320,10 @@ void MainFrame::OnListExpanding(wxTreeListEvent& event){
 	loaded.insert(key);
 }
 
+/**
+ Called when an item in the list is selected. Populates the sidebar.
+ @param event the wxTreeListEvent sent by the selected item
+ */
 void MainFrame::OnListSelection(wxTreeListEvent& event){
 	//get selection information
 	wxTreeListItem item = event.GetItem();
@@ -326,6 +352,10 @@ string MainFrame::GetPathFromDialog(const string& message)
 
 
 //definitions for the events
+/**
+ Called when the open menu or button is selected
+ @param event (unused) event from sender
+ */
 void MainFrame::OnOpenFolder(wxCommandEvent& event){
 	string path = GetPathFromDialog("Select a folder to size");
 	if (path != ""){

@@ -19,6 +19,9 @@ using namespace std;
 
 class StructurePtrData;
 
+/**
+ Defines the main window and all of its behaviors and members.
+ */
 class MainFrame : public MainFrameBase
 {
 public:
@@ -26,12 +29,12 @@ public:
 private:
 	folderSizer sizer;
 	FolderData* folderData = NULL;
-	string GetPathFromDialog(const string& message);
 	thread worker;
 	unordered_set<string> loaded;
 	int progIndex = 0;
 	wxTreeListItem lastUpdateItem;
 
+	string GetPathFromDialog(const string& message);
 	void AddSubItems(const wxTreeListItem& item,FolderData* data);
 	void SizeRootFolder(const string& folder);
 	void PopulateSidebar(StructurePtrData* data);
@@ -107,6 +110,11 @@ public:
 		//get client data
 		StructurePtrData* item1 = (StructurePtrData*)treelist->GetItemData(first);
 		StructurePtrData* item2 = (StructurePtrData*)treelist->GetItemData(first);
+		
+		//error checking
+		if (!item1 || !item2){
+			return 0;
+		}
 		
 		//get the size to use
 		unsigned long size1;

@@ -43,16 +43,23 @@ struct FolderData{
 			delete folder;
 		}
 	}
+	//for back navigation
+	FolderData* parent = NULL;
 };
 
 //callback definitions
 typedef function<void(float progress, FolderData* data)> progCallback;
 
+/**
+ Class that calculates the sizes of folders.
+ */
 class folderSizer{
 public:
 	folderSizer();
 	~folderSizer();
 	FolderData* SizeFolder(const string& folder, const progCallback& progress);
+	void sizeImmediate(FolderData* data, const bool& skipFolders = false);
+	vector<FolderData*> getSuperFolders(FolderData* data);
 	static string sizeToString(const unsigned long& fileSize);
 	static void recalculateStats(FolderData* data);
 };
