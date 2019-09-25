@@ -271,6 +271,11 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	//Get selected item
 	wxTreeListItem selected = fileBrowser->GetSelection();
 	
+	//error check
+	if (!selected.IsOk()){
+		return;
+	}
+	
 	StructurePtrData* ptr = (StructurePtrData*)fileBrowser->GetItemData(selected);
 	
 	//only resize folders, if a file is selected, stop

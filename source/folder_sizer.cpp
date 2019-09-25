@@ -72,7 +72,7 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 void folderSizer::sizeImmediate(FolderData* data, const bool& skipFolders){
 	//clear to prevent dupes
 	data->files.clear();
-	data->files_size = 0;
+	data->files_size = 1;
 	if (!skipFolders){
 		data->subFolders.clear();
 	}
@@ -140,8 +140,12 @@ void folderSizer::recalculateStats(FolderData* data){
 	
 	if (data->subFolders.size() > 0){
 		data->num_items = data->files.size();
-		data->total_size = 0;
-		data->files_size = 0;
+		//calculate file size
+		data->files_size = 1;
+		for (FileData* file : data->files){
+			data->files_size += file->size;
+		}
+		data->total_size = data->files_size;
 		
 		for(FolderData* sub : data->subFolders){
 			//error handle

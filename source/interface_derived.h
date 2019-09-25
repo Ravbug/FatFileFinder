@@ -117,23 +117,23 @@ public:
 		}
 		
 		//get needed data
-		double percent1 = 0;
-		double percent2 = 0;
+		double size1 = 0;
+		double size2 = 0;
 		//calculate the percentages
 		if(item1->folderData != NULL){
-			percent1 = (double)item1->folderData->total_size / item1->folderData->parent->total_size;
+			size1 = (double)item1->folderData->total_size;
 		}
 		else{
-			percent1 = (double)item1->fileData->size / item1->fileData->parent->total_size;
+			size1 = (double)item1->fileData->size;
 		}
 		if (item2->folderData != NULL){
-			percent2 = (double)item2->folderData->total_size / item2->folderData->parent->total_size;
+			size2 = (double)item2->folderData->total_size;
 		}
 		else{
-			percent2 = (double)item2->fileData->size / item2->fileData->parent->total_size;
+			size2 = (double)item2->fileData->size;
 		}
 		
-		//return the difference (*100 otherwise int will always make it 0)
-		return (percent1*100) - (percent2*100);
+		//return the difference
+		return size1 - size2;
 	}
 };

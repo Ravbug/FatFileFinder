@@ -24,12 +24,12 @@ struct FolderData;
 //structure definitions
 struct FileData{
 	path Path;
-	unsigned long size = 0;
+	unsigned long size = 1;
 	FolderData* parent;
 };
 struct FolderData{
 	path Path;
-	unsigned long files_size = 0;
+	unsigned long files_size = 1;
 	unsigned long num_items = 0;
 	unsigned long total_size = 0;
 	vector<FolderData*> subFolders;
