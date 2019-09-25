@@ -103,3 +103,25 @@ string folderSizer::sizeToString(const unsigned long& fileSize){
 
 	return formatted;
 }
+
+/**
+ Recalculate the size and the number of items in a FolderData struct.
+ Does not make filesystem calls, instead uses only the data in the FolderData struct.
+ Modifies the properties of the struct.
+ @param data the FolderData to resize
+ */
+void folderSizer::recalculateStats(FolderData* data){
+	if (data->subFolders.size() > 0){
+		data->num_items = 0;
+		data->total_size = 0;
+		data->files_size = 0;
+		
+		for(FolderData* sub : data->subFolders){
+			folderSizer::recalculateStats(sub);
+			data->num_items += sub->num_items;
+			data->total_size += sub->total_size;
+			data->files_size += sub->files_size;
+		}
+	}
+}
+

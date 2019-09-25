@@ -35,11 +35,15 @@ private:
 	void AddSubItems(const wxTreeListItem& item,FolderData* data);
 	void SizeRootFolder(const string& folder);
 	void PopulateSidebar(StructurePtrData* data);
+	void AddFiles(wxTreeListItem root, FolderData* data);
+	
 	void OnExit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
 	void OnOpenFolder(wxCommandEvent& event);
 	void OnStopSizing(wxCommandEvent& event);
+	void OnReloadFolder(wxCommandEvent& event);
 	void OnUpdateUI(wxCommandEvent& event);
+	void OnUpdateReload(wxCommandEvent& event);
 	void OnListExpanding(wxTreeListEvent& event);
 	void OnListSelection(wxTreeListEvent& event);
 	void OnCopy(wxCommandEvent& event);
@@ -82,6 +86,7 @@ private:
 class StructurePtrData : public wxTreeItemData{
 public:
 	FolderData* folderData = NULL;
+	FolderData* reloadData = NULL;
 	FileData* fileData = NULL;
 	//constructors
 	StructurePtrData(FolderData* data):wxTreeItemData(){

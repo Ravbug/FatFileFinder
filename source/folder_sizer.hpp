@@ -54,4 +54,5 @@ public:
 	~folderSizer();
 	FolderData* SizeFolder(const string& folder, const progCallback& progress);
 	static string sizeToString(const unsigned long& fileSize);
+	static void recalculateStats(FolderData* data);
 };

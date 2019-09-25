@@ -16,17 +16,22 @@
 #include "wxlin.xpm"
 #endif
 
+#define PROGEVT 2001
+#define RELOADEVT 2002
+
 wxDEFINE_EVENT(progEvt, wxCommandEvent);
-wxDEFINE_EVENT(errorEvt, wxCommandEvent);
 
 //Declare event mapping here
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 EVT_MENU(wxID_EXIT,  MainFrame::OnExit)
 EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
 EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
-EVT_COMMAND(wxID_ANY, progEvt, MainFrame::OnUpdateUI)
+EVT_COMMAND(PROGEVT, progEvt, MainFrame::OnUpdateUI)
+EVT_COMMAND(RELOADEVT,progEvt, MainFrame::OnUpdateReload)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
 EVT_BUTTON(COPYPATH, MainFrame::OnCopy)
+EVT_MENU(wxID_REFRESH,MainFrame::OnReloadFolder)
+EVT_BUTTON(wxID_REFRESH,MainFrame::OnReloadFolder)
 EVT_TREELIST_ITEM_EXPANDING(TREELIST,MainFrame::OnListExpanding)
 EVT_TREELIST_SELECTION_CHANGED(TREELIST,MainFrame::OnListSelection)
 wxEND_EVENT_TABLE()
@@ -79,6 +84,7 @@ void MainFrame::SizeRootFolder(const string& folder){
 		//called on progress updates
 		progCallback callback = [&](float progress, FolderData* data){			
 			wxCommandEvent event(progEvt);
+			event.SetId(PROGEVT);
 			event.SetInt(progress * 100);
 			event.SetClientData(data);
 			
@@ -111,11 +117,8 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
 		if(d->subFolders.size() > 0 || d->files.size() > 0){
 			fileBrowser->AppendItem(added, "");
 		}
-		//add this items' files
-		for(FileData* f : d->files){
-			wxTreeListItem fileItem = fileBrowser->AppendItem(added,iconForExtension(f->Path.extension().string()) + "\t" + f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
-			fileBrowser->SetItemText(fileItem, 1, folderSizer::sizeToString(f->size));
-		}
+		//add this item's files
+		AddFiles(added,d);
 	}
 }
 /**
@@ -156,6 +159,19 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 }
 
 /**
+ Add the file listings for a folder in the tree view
+ @param root the folder item to add the files to
+ @param data the backing structure to set on each file
+ */
+void MainFrame::AddFiles(wxTreeListItem root, FolderData* data){
+	//populate files
+	for(FileData* f : data->files){
+		wxTreeListItem fileItem = fileBrowser->AppendItem(root,iconForExtension(f->Path.extension().string()) + "\t" + f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
+		fileBrowser->SetItemText(fileItem, 1, folderSizer::sizeToString(f->size));
+	}
+}
+
+/**
  Refresh the UI on progress updates
  */
 void MainFrame::OnUpdateUI(wxCommandEvent& event){
@@ -171,11 +187,7 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 		AddSubItems(fileBrowser->GetRootItem(), fd);
 		lastUpdateItem = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
 		
-		//populate files
-		for(FileData* f : fd->files){
-			wxTreeListItem fileItem = fileBrowser->AppendItem(fileBrowser->GetRootItem(),iconForExtension(f->Path.extension().string()) + "\t" + f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
-			fileBrowser->SetItemText(fileItem, 1, folderSizer::sizeToString(f->size));
-		}
+		AddFiles(fileBrowser->GetRootItem(),fd);
 	}
 	else{
 		//update the most recent leaf
@@ -192,8 +204,79 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path.string() + " [" + folderSizer::sizeToString(fd->total_size) + "]");
 }
 
+/**
+ Called when a reload folder operation finishes
+ */
+void MainFrame::OnUpdateReload(wxCommandEvent& event){
+	StructurePtrData* wrapper = (StructurePtrData*)event.GetClientData();
+	//set the item's client data
+	fileBrowser->SetClientData(wrapper->folderData);
+	
+	//hook up the new pointer
+	wrapper->reloadData = wrapper->folderData;
+	
+	//redraw the view
+	fileBrowser->DeleteAllItems();
+	
+	AddSubItems(fileBrowser->GetRootItem(),folderData);
+	AddFiles(fileBrowser->GetRootItem(),folderData);
+	
+}
+
 void MainFrame::OnCopy(wxCommandEvent& event){
 	//platform specific code
+}
+
+void MainFrame::OnReloadFolder(wxCommandEvent& event){
+	//Get selected item
+	wxTreeListItem selected = fileBrowser->GetSelection();
+	
+	StructurePtrData* ptr = (StructurePtrData*)fileBrowser->GetItemData(selected);
+	
+	//only resize folders, if a file is selected, stop
+	if (ptr == NULL || ptr->folderData == NULL){return;}
+	
+	//check if the folder still exists
+	if (exists(ptr->folderData->Path)){
+		//Prepend item with same name, but [sizing for folder]
+		wxTreeListItem replaced = fileBrowser->InsertItem(fileBrowser->GetItemParent(selected),selected, fileBrowser->GetItemText(selected));
+		fileBrowser->SetItemText(replaced, 1, "[sizing]");
+		//remove selected item
+		fileBrowser->DeleteItem(selected);
+		//select the new item
+		fileBrowser->Select(replaced);
+		
+		//create a thread to size that folder, return when finished
+		worker = thread([&](string folder,FolderData* oldptr){
+			//called on progress update
+			progCallback callback = [&](float progress, FolderData* data){
+				//check that the item still exists
+				if (int(progress*100) == 100 && replaced && replaced.IsOk()){
+					//set up event event
+					wxCommandEvent event(progEvt);
+					event.SetId(RELOADEVT);
+					event.SetInt(progress * 100);
+					//needs to pass both the list item and the updated client data
+					StructurePtrData* dataWrap = new StructurePtrData(data);
+					dataWrap->reloadData = oldptr;
+					event.SetClientData(dataWrap);
+					
+					//invoke event to notify needs to update UI
+					wxPostEvent(this, event);
+				}
+			};
+			sizer.SizeFolder(folder, callback);
+		},ptr->folderData->Path.string(),ptr->folderData);
+		worker.detach();
+
+	}
+	else{
+		//remove the item if it does not exist
+		fileBrowser->DeleteItem(selected);
+	}
+	
+	//recalculate the items, size values
+	folderSizer::recalculateStats(ptr->folderData);
 }
 
 void MainFrame::OnListExpanding(wxTreeListEvent& event){
