@@ -22,17 +22,17 @@
 #include <wx/button.h>
 #include <wx/gauge.h>
 #include <wx/gbsizer.h>
-#include <wx/dataview.h>
-#include <wx/panel.h>
 #include <wx/treelist.h>
 #include <wx/sizer.h>
+#include <wx/panel.h>
+#include <wx/dataview.h>
 #include <wx/splitter.h>
 #include <wx/frame.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
-#define COPYPATH 1000
-#define TREELIST 1001
+#define TREELIST 1000
+#define COPYPATH 1001
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class MainFrameBase
@@ -51,14 +51,14 @@ class MainFrameBase : public wxFrame
 		wxButton* stopSizeBtn;
 		wxGauge* progressBar;
 		wxSplitterWindow* mainSplitter;
+		wxPanel* directoryPanel;
+		wxTreeListCtrl* fileBrowser;
 		wxPanel* propertyPanel;
 		wxDataViewListCtrl* propertyList;
 		wxDataViewColumn* PLPropertyCol;
 		wxDataViewColumn* PLValueCol;
 		wxButton* copyPathBtn;
 		wxButton* revealBtn;
-		wxPanel* directoryPanel;
-		wxTreeListCtrl* fileBrowser;
 
 	public:
 
@@ -68,7 +68,7 @@ class MainFrameBase : public wxFrame
 
 		void mainSplitterOnIdle( wxIdleEvent& )
 		{
-			mainSplitter->SetSashPosition( 0 );
+			mainSplitter->SetSashPosition( 420 );
 			mainSplitter->Disconnect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::mainSplitterOnIdle ), NULL, this );
 		}
 

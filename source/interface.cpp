@@ -74,8 +74,25 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	mainSizer->Add( toolbarSizer, 1, wxEXPAND|wxALIGN_BOTTOM, 5 );
 
 	mainSplitter = new wxSplitterWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE|wxSP_NOBORDER|wxSP_PERMIT_UNSPLIT|wxSP_THIN_SASH );
+	mainSplitter->SetSashGravity( 1 );
 	mainSplitter->Connect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::mainSplitterOnIdle ), NULL, this );
+	mainSplitter->SetMinimumPaneSize( 220 );
 
+	directoryPanel = new wxPanel( mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* browserSizer;
+	browserSizer = new wxBoxSizer( wxVERTICAL );
+
+	fileBrowser = new wxTreeListCtrl( directoryPanel, TREELIST, wxDefaultPosition, wxDefaultSize, wxTL_DEFAULT_STYLE|wxTL_SINGLE );
+	fileBrowser->AppendColumn( wxT("File Name"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_LEFT, wxCOL_RESIZABLE );
+	fileBrowser->AppendColumn( wxT("Percentage"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER, wxCOL_RESIZABLE|wxCOL_SORTABLE );
+	fileBrowser->AppendColumn( wxT("Size"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_RIGHT, wxCOL_RESIZABLE|wxCOL_SORTABLE );
+
+	browserSizer->Add( fileBrowser, 1, wxEXPAND | wxALL, 5 );
+
+
+	directoryPanel->SetSizer( browserSizer );
+	directoryPanel->Layout();
+	browserSizer->Fit( directoryPanel );
 	propertyPanel = new wxPanel( mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxGridBagSizer* propertySizer;
 	propertySizer = new wxGridBagSizer( 0, 0 );
@@ -100,22 +117,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	propertyPanel->SetSizer( propertySizer );
 	propertyPanel->Layout();
 	propertySizer->Fit( propertyPanel );
-	directoryPanel = new wxPanel( mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	wxBoxSizer* browserSizer;
-	browserSizer = new wxBoxSizer( wxVERTICAL );
-
-	fileBrowser = new wxTreeListCtrl( directoryPanel, TREELIST, wxDefaultPosition, wxDefaultSize, wxTL_DEFAULT_STYLE|wxTL_SINGLE );
-	fileBrowser->AppendColumn( wxT("File Name"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_LEFT, wxCOL_RESIZABLE );
-	fileBrowser->AppendColumn( wxT("Percentage"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER, wxCOL_RESIZABLE|wxCOL_SORTABLE );
-	fileBrowser->AppendColumn( wxT("Size"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_RIGHT, wxCOL_RESIZABLE|wxCOL_SORTABLE );
-
-	browserSizer->Add( fileBrowser, 1, wxEXPAND | wxALL, 5 );
-
-
-	directoryPanel->SetSizer( browserSizer );
-	directoryPanel->Layout();
-	browserSizer->Fit( directoryPanel );
-	mainSplitter->SplitVertically( propertyPanel, directoryPanel, 0 );
+	mainSplitter->SplitVertically( directoryPanel, propertyPanel, 420 );
 	mainSizer->Add( mainSplitter, 1, wxEXPAND, 5 );
 
 

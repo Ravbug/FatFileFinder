@@ -43,6 +43,8 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 	float num = 0;
 	for (int i = 0; i < fd->subFolders.size(); i++){
 		fd->subFolders[i] = SizeFolder(fd->subFolders[i]->Path.string(), nullptr);
+		//error handle
+		if (fd->subFolders[i] == NULL){continue;}
 		//update parent
 		fd->subFolders[i]->parent = fd;
 		if (fd->subFolders[i] != NULL){
@@ -133,14 +135,19 @@ string folderSizer::sizeToString(const unsigned long& fileSize){
  @param data the FolderData to resize
  */
 void folderSizer::recalculateStats(FolderData* data){
+	//error handle
+	if (data == NULL){return;}
+	
 	if (data->subFolders.size() > 0){
 		data->num_items = data->files.size();
 		data->total_size = 0;
 		data->files_size = 0;
 		
 		for(FolderData* sub : data->subFolders){
+			//error handle
+			if (sub == NULL) {continue;}
 			folderSizer::recalculateStats(sub);
-			data->num_items += sub->num_items;
+			data->num_items += sub->num_items + 1;
 			data->total_size += sub->total_size;
 			data->files_size += sub->files_size;
 		}
@@ -175,6 +182,7 @@ vector<FolderData*> folderSizer::getSuperFolders(FolderData* data){
  @returns size rounded to 1 decimal place e.g (5.2%)
  */
 string folderSizer::percentOfParent(FolderData* data){
+	if (data == NULL || data->parent == NULL){return "[waiting]";}
 	//round to 2 decimal places, then attach unit
 	char buffer[10];
 	sprintf(buffer,"%.1f",(double)data->total_size / data->parent->total_size * 100);
@@ -187,6 +195,7 @@ string folderSizer::percentOfParent(FolderData* data){
  @returns size rounded to 1 decimal place e.g (5.2%)
  */
 string folderSizer::percentOfParent(FileData* data){
+	if (data == NULL || data->parent == NULL){return "[waiting]";}
 	//round to 2 decimal places, then attach unit
 	char buffer[10];
 	sprintf(buffer,"%.1f",(double)data->size / data->parent->total_size * 100);
