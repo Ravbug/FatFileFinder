@@ -107,10 +107,12 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
 		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + d->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
 		//set the other strings on the item
 		if (d->total_size > 0){
-			fileBrowser->SetItemText(added, 1, folderSizer::sizeToString(d->total_size));
+			fileBrowser->SetItemText(added, 2, folderSizer::sizeToString(d->total_size));
+			fileBrowser->SetItemText(added,1,folderSizer::percentOfParent(d));
 		}
 		else{
-			fileBrowser->SetItemText(added,1,"[sizing]");
+			fileBrowser->SetItemText(added,2,"[sizing]");
+			fileBrowser->SetItemText(added,1,"[waiting]");
 		}
 		
 		//add placeholder to get disclosure triangle if there are sub items to show
@@ -167,7 +169,8 @@ void MainFrame::AddFiles(wxTreeListItem root, FolderData* data){
 	//populate files
 	for(FileData* f : data->files){
 		wxTreeListItem fileItem = fileBrowser->AppendItem(root,iconForExtension(f->Path.extension().string()) + "\t" + f->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
-		fileBrowser->SetItemText(fileItem, 1, folderSizer::sizeToString(f->size));
+		fileBrowser->SetItemText(fileItem, 2, folderSizer::sizeToString(f->size));
+		fileBrowser->SetItemText(fileItem, 1,folderSizer::percentOfParent(f));
 	}
 }
 
@@ -194,7 +197,7 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 		//update the most recent leaf
 		lastUpdateItem = fileBrowser->GetNextSibling(lastUpdateItem);
 		unsigned long totalSize = fd->subFolders[progIndex]->total_size;
-		fileBrowser->SetItemText(lastUpdateItem, 1, folderSizer::sizeToString(totalSize));
+		fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
 		fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
 		if (fd->subFolders[progIndex]->num_items > 0){
 			fileBrowser->AppendItem(lastUpdateItem, "");
@@ -203,6 +206,17 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	progIndex++;
 	//set titlebar
 	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path.string() + " [" + folderSizer::sizeToString(fd->total_size) + "]");
+	
+	//set percentage on completion
+	if(progIndex == fd->subFolders.size()){
+		wxTreeListItem item = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
+		for(FolderData* data : fd->subFolders){
+			fileBrowser->SetItemText(item, 1,folderSizer::percentOfParent(data));
+			item = fileBrowser->GetNextSibling(item);
+		}
+		//sort the collumns descending
+		fileBrowser->SetSortColumn(1,false);
+	}
 }
 
 /**
@@ -236,6 +250,13 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 	
 	AddSubItems(fileBrowser->GetRootItem(),folderData);
 	AddFiles(fileBrowser->GetRootItem(),folderData);
+	
+	//get percents
+	wxTreeListItem item = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
+	for(FolderData* data : folderData->subFolders){
+		fileBrowser->SetItemText(item, 1,folderSizer::percentOfParent(data));
+		item = fileBrowser->GetNextSibling(item);
+	}
 }
 
 void MainFrame::OnCopy(wxCommandEvent& event){
@@ -259,7 +280,7 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	if (exists(ptr->folderData->Path)){
 		//Prepend item with same name, but [sizing for folder]
 		wxTreeListItem replaced = fileBrowser->InsertItem(fileBrowser->GetItemParent(selected),selected, fileBrowser->GetItemText(selected));
-		fileBrowser->SetItemText(replaced, 1, "[sizing]");
+		fileBrowser->SetItemText(replaced, 2, "[sizing]");
 		//remove selected item
 		fileBrowser->DeleteItem(selected);
 		//select the new item

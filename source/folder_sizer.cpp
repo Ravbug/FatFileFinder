@@ -89,6 +89,7 @@ void folderSizer::sizeImmediate(FolderData* data, const bool& skipFolders){
 			//size the file, add its details to the structure
 			FileData* file = new FileData{p,file_size(p)};
 			data->files_size += file->size;
+			file->parent = data;
 			data->files.push_back(file);
 		}
 	}
@@ -133,7 +134,7 @@ string folderSizer::sizeToString(const unsigned long& fileSize){
  */
 void folderSizer::recalculateStats(FolderData* data){
 	if (data->subFolders.size() > 0){
-		data->num_items = 0;
+		data->num_items = data->files.size();
 		data->total_size = 0;
 		data->files_size = 0;
 		
@@ -166,4 +167,28 @@ vector<FolderData*> folderSizer::getSuperFolders(FolderData* data){
 	recurse(data);
 	
 	return folders;
+}
+
+/**
+ Return a string representing the item's % size of the superitem
+ @param data the sub item to calculate
+ @returns size rounded to 1 decimal place e.g (5.2%)
+ */
+string folderSizer::percentOfParent(FolderData* data){
+	//round to 2 decimal places, then attach unit
+	char buffer[10];
+	sprintf(buffer,"%.1f",(double)data->total_size / data->parent->total_size * 100);
+	return string(buffer) + "%";
+}
+
+/**
+ Return a string representing the item's % size of the superitem
+ @param data the sub item to calculate
+ @returns size rounded to 1 decimal place e.g (5.2%)
+ */
+string folderSizer::percentOfParent(FileData* data){
+	//round to 2 decimal places, then attach unit
+	char buffer[10];
+	sprintf(buffer,"%.1f",(double)data->size / data->parent->total_size * 100);
+	return string(buffer) + "%";
 }

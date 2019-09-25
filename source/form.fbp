@@ -940,8 +940,14 @@
                                             <property name="window_style"></property>
                                             <object class="wxTreeListCtrlColumn" expanded="1">
                                                 <property name="alignment">wxALIGN_LEFT</property>
-                                                <property name="flag">wxCOL_RESIZABLE|wxCOL_SORTABLE</property>
+                                                <property name="flag">wxCOL_RESIZABLE</property>
                                                 <property name="name">File Name</property>
+                                                <property name="width">wxCOL_WIDTH_AUTOSIZE</property>
+                                            </object>
+                                            <object class="wxTreeListCtrlColumn" expanded="1">
+                                                <property name="alignment">wxALIGN_CENTER</property>
+                                                <property name="flag">wxCOL_RESIZABLE|wxCOL_SORTABLE</property>
+                                                <property name="name">Percentage</property>
                                                 <property name="width">wxCOL_WIDTH_AUTOSIZE</property>
                                             </object>
                                             <object class="wxTreeListCtrlColumn" expanded="1">

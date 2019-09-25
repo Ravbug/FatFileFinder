@@ -19,11 +19,13 @@
 
 
 using namespace std;
+struct FolderData;
 
 //structure definitions
 struct FileData{
 	path Path;
 	unsigned long size = 0;
+	FolderData* parent;
 };
 struct FolderData{
 	path Path;
@@ -60,6 +62,8 @@ public:
 	FolderData* SizeFolder(const string& folder, const progCallback& progress);
 	void sizeImmediate(FolderData* data, const bool& skipFolders = false);
 	vector<FolderData*> getSuperFolders(FolderData* data);
+	static string percentOfParent(FolderData* data);
+	static string percentOfParent(FileData* data);
 	static string sizeToString(const unsigned long& fileSize);
 	static void recalculateStats(FolderData* data);
 };

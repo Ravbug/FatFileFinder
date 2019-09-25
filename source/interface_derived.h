@@ -109,30 +109,31 @@ public:
 	int Compare(wxTreeListCtrl *treelist, unsigned column, wxTreeListItem first, wxTreeListItem second){
 		//get client data
 		StructurePtrData* item1 = (StructurePtrData*)treelist->GetItemData(first);
-		StructurePtrData* item2 = (StructurePtrData*)treelist->GetItemData(first);
+		StructurePtrData* item2 = (StructurePtrData*)treelist->GetItemData(second);
 		
 		//error checking
 		if (!item1 || !item2){
 			return 0;
 		}
 		
-		//get the size to use
-		unsigned long size1;
-		unsigned long size2;
-		if (item1->folderData != NULL){
-			size1 = item1->folderData->total_size;
+		//get needed data
+		double percent1 = 0;
+		double percent2 = 0;
+		//calculate the percentages
+		if(item1->folderData != NULL){
+			percent1 = (double)item1->folderData->total_size / item1->folderData->parent->total_size;
 		}
 		else{
-			size1 = item1->fileData->size;
+			percent1 = (double)item1->fileData->size / item1->fileData->parent->total_size;
 		}
 		if (item2->folderData != NULL){
-			size2 = item2->folderData->total_size;
+			percent2 = (double)item2->folderData->total_size / item2->folderData->parent->total_size;
 		}
 		else{
-			size2 = item2->fileData->size;
+			percent2 = (double)item2->fileData->size / item2->fileData->parent->total_size;
 		}
 		
-		//negative = sort first, positive = sort second
-		return (size1 > size2)? 1 : -1;
+		//return the difference (*100 otherwise int will always make it 0)
+		return (percent1*100) - (percent2*100);
 	}
 };
