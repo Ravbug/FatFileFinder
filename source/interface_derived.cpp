@@ -230,9 +230,12 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 	//set the item's client data
 	fileBrowser->SetClientData(wrapper->folderData);
 	
-	//hook up the new pointer
-	wrapper->folderData->parent = wrapper->reloadData->parent;
-	wrapper->reloadData = wrapper->folderData;
+	FolderData* old = wrapper->reloadData;
+	FolderData* repl = wrapper->folderData;
+	
+	//hook up the new pointers
+	repl->parent = old->parent;
+	*old = *repl;
 	
 	//recalculate the items, size values
 	folderSizer::recalculateStats(folderData);
@@ -291,7 +294,7 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 					//get the super folders that need to check for moves
 					vector<FolderData*> superItems = sizer.getSuperFolders(oldptr);
 					
-					//update file sizes
+					//update file sizes (modifying the data structure on multiple threads is a bad idea, but in this case it should be fine)
 					for(FolderData* i : superItems){
 						sizer.sizeImmediate(i,true);
 					}

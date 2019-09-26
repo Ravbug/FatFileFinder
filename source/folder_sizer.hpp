@@ -24,7 +24,7 @@ struct FolderData;
 //structure definitions
 struct FileData{
 	path Path;
-	unsigned long size = 1;
+	unsigned long size = 0;
 	time_t modifyDate;
 	//for back navigation
 	FolderData* parent;
