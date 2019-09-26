@@ -106,8 +106,8 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
 		//add the item, with its client data pointer
 		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + d->Path.leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
 		//set the other strings on the item
-		if (d->total_size > 0){
-			fileBrowser->SetItemText(added, 2, folderSizer::sizeToString(d->total_size));
+		if (d->size > 0){
+			fileBrowser->SetItemText(added, 2, folderSizer::sizeToString(d->size));
 			fileBrowser->SetItemText(added,1,folderSizer::percentOfParent(d));
 		}
 		else{
@@ -129,6 +129,9 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,FolderData* data){
  */
 void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	if (spd == NULL){return;}
+	
+	//make sure item still exists
+	void* ptr;
 	path p;
 	if (spd->fileData != NULL){
 		p = spd->fileData->Path;
@@ -137,19 +140,20 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 		//special case for files with no extension
 		propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "binary" : ext.substr(1)) + " File", 2, 1);
 		propertyList->SetTextValue("",3,1);
+		ptr = spd->fileData;
 	}
 	else{
 		p = spd->folderData->Path;
-		propertyList->SetTextValue(folderSizer::sizeToString(spd->folderData->total_size), 1, 1);
+		propertyList->SetTextValue(folderSizer::sizeToString(spd->folderData->size), 1, 1);
 		propertyList->SetTextValue(FolderIcon + " Folder", 2, 1);
 		propertyList->SetTextValue(to_string(spd->folderData->num_items),3,1);
-		
+		ptr = spd->folderData;
 	}
 	propertyList->SetTextValue(p.leaf().string(), 0, 1);
-		
+	
 	//modified date
 	tm* time;
-	time_t tm = last_write_time(p);
+	time_t tm = ((FileData*)ptr)->modifyDate;
 	time = localtime(&tm);
 	char dateString[100];
 	strftime(dateString,50,"%x %X",time);
@@ -157,7 +161,6 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	
 	//also show selected item in the status bar
 	statusBar->SetStatusText(p.string());
-	
 }
 
 /**
@@ -196,7 +199,7 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	else{
 		//update the most recent leaf
 		lastUpdateItem = fileBrowser->GetNextSibling(lastUpdateItem);
-		unsigned long totalSize = fd->subFolders[progIndex]->total_size;
+		unsigned long totalSize = fd->subFolders[progIndex]->size;
 		fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
 		fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
 		if (fd->subFolders[progIndex]->num_items > 0){
@@ -205,7 +208,7 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	}
 	progIndex++;
 	//set titlebar
-	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path.string() + " [" + folderSizer::sizeToString(fd->total_size) + "]");
+	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path.string() + " [" + folderSizer::sizeToString(fd->size) + "]");
 	
 	//set percentage on completion
 	if(progIndex == fd->subFolders.size()){
@@ -230,14 +233,6 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 	//hook up the new pointer
 	wrapper->folderData->parent = wrapper->reloadData->parent;
 	wrapper->reloadData = wrapper->folderData;
-	
-	//get the super folders that need to check for moves
-	vector<FolderData*> superItems = sizer.getSuperFolders(wrapper->reloadData);
-	
-	//update file sizes
-	for(FolderData* i : superItems){
-		sizer.sizeImmediate(i,true);
-	}
 	
 	//recalculate the items, size values
 	folderSizer::recalculateStats(folderData);
@@ -286,10 +281,6 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 		//Prepend item with same name, but [sizing for folder]
 		wxTreeListItem replaced = fileBrowser->InsertItem(fileBrowser->GetItemParent(selected),selected, fileBrowser->GetItemText(selected));
 		fileBrowser->SetItemText(replaced, 2, "[sizing]");
-		//remove selected item
-		fileBrowser->DeleteItem(selected);
-		//select the new item
-		fileBrowser->Select(replaced);
 		
 		//create a thread to size that folder, return when finished
 		worker = thread([&](string folder,FolderData* oldptr){
@@ -297,6 +288,14 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 			progCallback callback = [&](float progress, FolderData* data){
 				//check that the item still exists
 				if (int(progress*100) == 100 && replaced && replaced.IsOk()){
+					//get the super folders that need to check for moves
+					vector<FolderData*> superItems = sizer.getSuperFolders(oldptr);
+					
+					//update file sizes
+					for(FolderData* i : superItems){
+						sizer.sizeImmediate(i,true);
+					}
+					
 					//set up event event
 					wxCommandEvent event(progEvt);
 					event.SetId(RELOADEVT);
@@ -313,6 +312,11 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 			sizer.SizeFolder(folder, callback);
 		},ptr->folderData->Path.string(),ptr->folderData);
 		worker.detach();
+		
+		//remove selected item (do this after creating thread to avoid thread collisions)
+		fileBrowser->DeleteItem(selected);
+		//select the new item
+		fileBrowser->Select(replaced);
 
 	}
 	else{

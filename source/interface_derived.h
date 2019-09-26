@@ -121,13 +121,13 @@ public:
 		double size2 = 0;
 		//calculate the percentages
 		if(item1->folderData != NULL){
-			size1 = (double)item1->folderData->total_size;
+			size1 = (double)item1->folderData->size;
 		}
 		else{
 			size1 = (double)item1->fileData->size;
 		}
 		if (item2->folderData != NULL){
-			size2 = (double)item2->folderData->total_size;
+			size2 = (double)item2->folderData->size;
 		}
 		else{
 			size2 = (double)item2->fileData->size;

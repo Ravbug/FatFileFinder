@@ -36,7 +36,7 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 		return NULL;
 	}
 	
-	fd->total_size = fd->files_size;
+	fd->size = fd->files_size;
 	fd->num_items = fd->files.size();
 	
 	//recursively size the folders in the folder
@@ -49,11 +49,13 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 		fd->subFolders[i]->parent = fd;
 		if (fd->subFolders[i] != NULL){
 			fd->num_items += fd->subFolders[i]->num_items + 1;
-			fd->total_size += fd->subFolders[i]->total_size;
+			fd->size += fd->subFolders[i]->size;
+			//set modified time
+			fd->modifyDate = last_write_time(fd->Path);
 			num++;
 			//check for zero size
-			if (fd->total_size == 0){
-				fd->total_size = 1;
+			if (fd->size == 0){
+				fd->size = 1;
 			}
 			
 			if (progress != nullptr){
@@ -92,6 +94,7 @@ void folderSizer::sizeImmediate(FolderData* data, const bool& skipFolders){
 			FileData* file = new FileData{p,file_size(p)};
 			data->files_size += file->size;
 			file->parent = data;
+			file->modifyDate = last_write_time(file->Path);
 			data->files.push_back(file);
 		}
 	}
@@ -145,14 +148,14 @@ void folderSizer::recalculateStats(FolderData* data){
 		for (FileData* file : data->files){
 			data->files_size += file->size;
 		}
-		data->total_size = data->files_size;
+		data->size = data->files_size;
 		
 		for(FolderData* sub : data->subFolders){
 			//error handle
 			if (sub == NULL) {continue;}
 			folderSizer::recalculateStats(sub);
 			data->num_items += sub->num_items + 1;
-			data->total_size += sub->total_size;
+			data->size += sub->size;
 			data->files_size += sub->files_size;
 		}
 	}
@@ -185,23 +188,10 @@ vector<FolderData*> folderSizer::getSuperFolders(FolderData* data){
  @param data the sub item to calculate
  @returns size rounded to 1 decimal place e.g (5.2%)
  */
-string folderSizer::percentOfParent(FolderData* data){
-	if (data == NULL || data->parent == NULL){return "[waiting]";}
-	//round to 2 decimal places, then attach unit
-	char buffer[10];
-	sprintf(buffer,"%.1f",(double)data->total_size / data->parent->total_size * 100);
-	return string(buffer) + "%";
-}
-
-/**
- Return a string representing the item's % size of the superitem
- @param data the sub item to calculate
- @returns size rounded to 1 decimal place e.g (5.2%)
- */
 string folderSizer::percentOfParent(FileData* data){
 	if (data == NULL || data->parent == NULL){return "[waiting]";}
 	//round to 2 decimal places, then attach unit
 	char buffer[10];
-	sprintf(buffer,"%.1f",(double)data->size / data->parent->total_size * 100);
+	sprintf(buffer,"%.1f",(double)data->size / data->parent->size * 100);
 	return string(buffer) + "%";
 }

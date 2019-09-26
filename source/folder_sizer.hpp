@@ -25,13 +25,16 @@ struct FolderData;
 struct FileData{
 	path Path;
 	unsigned long size = 1;
+	time_t modifyDate;
+	//for back navigation
 	FolderData* parent;
+	~FileData(){
+		parent = NULL;
+	}
 };
-struct FolderData{
-	path Path;
+struct FolderData : FileData{
 	unsigned long files_size = 1;
 	unsigned long num_items = 0;
-	unsigned long total_size = 0;
 	vector<FolderData*> subFolders;
 	vector<FileData*> files;
 	//destructor
@@ -45,8 +48,6 @@ struct FolderData{
 			delete folder;
 		}
 	}
-	//for back navigation
-	FolderData* parent = NULL;
 };
 
 //callback definitions
@@ -62,7 +63,6 @@ public:
 	FolderData* SizeFolder(const string& folder, const progCallback& progress);
 	void sizeImmediate(FolderData* data, const bool& skipFolders = false);
 	vector<FolderData*> getSuperFolders(FolderData* data);
-	static string percentOfParent(FolderData* data);
 	static string percentOfParent(FileData* data);
 	static string sizeToString(const unsigned long& fileSize);
 	static void recalculateStats(FolderData* data);
