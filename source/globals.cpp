@@ -29,6 +29,14 @@ inline void fitWindowMinSize(wxWindow* window) {
 #if defined _WIN32
 //place windows-specific globals here
 
+//windows.h must be the first include, and must be placed before using namespace std.
+//if they are not in this order, the compiler will not be able to resolve byte
+//ensure globals.cpp is the first include in every file
+#include <windows.h>
+#include <chrono>
+#include <ctime>
+#include <filesystem>
+static inline const int maxPathLength = 247;
 
 /**
 @return the calculated display scale factor using GDI+
@@ -71,15 +79,39 @@ inline void dpi_scale(wxWindow* window) {
 	window->SetSize(wxSize(size.GetWidth() * fac,size.GetHeight()*fac));
 }
 
+static inline std::string timeToString(std::filesystem::file_time_type inTime) {
+	//time_t cftime = decltype(inTime)::clock::to_time_t(inTime);
+	//return std::asctime(std::localtime(&cftime));
+	//std::chrono::system_clock::to_time_t((std::chrono::time_point<std::chrono::time_point)inTime);
+	return "Test";
+}
+
 #elif defined __APPLE__
 //place macOS-specific globals here
 //skip paths longer than this length to avoid errors
 static inline const int maxPathLength = 260;
 
+static inline std::string timeToString(time_t& inTime) {
+	tm* time;
+	time_t tm = inTime;
+	time = localtime(&tm);
+	char dateString[100];
+	strftime(dateString, 50, "%x %X", time);
+	return dateString;
+}
+
 #elif defined __linux__
 //place linux-specific globals here
-
+static inline std::string timeToString(std::filesystem::file_time_type inTime) {
+	return "test";
+}
 #else
 //place globals for systems here
 
+#endif
+
+
+//globals for both linux and windows
+#if defined __linux__ || defined _WIN32
+#define leaf() filename()
 #endif

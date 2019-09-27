@@ -9,25 +9,36 @@
 
 #include <stdio.h>
 #include <functional>
+#include <vector>
+using namespace std;
 
 #ifdef __APPLE__
 	#include <boost/filesystem.hpp>
 	#include <boost/range/iterator_range.hpp>
 	using namespace boost::filesystem;
 	#define ofstream_scope boost::filesystem
+#else
+#include <filesystem>
+using namespace std::filesystem;
 #endif
 
 
-using namespace std;
+
 struct FolderData;
 
 //structure definitions
 struct FileData{
 	path Path;
+	
+#ifdef __APPLE__
 	unsigned long size = 0;
 	time_t modifyDate;
+#else
+	uintmax_t size = 0;
+	file_time_type modifyDate;
+#endif
 	//for back navigation
-	FolderData* parent;
+	FolderData* parent = NULL;
 	~FileData(){
 		parent = NULL;
 	}

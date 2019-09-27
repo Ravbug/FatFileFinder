@@ -6,8 +6,8 @@
 // This file contains the implementation for the main GUI.
 // Place constructors and function definitons here.
 
-#include "interface_derived.h"
 #include "globals.cpp"
+#include "interface_derived.h"
 #include <wx/generic/aboutdlgg.h>
 #include <wx/aboutdlg.h>
 
@@ -156,12 +156,8 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	propertyList->SetTextValue(p.leaf().string(), 0, 1);
 	
 	//modified date
-	tm* time;
-	time_t tm = ((FileData*)ptr)->modifyDate;
-	time = localtime(&tm);
-	char dateString[100];
-	strftime(dateString,50,"%x %X",time);
-	propertyList->SetTextValue(dateString,4,1);
+	
+	propertyList->SetTextValue(timeToString(((FileData*)ptr)->modifyDate),4,1);
 	
 	//also show selected item in the status bar
 	statusBar->SetStatusText(p.string());

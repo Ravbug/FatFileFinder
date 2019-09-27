@@ -5,8 +5,8 @@
 //  Copyright © 2019 Ravbug. All rights reserved.
 //
 
-#include "folder_sizer.hpp"
 #include "globals.cpp"
+#include "folder_sizer.hpp"
 #include <array>
 
 //constructor and destructor
