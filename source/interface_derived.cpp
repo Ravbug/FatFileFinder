@@ -91,7 +91,11 @@ void MainFrame::SizeRootFolder(const string& folder){
 			//invoke event to notify needs to update UI
 			wxPostEvent(this, event);
 		};
-		sizer.SizeFolder(folder, callback);
+		//ensure callback gets invoked for items with 0 subfolders
+		FolderData* fin = sizer.SizeFolder(folder, callback);
+		if (fin->subFolders.size() == 0){
+			callback(1,fin);
+		}
 	},folder);
 	worker.detach();
 }
@@ -317,7 +321,11 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 					wxPostEvent(this, event);
 				}
 			};
-			sizer.SizeFolder(folder, callback);
+			FolderData* fin = sizer.SizeFolder(folder, callback);
+			//ensure callback gets invoked for items with 0 subfolders
+			if (fin->subFolders.size() == 0){
+				callback(1,fin);
+			}
 		},ptr->folderData->Path.string(),ptr->folderData);
 		worker.detach();
 		
