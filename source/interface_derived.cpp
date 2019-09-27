@@ -198,12 +198,14 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	}
 	else{
 		//update the most recent leaf
-		lastUpdateItem = fileBrowser->GetNextSibling(lastUpdateItem);
-		unsigned long totalSize = fd->subFolders[progIndex]->size;
-		fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
-		fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
-		if (fd->subFolders[progIndex]->num_items > 0){
-			fileBrowser->AppendItem(lastUpdateItem, "");
+		if (lastUpdateItem.IsOk()){
+			lastUpdateItem = fileBrowser->GetNextSibling(lastUpdateItem);
+			unsigned long totalSize = fd->subFolders[progIndex]->size;
+			fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
+			fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
+			if (fd->subFolders[progIndex]->num_items > 0){
+				fileBrowser->AppendItem(lastUpdateItem, "");
+			}
 		}
 	}
 	progIndex++;
@@ -255,6 +257,9 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 		fileBrowser->SetItemText(item, 1,folderSizer::percentOfParent(data));
 		item = fileBrowser->GetNextSibling(item);
 	}
+	
+	//update titlebar
+	SetTitle(AppName + " - Sizing " + to_string(100) + "% " + folderData->Path.string() + " [" + folderSizer::sizeToString(folderData->size) + "]");
 }
 
 void MainFrame::OnCopy(wxCommandEvent& event){
