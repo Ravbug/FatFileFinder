@@ -49,6 +49,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	
 		//fix DPI scaling
 		dpi_scale(this);
+
+		//set color
+		SetBackgroundColour(*wxWHITE);
 	#elif __linux
 		SetIcon(wxIcon(wxICON(wxlin)));
 	#endif
