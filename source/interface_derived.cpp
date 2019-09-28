@@ -410,6 +410,8 @@ void MainFrame::OnOpenFolder(wxCommandEvent& event){
  */
 void MainFrame::OnExit(wxCommandEvent& event)
 {
+	//deallocate structure
+	delete folderData;
 	Close( true );
 }
 /**
