@@ -82,20 +82,24 @@ void folderSizer::sizeImmediate(FolderData* data, const bool& skipFolders){
 	// iterate through the items in the folder
 	for(auto& p : directory_iterator(data->Path)){
 		//is the item a folder? if so, defer sizing it
-		if (is_directory(p)){
-			if (!skipFolders){
-				FolderData* sub = new FolderData{};
-				sub->Path = p;
-				data->subFolders.push_back(sub);
+		//check if can read the file
+		file_status s = status(p.path());
+		if ((s.permissions() & perms::others_read) != perms::no_perms){
+			if (is_directory(p)){
+				if (!skipFolders){
+					FolderData* sub = new FolderData{};
+					sub->Path = p;
+					data->subFolders.push_back(sub);
+				}
 			}
-		}
-		else{
-			//size the file, add its details to the structure
-			FileData* file = new FileData{p,file_size(p)};
-			data->files_size += file->size;
-			file->parent = data;
-			file->modifyDate = last_write_time(file->Path);
-			data->files.push_back(file);
+			else{
+				//size the file, add its details to the structure
+				FileData* file = new FileData{p,file_size(p)};
+				data->files_size += file->size;
+				file->parent = data;
+				file->modifyDate = last_write_time(file->Path);
+				data->files.push_back(file);
+			}
 		}
 	}
 }
