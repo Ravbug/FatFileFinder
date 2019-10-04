@@ -56,6 +56,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 		SetBackgroundColour(*wxWHITE);
 	#elif __linux
 		SetIcon(wxIcon(wxICON(wxlin)));
+	#elif __APPLE__
+		//reveal button label lists Finder instead of Explorer
+		revealBtn->SetLabel("Reveal in Finder");
 	#endif
 	
 	//set up the default values for the left side table
@@ -205,11 +208,13 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 		//update the most recent leaf
 		if (lastUpdateItem.IsOk()){
 			lastUpdateItem = fileBrowser->GetNextSibling(lastUpdateItem);
-			unsigned long totalSize = fd->subFolders[progIndex]->size;
-			fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
-			fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
-			if (fd->subFolders[progIndex]->num_items > 0){
-				fileBrowser->AppendItem(lastUpdateItem, "");
+			if (fd->subFolders[progIndex] != NULL){
+				unsigned long totalSize = fd->subFolders[progIndex]->size;
+				fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
+				fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
+				if (fd->subFolders[progIndex]->num_items > 0){
+					fileBrowser->AppendItem(lastUpdateItem, "");
+				}
 			}
 		}
 	}
