@@ -107,7 +107,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	copyPathBtn = new wxButton( propertyPanel, COPYPATH, wxT("Copy File Path"), wxDefaultPosition, wxDefaultSize, 0 );
 	propertySizer->Add( copyPathBtn, wxGBPosition( 1, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
 
-	revealBtn = new wxButton( propertyPanel, wxID_ANY, wxT("Reveal In Explorer"), wxDefaultPosition, wxDefaultSize, 0 );
+	revealBtn = new wxButton( propertyPanel, wxID_FIND, wxT("Reveal In Explorer"), wxDefaultPosition, wxDefaultSize, 0 );
 	propertySizer->Add( revealBtn, wxGBPosition( 2, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
 
 

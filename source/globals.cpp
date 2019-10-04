@@ -87,6 +87,9 @@ static inline std::string timeToString(std::filesystem::file_time_type inTime) {
 }
 
 #elif defined __APPLE__
+	#include <boost/filesystem.hpp>
+	#include <boost/range/iterator_range.hpp>
+	using namespace boost::filesystem;
 //place macOS-specific globals here
 //skip paths longer than this length to avoid errors
 static inline const int maxPathLength = 260;
@@ -98,6 +101,18 @@ static inline std::string timeToString(time_t& inTime) {
 	char dateString[100];
 	strftime(dateString, 50, "%x %X", time);
 	return dateString;
+}
+
+/**
+ Reveal a folder or file in the Finder
+ @param fspath the path to the file or folder
+ */
+static inline void reveal(const path& fspath){
+	path p = fspath;
+	if (! is_directory(p)){
+		p = fspath.parent_path();
+	}
+	wxExecute(wxT("open \"" + p.string() + "\""),wxEXEC_ASYNC);
 }
 
 #elif defined __linux__

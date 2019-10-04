@@ -10,6 +10,7 @@
 #include "interface_derived.h"
 #include <wx/generic/aboutdlgg.h>
 #include <wx/aboutdlg.h>
+#include <wx/clipbrd.h>
 
 //include the icon file on linux
 #ifdef __linux
@@ -30,6 +31,7 @@ EVT_COMMAND(PROGEVT, progEvt, MainFrame::OnUpdateUI)
 EVT_COMMAND(RELOADEVT,progEvt, MainFrame::OnUpdateReload)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
 EVT_BUTTON(COPYPATH, MainFrame::OnCopy)
+EVT_BUTTON(wxID_FIND, MainFrame::OnReveal)
 EVT_MENU(wxID_REFRESH,MainFrame::OnReloadFolder)
 EVT_BUTTON(wxID_REFRESH,MainFrame::OnReloadFolder)
 EVT_TREELIST_ITEM_EXPANDING(TREELIST,MainFrame::OnListExpanding)
@@ -266,9 +268,61 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 }
 
 void MainFrame::OnCopy(wxCommandEvent& event){
-	//platform specific code
+	//Get selected item
+	wxTreeListItem selected = fileBrowser->GetSelection();
+	
+	//error check
+	if (!selected.IsOk()){
+		return;
+	}
+	
+	StructurePtrData* ptr = (StructurePtrData*)fileBrowser->GetItemData(selected);
+	
+	//get the pointer to use
+	FileData* data;
+	if (ptr->fileData != NULL){
+		data = ptr->fileData;
+	}
+	else if (ptr->folderData != NULL){
+		data = ptr->folderData;
+	}
+	else{
+		//if no pointer, don't try to copy
+		return;
+	}
+	
+	//copy values to the clipboard
+	if(wxTheClipboard->Open()){
+		 wxTheClipboard->SetData( new wxTextDataObject(data->Path.string()) );
+		wxTheClipboard->Close();
+	}
 }
 
+void MainFrame::OnReveal(wxCommandEvent& event){
+	//Get selected item
+	wxTreeListItem selected = fileBrowser->GetSelection();
+	
+	//error check
+	if (!selected.IsOk()){
+		return;
+	}
+	
+	StructurePtrData* ptr = (StructurePtrData*)fileBrowser->GetItemData(selected);
+	
+	//get the pointer to use
+	FileData* data;
+	if (ptr->fileData != NULL){
+		data = ptr->fileData;
+	}
+	else if (ptr->folderData != NULL){
+		data = ptr->folderData;
+	}
+	else{
+		//if no pointer, don't try to open
+		return;
+	}
+	reveal(data->Path);
+}
 /**
  Called when the reload button or reload menu is selected
  @param event (unused) command event from sender

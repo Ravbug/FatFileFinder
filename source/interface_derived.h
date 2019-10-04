@@ -50,6 +50,7 @@ private:
 	void OnListExpanding(wxTreeListEvent& event);
 	void OnListSelection(wxTreeListEvent& event);
 	void OnCopy(wxCommandEvent& event);
+	void OnReveal(wxCommandEvent& event);
 	wxDECLARE_EVENT_TABLE();
 	
 	//for drawing icons next to items in the list
