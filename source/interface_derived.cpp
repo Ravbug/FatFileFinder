@@ -394,6 +394,9 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 
 	}
 	else{
+		//subtract from the size
+		ptr->folderData->parent->size -= ptr->folderData->size;
+		
 		//remove the item if it does not exist
 		fileBrowser->DeleteItem(selected);
 		//recalculate the items, size values
