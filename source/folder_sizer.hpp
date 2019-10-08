@@ -13,35 +13,36 @@
 using namespace std;
 
 #ifdef __APPLE__
+	typedef time_t fileTime;
+	typedef size_t fileSize;
 	#include <boost/filesystem.hpp>
 	#include <boost/range/iterator_range.hpp>
 	using namespace boost::filesystem;
 	#define ofstream_scope boost::filesystem
 #else
-#include <filesystem>
-using namespace std::filesystem;
+	#include <filesystem>
+	using namespace std::filesystem;
+	typedef file_time_type fileTime;
+	typedef unitmax_t fileSize;
 #endif
-
-
-
-struct FolderData;
 
 //structure definitions
 struct FileData{
 	path Path;
 	
-#ifdef __APPLE__
-	unsigned long size = 0;
-	time_t modifyDate;
-#else
-	uintmax_t size = 0;
-	file_time_type modifyDate;
-#endif
-	//for back navigation
-	FolderData* parent = NULL;
-	~FileData(){
-		parent = NULL;
+	//see typedefs for platform-specific types
+	fileSize size = 0;
+	fileTime modifyDate;
+
+	//constructors
+	FileData(){}
+	FileData(path inPath, fileSize inSize){
+		Path = inPath;
+		size = inSize;
 	}
+	//for back navigation
+	FileData* parent = NULL;
+	virtual ~FileData(){}
 };
 struct FolderData : FileData{
 	unsigned long files_size = 1;
@@ -49,7 +50,7 @@ struct FolderData : FileData{
 	vector<FolderData*> subFolders;
 	vector<FileData*> files;
 	//destructor
-	~FolderData(){
+	virtual ~FolderData(){
 		//deallocate each of the files
 		for(FileData* file : files){
 			delete file;
@@ -58,6 +59,8 @@ struct FolderData : FileData{
 		for(FolderData* folder : subFolders){
 			delete folder;
 		}
+		subFolders.clear();
+		files.clear();
 	}
 };
 

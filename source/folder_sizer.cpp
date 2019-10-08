@@ -24,7 +24,7 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 		return NULL;
 	}
 	
-	FolderData* fd = new FolderData{};
+	FolderData* fd = new FolderData;
 	fd->Path = path(folder);
 	
 	//calculate the size of the immediate files in the folder
@@ -176,8 +176,8 @@ vector<FolderData*> folderSizer::getSuperFolders(FolderData* data){
 	//recursively advance up the hierarchy
 	function<FolderData*(FolderData*)> recurse = [&](FolderData* d) -> FolderData* {
 		if (d->parent != NULL){
-			folders.push_back(d->parent);
-			return recurse(d->parent);
+			folders.push_back((FolderData*)d->parent);
+			return recurse((FolderData*)d->parent);
 		}
 		else{
 			return d;
