@@ -27,45 +27,48 @@ using namespace std;
 #endif
 
 //structure definitions
-struct FileData{
-	path Path;
-	
+struct DirectoryData{
+	string Path;
 	//see typedefs for platform-specific types
 	fileSize size = 0;
 	fileTime modifyDate;
-
-	//constructors
-	FileData(){}
-	FileData(path inPath, fileSize inSize){
+	
+	bool isFolder;
+	
+	DirectoryData(string inPath, bool folder){
+		Path = inPath;
+		isFolder = folder;
+	}
+	DirectoryData(string inPath, fileSize inSize){
 		Path = inPath;
 		size = inSize;
+		isFolder = false;
 	}
 	//for back navigation
-	FileData* parent = NULL;
-	virtual ~FileData(){}
-};
-struct FolderData : FileData{
+	DirectoryData* parent = NULL;
+	
 	unsigned long files_size = 1;
 	unsigned long num_items = 0;
-	vector<FolderData*> subFolders;
-	vector<FileData*> files;
+	vector<DirectoryData*> subFolders;
+	vector<DirectoryData*> files;
 	//destructor
-	virtual ~FolderData(){
+	virtual ~DirectoryData(){
 		//deallocate each of the files
-		for(FileData* file : files){
+		for(DirectoryData* file : files){
 			delete file;
 		}
 		//deallocate each of the subfolders
-		for(FolderData* folder : subFolders){
+		for(DirectoryData* folder : subFolders){
 			delete folder;
 		}
 		subFolders.clear();
 		files.clear();
 	}
+	
 };
 
 //callback definitions
-typedef function<void(float progress, FolderData* data)> progCallback;
+typedef function<void(float progress, DirectoryData* data)> progCallback;
 
 /**
  Class that calculates the sizes of folders.
@@ -74,10 +77,10 @@ class folderSizer{
 public:
 	folderSizer();
 	~folderSizer();
-	FolderData* SizeFolder(const string& folder, const progCallback& progress);
-	void sizeImmediate(FolderData* data, const bool& skipFolders = false);
-	vector<FolderData*> getSuperFolders(FolderData* data);
-	static string percentOfParent(FileData* data);
+	DirectoryData* SizeFolder(const string& folder, const progCallback& progress);
+	void sizeImmediate(DirectoryData* data, const bool& skipFolders = false);
+	vector<DirectoryData*> getSuperFolders(DirectoryData* data);
+	static string percentOfParent(DirectoryData* data);
 	static string sizeToString(const unsigned long& fileSize);
-	static void recalculateStats(FolderData* data);
+	static void recalculateStats(DirectoryData* data);
 };

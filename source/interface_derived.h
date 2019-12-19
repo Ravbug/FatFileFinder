@@ -28,17 +28,17 @@ public:
 	MainFrame(wxWindow* parent = NULL);
 private:
 	folderSizer sizer;
-	FolderData* folderData = NULL;
+	DirectoryData* folderData = NULL;
 	thread worker;
 	unordered_set<string> loaded;
 	int progIndex = 0;
 	wxTreeListItem lastUpdateItem;
 
 	string GetPathFromDialog(const string& message);
-	void AddSubItems(const wxTreeListItem& item,FolderData* data);
+	void AddSubItems(const wxTreeListItem& item, DirectoryData* data);
 	void SizeRootFolder(const string& folder);
 	void PopulateSidebar(StructurePtrData* data);
-	void AddFiles(wxTreeListItem root, FolderData* data);
+	void AddFiles(wxTreeListItem root, DirectoryData* data);
 	
 	void OnExit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
@@ -89,15 +89,11 @@ private:
  */
 class StructurePtrData : public wxTreeItemData{
 public:
-	FolderData* folderData = NULL;
-	FolderData* reloadData = NULL;
-	FileData* fileData = NULL;
+	DirectoryData* folderData = NULL;
+	DirectoryData* reloadData = NULL;
 	//constructors
-	StructurePtrData(FolderData* data):wxTreeItemData(){
+	StructurePtrData(DirectoryData* data):wxTreeItemData(){
 		folderData = data;
-	}
-	StructurePtrData(FileData* data):wxTreeItemData(){
-		fileData = data;
 	}
 };
 
@@ -121,19 +117,10 @@ public:
 		double size1 = 0;
 		double size2 = 0;
 		//calculate the percentages
-		if(item1->folderData != NULL){
-			size1 = (double)item1->folderData->size;
-		}
-		else{
-			size1 = (double)item1->fileData->size;
-		}
-		if (item2->folderData != NULL){
-			size2 = (double)item2->folderData->size;
-		}
-		else{
-			size2 = (double)item2->fileData->size;
-		}
-		
+		size1 = (double)item1->folderData->size;
+	
+		size2 = (double)item2->folderData->size;
+	
 		//return the difference
 		return size1 - size2;
 	}

@@ -19,13 +19,12 @@ folderSizer::~folderSizer(){}
  @param progress the std::function to call with progress updates
  @return the FolderData structure representing the entire directory tree
  */
-FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& progress){
+DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback& progress){
 	if (folder.size() > maxPathLength){
 		return NULL;
 	}
 	
-	FolderData* fd = new FolderData;
-	fd->Path = path(folder);
+	DirectoryData* fd = new DirectoryData(folder,true);
 	
 	//calculate the size of the immediate files in the folder
 	try{
@@ -42,7 +41,7 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
 	//recursively size the folders in the folder
 	float num = 0;
 	for (int i = 0; i < fd->subFolders.size(); i++){
-		fd->subFolders[i] = SizeFolder(fd->subFolders[i]->Path.string(), nullptr);
+		fd->subFolders[i] = SizeFolder(fd->subFolders[i]->Path, nullptr);
 		//error handle
 		if (fd->subFolders[i] == NULL){continue;}
 		//update parent
@@ -71,7 +70,7 @@ FolderData* folderSizer::SizeFolder(const string& folder, const progCallback& pr
  Calculate the size of the immediate files in the folder
  @param data the FolderData struct to calculate
  */
-void folderSizer::sizeImmediate(FolderData* data, const bool& skipFolders){
+void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 	//clear to prevent dupes
 	data->files.clear();
 	data->files_size = 1;
@@ -88,14 +87,13 @@ void folderSizer::sizeImmediate(FolderData* data, const bool& skipFolders){
 		{
 			if (is_directory(p)){
 				if (!skipFolders){
-					FolderData* sub = new FolderData{};
-					sub->Path = p;
+					DirectoryData* sub = new DirectoryData(p.path().string(),true);
 					data->subFolders.push_back(sub);
 				}
 			}
 			else{
 				//size the file, add its details to the structure
-				FileData* file = new FileData{p,file_size(p)};
+				DirectoryData* file = new DirectoryData(p.path().string(),file_size(p));
 				data->files_size += file->size;
 				file->parent = data;
 				file->modifyDate = last_write_time(file->Path);
@@ -142,7 +140,7 @@ string folderSizer::sizeToString(const unsigned long& fileSize){
  Modifies the properties of the struct.
  @param data the FolderData to resize
  */
-void folderSizer::recalculateStats(FolderData* data){
+void folderSizer::recalculateStats(DirectoryData* data){
 	//error handle
 	if (data == NULL){return;}
 	
@@ -150,12 +148,12 @@ void folderSizer::recalculateStats(FolderData* data){
 		data->num_items = data->files.size();
 		//calculate file size
 		data->files_size = 1;
-		for (FileData* file : data->files){
+		for (DirectoryData* file : data->files){
 			data->files_size += file->size;
 		}
 		data->size = data->files_size;
 		
-		for(FolderData* sub : data->subFolders){
+		for(DirectoryData* sub : data->subFolders){
 			//error handle
 			if (sub == NULL) {continue;}
 			folderSizer::recalculateStats(sub);
@@ -171,13 +169,13 @@ void folderSizer::recalculateStats(FolderData* data){
  @param data the node to find the super items for
  @returns vector of all the pointers that make up a single chain to data
  */
-vector<FolderData*> folderSizer::getSuperFolders(FolderData* data){
-	vector<FolderData*> folders;
+vector<DirectoryData*> folderSizer::getSuperFolders(DirectoryData* data){
+	vector<DirectoryData*> folders;
 	//recursively advance up the hierarchy
-	function<FolderData*(FolderData*)> recurse = [&](FolderData* d) -> FolderData* {
+	function<DirectoryData*(DirectoryData*)> recurse = [&](DirectoryData* d) -> DirectoryData* {
 		if (d->parent != NULL){
-			folders.push_back((FolderData*)d->parent);
-			return recurse((FolderData*)d->parent);
+			folders.push_back((DirectoryData*)d->parent);
+			return recurse((DirectoryData*)d->parent);
 		}
 		else{
 			return d;
@@ -193,7 +191,7 @@ vector<FolderData*> folderSizer::getSuperFolders(FolderData* data){
  @param data the sub item to calculate
  @returns size rounded to 1 decimal place e.g (5.2%)
  */
-string folderSizer::percentOfParent(FileData* data){
+string folderSizer::percentOfParent(DirectoryData* data){
 	if (data == NULL || data->parent == NULL){return "[waiting]";}
 	//round to 2 decimal places, then attach unit
 	char buffer[10];
