@@ -472,10 +472,7 @@ void MainFrame::OnAbout(wxCommandEvent& event)
 	wxAboutDialogInfo aboutInfo;
 	aboutInfo.SetName(AppName);
 	aboutInfo.SetVersion(AppVersion);
-	aboutInfo.SetDescription(_("Fill about info here."));
-	aboutInfo.SetCopyright("(C) 2019");
-	aboutInfo.SetWebSite("https://github.com/ravbug/FatFileFinderCPP");
-	aboutInfo.AddDeveloper("Ravbug");
+	aboutInfo.SetCopyright("(C) 2019 Ravbug");
 	wxAboutBox(aboutInfo);
 }
 /**
