@@ -82,7 +82,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
  */
 void MainFrame::SizeRootFolder(const string& folder){
 	//deallocate existing data
-	//delete folderData;
+	delete folderData;
 	progIndex = 0;
 	loaded.clear();
 	//clear old cells

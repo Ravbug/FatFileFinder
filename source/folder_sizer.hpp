@@ -52,7 +52,7 @@ struct DirectoryData{
 	vector<DirectoryData*> subFolders;
 	vector<DirectoryData*> files;
 	//destructor
-	virtual ~DirectoryData(){
+	~DirectoryData(){
 		//deallocate each of the files
 		for(DirectoryData* file : files){
 			delete file;
