@@ -38,6 +38,8 @@ inline struct stat get_stat(const std::string& path){
 	return buf;
 }
 
+#pragma mark Unix-like functions
+#if defined __APPLE__ || defined __linux__
 /**
  Determines if an item is write-able using stat
  @param path the path to the file
@@ -89,8 +91,8 @@ static inline std::string permstr_for(const std::string& path){
  */
 static inline std::string modet_type_for(const std::string& path){
 	mode_t perm = get_stat(path).st_mode;
-	std::string types[] = {"socket", "symbolic link", "regular file", "block device", "directory", "character device", "FIFO"};
-	int perms[] = {S_IFSOCK, S_IFLNK, S_IFREG, S_IFBLK, S_IFDIR, S_IFCHR, S_IFIFO};
+	std::string types[] = {"symbolic link", "regular file", "block device", "directory", "character device", "FIFO"};
+	int perms[] = {S_IFLNK, S_IFREG, S_IFBLK, S_IFDIR, S_IFCHR, S_IFIFO};
 	
 	std::string result;
 	for (int i = 0; i < sizeof(perms)/sizeof(int); i++){
@@ -98,9 +100,30 @@ static inline std::string modet_type_for(const std::string& path){
 			result += types[i] + ", ";
 		}
 	}
-	return result;
+	//omit trailing comma
+	return result.substr(0,result.length()-2);
 }
 
+/**
+ Converts a time_t to a formatted date string
+ @param inTime the time_t to convert
+ @return formatted date string
+ */
+static inline std::string timeToString(time_t& inTime) {
+	tm* time;
+	time_t tm = inTime;
+	time = localtime(&tm);
+	if (time != NULL){
+		char dateString[100];
+		strftime(dateString, 50, "%x %X", time);
+		return dateString;
+	}
+	return "Unavailable";
+}
+
+#endif
+
+#pragma mark Windows functions
 #if defined _WIN32
 //place windows-specific globals here
 
@@ -161,6 +184,7 @@ static inline std::string timeToString(std::filesystem::file_time_type inTime) {
 	return "Test";
 }
 
+#pragma mark macOS functions
 #elif defined __APPLE__
 	#include <boost/filesystem.hpp>
 	#include <boost/range/iterator_range.hpp>
@@ -168,18 +192,6 @@ static inline std::string timeToString(std::filesystem::file_time_type inTime) {
 //place macOS-specific globals here
 //skip paths longer than this length to avoid errors
 static inline const int maxPathLength = 260;
-
-static inline std::string timeToString(time_t& inTime) {
-	tm* time;
-	time_t tm = inTime;
-	time = localtime(&tm);
-	if (time != NULL){
-		char dateString[100];
-		strftime(dateString, 50, "%x %X", time);
-		return dateString;
-	}
-	return "Unavailable";
-}
 
 /**
  Reveal a folder or file in the Finder
@@ -193,17 +205,16 @@ static inline void reveal(const path& fspath){
 	wxExecute(wxT("open \"" + p.string() + "\""),wxEXEC_ASYNC);
 }
 
+#pragma mark Linux functions
 #elif defined __linux__
-//place linux-specific globals here
-static inline std::string timeToString(std::filesystem::file_time_type inTime) {
-	return "test";
-}
+
 #else
 //place globals for systems here
 
 #endif
 
 
+#pragma mark Win-Linux functions
 //globals for both linux and windows
 #if defined __linux__ || defined _WIN32
 #define leaf() filename()
