@@ -138,6 +138,7 @@ static inline void reveal(const path& fspath){
 
 #pragma mark Unix-like functions
 #if defined __APPLE__ || defined __linux__
+#include <sys/param.h>
 /**
  Determines if an item is write-able using stat
  @param path the path to the file
@@ -228,6 +229,15 @@ static inline std::string timeToString(time_t& inTime) {
 		return dateString;
 	}
 	return "Unavailable";
+}
+
+/**
+ Returns the size of the file on disk, based on the number of blocks it consumes
+ @param path the path to the file
+ @return number of bytes representing the file	on disk
+ */
+static inline long long size_on_disk(const std::string& path){
+	return get_stat(path).st_blocks * DEV_BSIZE;
 }
 
 #endif

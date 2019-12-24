@@ -63,7 +63,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	
 	//set up the default values for the left side table
 #if defined __APPLE__ || defined __linux__
-	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t type","Permissions"};
+	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t type","Permissions","Size on Disk"};
 #elif defined _WIN32
 	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t type","Permissions"};
 #endif
@@ -182,6 +182,9 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 
 	//perms string
 	propertyList->SetTextValue(permstr_for(ptr->Path), 9, 1);
+	
+	//Size on disk
+	propertyList->SetTextValue(!ptr->isFolder? folderSizer::sizeToString(size_on_disk(ptr->Path)) : "-", 10, 1);
 	
 # elif defined _WIN32
 
