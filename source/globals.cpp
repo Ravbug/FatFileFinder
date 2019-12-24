@@ -50,7 +50,6 @@ inline struct stat get_stat(const std::string& path){
 #include <chrono>
 #include <ctime>
 #include <filesystem>
-static inline const int maxPathLength = 247;
 
 /**
 @return the calculated display scale factor using GDI+
@@ -100,14 +99,22 @@ static inline std::string timeToString(std::filesystem::file_time_type inTime) {
 	return "Test";
 }
 
+/**
+ Determines if a path is too long. On Windows using Win32 APIs, the maxiumum length of the entire path is 260 bytes, but to be safe this program reduces it to 247.
+ @param inPath the path to the file
+ @return true if path is too long, false otherwise
+ */
+static inline bool path_too_long(const std::string& inPath){
+	return inPath > 247;
+}
+
 #pragma mark macOS functions
 #elif defined __APPLE__
 	#include <boost/filesystem.hpp>
 	#include <boost/range/iterator_range.hpp>
+	#include <sys/statvfs.h>
 	using namespace boost::filesystem;
 //place macOS-specific globals here
-//skip paths longer than this length to avoid errors
-static inline const int maxPathLength = 260;
 
 /**
  Reveal a folder or file in the Finder
@@ -121,8 +128,36 @@ static inline void reveal(const path& fspath){
 	wxExecute(wxT("open \"" + p.string() + "\""),wxEXEC_ASYNC);
 }
 
+/**
+ Determines if a path is too long to process. On macOS (HFS/APFS), the file path length is unlimited, but the filename limit is 255 characters.
+ @note Uses statvfs to query the correct maximum path.
+ @param inPath the path to the file
+ @return true if the path is too long, false if not
+ */
+static inline bool path_too_long(const std::string& inPath){
+	path p = path(inPath);
+	struct statvfs buf;
+	statvfs(inPath.c_str(),&buf);
+	return p.leaf().string().size() > buf.f_namemax;
+}
+
 #pragma mark Linux functions
 #elif defined __linux__
+#include <limits.h>
+/**
+ Determines if a path is too long to process. On Linux, a file path cannot exceed 4096 characters, and a filename cannot exceed 255 bytes.
+ @param inPath the path to the file
+ @return true if path is too long, false otherwise
+ */
+static inline bool path_too_long(const std::string& inPath){
+	path p = path(inPath);
+	struct statvfs buf;
+	statvfs(inPath.c_str(),&buf);
+	if (p.filename().string().size() > buf.f_namemax){
+		return true;
+	}
+	return p.stem().string().size() > PATH_MAX;
+}
 
 #else
 //place globals for systems here
@@ -139,6 +174,7 @@ static inline void reveal(const path& fspath){
 #pragma mark Unix-like functions
 #if defined __APPLE__ || defined __linux__
 #include <sys/param.h>
+
 /**
  Determines if an item is write-able using stat
  @param path the path to the file
@@ -185,7 +221,7 @@ static inline std::string permstr_for(const std::string& path){
 
 /**
  Determines if a file is hidden
- @param path the path to the file
+ @param strpath the path to the file
  @return true if file is hidden (path starts with '.'), false otherwise
  */
 static inline bool is_hidden(const std::string& strpath){

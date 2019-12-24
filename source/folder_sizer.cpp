@@ -20,7 +20,7 @@ folderSizer::~folderSizer(){}
  @return the FolderData structure representing the entire directory tree
  */
 DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback& progress){
-	if (folder.size() > maxPathLength){
+	if (path_too_long(folder)){
 		return NULL;
 	}
 	
