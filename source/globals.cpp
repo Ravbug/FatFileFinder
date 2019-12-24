@@ -7,6 +7,8 @@
 //  Copyright © 2019 Ravbug. All rights reserved.
 //
 #include <wx/wx.h>
+#include <fstream>
+#include <unistd.h>
 
 static inline const std::string AppName = "FatFileFinder";
 static inline const std::string AppVersion = "1.0";
@@ -25,6 +27,79 @@ inline void fitWindowMinSize(wxWindow* window) {
 	window->SetSizeHints(size);
 }
 
+/**
+ Calls stat on a path
+ @param path the path to get stat for
+ @return a stat struct representing the path
+ */
+inline struct stat get_stat(const std::string& path){
+	struct stat buf;
+	stat(path.c_str(),&buf);
+	return buf;
+}
+
+/**
+ Determines if an item is write-able using stat
+ @param path the path to the file
+ @return true if the file can be written to, false otherwise
+ */
+static inline bool is_writable(const std::string& path){
+	mode_t mode = get_stat(path).st_mode;
+	//owner or others can write
+	return mode & S_IWUSR || mode & S_IWOTH;
+}
+
+/**
+ Determines if an item is executable using stat
+ @param path the path to the file
+ @return true if file is executable, false otherwise
+ */
+static inline bool is_executable(const std::string& path){
+	mode_t mode = get_stat(path).st_mode;
+	//owner can exeucte or others can execute if the item is not a folder
+	return (mode & S_IXUSR || mode & S_IXOTH) && !(mode & S_IFDIR);
+}
+
+/**
+ Gets a permissions string based on stat
+ @param path the path to the item
+ @return string representing the permissions
+ */
+static inline std::string permstr_for(const std::string& path){
+	mode_t perm = get_stat(path).st_mode;
+	char perms[10];
+	perms[0] = (perm & S_IRUSR) ? 'r' : '-';
+    perms[1] = (perm & S_IWUSR) ? 'w' : '-';
+    perms[2] = (perm & S_IXUSR) ? 'x' : '-';
+    perms[3] = (perm & S_IRGRP) ? 'r' : '-';
+    perms[4] = (perm & S_IWGRP) ? 'w' : '-';
+    perms[5] = (perm & S_IXGRP) ? 'x' : '-';
+    perms[6] = (perm & S_IROTH) ? 'r' : '-';
+    perms[7] = (perm & S_IWOTH) ? 'w' : '-';
+    perms[8] = (perm & S_IXOTH) ? 'x' : '-';
+    perms[9] = '\0';
+	
+	return std::string(perms);
+}
+
+/**
+ Determines the st_mode type of a path
+ @param path the path to the file
+ @return a string for the type
+ */
+static inline std::string modet_type_for(const std::string& path){
+	mode_t perm = get_stat(path).st_mode;
+	std::string types[] = {"socket", "symbolic link", "regular file", "block device", "directory", "character device", "FIFO"};
+	int perms[] = {S_IFSOCK, S_IFLNK, S_IFREG, S_IFBLK, S_IFDIR, S_IFCHR, S_IFIFO};
+	
+	std::string result;
+	for (int i = 0; i < sizeof(perms)/sizeof(int); i++){
+		if (perm & perms[i]){
+			result += types[i] + ", ";
+		}
+	}
+	return result;
+}
 
 #if defined _WIN32
 //place windows-specific globals here
@@ -98,9 +173,12 @@ static inline std::string timeToString(time_t& inTime) {
 	tm* time;
 	time_t tm = inTime;
 	time = localtime(&tm);
-	char dateString[100];
-	strftime(dateString, 50, "%x %X", time);
-	return dateString;
+	if (time != NULL){
+		char dateString[100];
+		strftime(dateString, 50, "%x %X", time);
+		return dateString;
+	}
+	return "Unavailable";
 }
 
 /**

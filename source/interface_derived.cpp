@@ -62,7 +62,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	#endif
 	
 	//set up the default values for the left side table
-	string properties[] = {"Name","Size","Type","Items","Modified","Is System","Is Hidden", "Is Read Only"};
+	string properties[] = {"Name","Size","Type","Items","Modified","Is System","Is Hidden", "Is Read Only","Is Executable","mode_t type","Perms"};
 	for (const string& p : properties){
 		//pairs, because 2 columns
 		wxVector<wxVariant> items;
@@ -143,13 +143,13 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	if (spd == NULL){return;}
 	
 	//make sure item still exists
-	void* ptr;
+	DirectoryData* ptr;
 	path p = spd->folderData->Path;
 	if (!spd->folderData->isFolder){
 		propertyList->SetTextValue(folderSizer::sizeToString(spd->folderData->size), 1, 1);
 		string ext = p.extension().string();
 		//special case for files with no extension
-		propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "binary" : ext.substr(1)) + " File", 2, 1);
+		propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "extensionless" : ext.substr(1)) + " File", 2, 1);
 		propertyList->SetTextValue("",3,1);
 	}
 	else{
@@ -161,8 +161,21 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	propertyList->SetTextValue(p.leaf().string(), 0, 1);
 	
 	//modified date
+	propertyList->SetTextValue(timeToString(ptr->modifyDate),4,1);
 	
-	propertyList->SetTextValue(timeToString(((DirectoryData*)ptr)->modifyDate),4,1);
+	//Is read only
+	propertyList->SetTextValue(is_writable(ptr->Path)? "No" : "Yes", 7, 1);
+	
+	//Is executable
+	propertyList->SetTextValue(is_executable(ptr->Path)? "Yes" : "No", 8, 1);
+	
+	//mode_t
+	propertyList->SetTextValue(modet_type_for(ptr->Path), 9, 1);
+
+	
+	//perms string
+	propertyList->SetTextValue(permstr_for(ptr->Path), 10, 1);
+
 	
 	//also show selected item in the status bar
 	statusBar->SetStatusText(p.string());
@@ -209,9 +222,10 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 				unsigned long totalSize = fd->subFolders[progIndex]->size;
 				fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
 				fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
-//				if (fd->subFolders[progIndex]->num_items > 0){
-//					//fileBrowser->AppendItem(lastUpdateItem, "[Placeholder]");
-//				}
+				//add placeholder if one is not already there
+				if (fd->subFolders[progIndex]->num_items > 0 && !fileBrowser->GetFirstChild(lastUpdateItem).IsOk()){
+					fileBrowser->AppendItem(lastUpdateItem, "[Placeholder]");
+				}
 			}
 		}
 	}
