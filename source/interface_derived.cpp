@@ -62,7 +62,11 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	#endif
 	
 	//set up the default values for the left side table
-	string properties[] = {"Name","Size","Type","Items","Modified","Is System","Is Hidden", "Is Read Only","Is Executable","mode_t type","Perms"};
+#if defined __APPLE__ || defined __linux__
+	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t type","Permissions"};
+#elif defined _WIN32
+	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t type","Permissions"};
+#endif
 	for (const string& p : properties){
 		//pairs, because 2 columns
 		wxVector<wxVariant> items;
@@ -164,19 +168,24 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	propertyList->SetTextValue(timeToString(ptr->modifyDate),4,1);
 	
 	//Is read only
-	propertyList->SetTextValue(is_writable(ptr->Path)? "No" : "Yes", 7, 1);
+	propertyList->SetTextValue(is_writable(ptr->Path)? "No" : "Yes", 6, 1);
 	
 	//Is executable
-	propertyList->SetTextValue(is_executable(ptr->Path)? "Yes" : "No", 8, 1);
+	propertyList->SetTextValue(is_executable(ptr->Path)? "Yes" : "No", 7, 1);
 	
+	//Is Hidden
+	propertyList->SetTextValue(is_hidden(ptr->Path)? "Yes" : "No", 5, 1);
+	
+#if defined __APPLE__ || defined __linux__
 	//mode_t
-	propertyList->SetTextValue(modet_type_for(ptr->Path), 9, 1);
+	propertyList->SetTextValue(modet_type_for(ptr->Path), 8, 1);
 
-	
 	//perms string
-	propertyList->SetTextValue(permstr_for(ptr->Path), 10, 1);
-
+	propertyList->SetTextValue(permstr_for(ptr->Path), 9, 1);
 	
+# elif defined _WIN32
+
+#endif
 	//also show selected item in the status bar
 	statusBar->SetStatusText(p.string());
 }
