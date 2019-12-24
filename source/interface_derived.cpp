@@ -129,7 +129,7 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,DirectoryData* data){
 		
 		//add placeholder to get disclosure triangle if there are sub items to show
 		if(d->subFolders.size() > 0 || d->files.size() > 0){
-			fileBrowser->AppendItem(added, "");
+			fileBrowser->AppendItem(added, "Placeholder");
 		}
 		//add this item's files
 		AddFiles(added,d);
@@ -209,9 +209,9 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 				unsigned long totalSize = fd->subFolders[progIndex]->size;
 				fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
 				fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
-				if (fd->subFolders[progIndex]->num_items > 0){
-					fileBrowser->AppendItem(lastUpdateItem, "");
-				}
+//				if (fd->subFolders[progIndex]->num_items > 0){
+//					//fileBrowser->AppendItem(lastUpdateItem, "[Placeholder]");
+//				}
 			}
 		}
 	}
