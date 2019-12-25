@@ -100,7 +100,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	propertySizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
 	propertyList = new wxDataViewListCtrl( propertyPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0 );
-	PLPropertyCol = propertyList->AppendTextColumn( wxT("Property"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
+	PLPropertyCol = propertyList->AppendTextColumn( wxT("Property"), wxDATAVIEW_CELL_INERT, 150, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	PLValueCol = propertyList->AppendTextColumn( wxT("Value"), wxDATAVIEW_CELL_ACTIVATABLE, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	propertySizer->Add( propertyList, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
 
@@ -117,7 +117,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	propertyPanel->SetSizer( propertySizer );
 	propertyPanel->Layout();
 	propertySizer->Fit( propertyPanel );
-	mainSplitter->SplitVertically( directoryPanel, propertyPanel, 420 );
+	mainSplitter->SplitVertically( directoryPanel, propertyPanel, 700 );
 	mainSizer->Add( mainSplitter, 1, wxEXPAND, 5 );
 
 

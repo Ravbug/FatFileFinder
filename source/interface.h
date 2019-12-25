@@ -68,7 +68,7 @@ class MainFrameBase : public wxFrame
 
 		void mainSplitterOnIdle( wxIdleEvent& )
 		{
-			mainSplitter->SetSashPosition( 420 );
+			mainSplitter->SetSashPosition( 700 );
 			mainSplitter->Disconnect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::mainSplitterOnIdle ), NULL, this );
 		}
 

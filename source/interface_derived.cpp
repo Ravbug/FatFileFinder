@@ -71,7 +71,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 #if defined __APPLE__ || defined __linux__
 	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t type","Permissions","Size on Disk"};
 #elif defined _WIN32
-	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t type","Permissions"};
+	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable", "Is Archive", "Is Compressed", "Is Encrypted", "Integrity Stream", "No Indexing", "No Scrubbing", "Is Offline", "Recall on Access", "Is Reparse Point", "Is Sparse File", "Is System", "Is Temporary", "Is Virtual"};
 #endif
 	for (const string& p : properties){
 		//pairs, because 2 columns
@@ -193,6 +193,13 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	propertyList->SetTextValue(!ptr->isFolder? folderSizer::sizeToString(size_on_disk(ptr->Path)) : "-", 10, 1);
 	
 # elif defined _WIN32
+
+	//file args windows
+	auto args = file_attributes_for(ptr->Path);
+
+	for (int i = 0; i < args.size(); i++) {
+		propertyList->SetTextValue(args[i] ? "Yes" : "No", 8+i, 1);
+	}
 
 #endif
 	//also show selected item in the status bar

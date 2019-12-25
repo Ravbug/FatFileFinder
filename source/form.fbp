@@ -545,7 +545,7 @@
                         <property name="pos"></property>
                         <property name="resize">Resizable</property>
                         <property name="sashgravity">1</property>
-                        <property name="sashpos">420</property>
+                        <property name="sashpos">700</property>
                         <property name="sashsize">-1</property>
                         <property name="show">1</property>
                         <property name="size"></property>
@@ -793,7 +793,7 @@
                                                 <property name="name">PLPropertyCol</property>
                                                 <property name="permission">protected</property>
                                                 <property name="type">Text</property>
-                                                <property name="width">-1</property>
+                                                <property name="width">150</property>
                                             </object>
                                             <object class="dataViewListColumn" expanded="1">
                                                 <property name="align">wxALIGN_LEFT</property>

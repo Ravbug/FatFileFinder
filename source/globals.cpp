@@ -7,7 +7,6 @@
 //  Copyright © 2019 Ravbug. All rights reserved.
 //
 #include <wx/wx.h>
-#include <fstream>
 #pragma mark Shared functions
 static inline const std::string AppName = "FatFileFinder";
 static inline const std::string AppVersion = "1.0";
@@ -47,8 +46,7 @@ inline struct stat get_stat(const std::string& path){
 //ensure globals.cpp is the first include in every file
 #include <windows.h>
 #include <winnt.h>
-#include <chrono>
-#include <ctime>
+#include <array>
 #include <filesystem>
 
 /**
@@ -115,7 +113,7 @@ static inline bool is_writable(const std::string& inPath) {
 
 static inline bool is_executable(const std::string& inPath) {
 	mode_t mode = get_stat(inPath).st_mode;
-	return mode & _S_IEXEC;
+	return mode & _S_IEXEC && mode & _S_IFDIR;
 }
 
 static inline bool is_hidden(const std::string& inPath) {
@@ -126,6 +124,24 @@ static inline bool is_hidden(const std::string& inPath) {
 static inline void reveal(const std::filesystem::path& fspath) {
 	wxExecute(wxT("C:\\Windows\\explorer.exe \"" + fspath.string() + "\""), wxEXEC_ASYNC);
 
+}
+
+/**
+Get the attributes for a file (Windows)
+@param path the path to the file
+@return a boolean array representing the different file properties
+*/
+static inline std::array<bool, 13> file_attributes_for(const std::string& path) {
+	DWORD attributes = GetFileAttributesA(path.c_str());
+	int attr_const[] = {FILE_ATTRIBUTE_ARCHIVE, FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_ENCRYPTED, FILE_ATTRIBUTE_INTEGRITY_STREAM, FILE_ATTRIBUTE_NOT_CONTENT_INDEXED, FILE_ATTRIBUTE_NO_SCRUB_DATA, FILE_ATTRIBUTE_OFFLINE, FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS, FILE_ATTRIBUTE_RECALL_ON_OPEN, FILE_ATTRIBUTE_REPARSE_POINT, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_SYSTEM, FILE_ATTRIBUTE_TEMPORARY, FILE_ATTRIBUTE_VIRTUAL};
+
+	std::array<bool, 13> attr;
+
+	for (int i = 0; i < attr.size(); i++) {
+		attr[i] = attributes & attr_const[i];
+	}
+
+	return attr;
 }
 
 #pragma mark macOS functions
