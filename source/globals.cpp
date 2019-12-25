@@ -46,6 +46,7 @@ inline struct stat get_stat(const std::string& path){
 //if they are not in this order, the compiler will not be able to resolve byte
 //ensure globals.cpp is the first include in every file
 #include <windows.h>
+#include <winnt.h>
 #include <chrono>
 #include <ctime>
 #include <filesystem>
@@ -108,18 +109,22 @@ static inline bool path_too_long(const std::string& inPath){
 }
 
 static inline bool is_writable(const std::string& inPath) {
-	return false;
+	mode_t mode = get_stat(inPath).st_mode;
+	return mode & _S_IWRITE;
 }
 
 static inline bool is_executable(const std::string& inPath) {
-	return false;
+	mode_t mode = get_stat(inPath).st_mode;
+	return mode & _S_IEXEC;
 }
 
 static inline bool is_hidden(const std::string& inPath) {
-	return false;
+	DWORD attributes = GetFileAttributesA(inPath.c_str());
+	return attributes & FILE_ATTRIBUTE_HIDDEN;
 }
 
 static inline void reveal(const std::filesystem::path& fspath) {
+	wxExecute(wxT("C:\\Windows\\explorer.exe \"" + fspath.string() + "\""), wxEXEC_ASYNC);
 
 }
 

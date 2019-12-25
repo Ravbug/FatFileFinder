@@ -54,6 +54,12 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 
 		//set color
 		SetBackgroundColour(*wxWHITE);
+
+		//update names (no unicode support for now)
+		openFolderBtn->SetLabel("Open");
+		reloadFolderBtn->SetLabel("Reload");
+		stopSizeBtn->SetLabel("Stop");
+
 	#elif __linux
 		SetIcon(wxIcon(wxICON(wxlin)));
 	#elif __APPLE__
