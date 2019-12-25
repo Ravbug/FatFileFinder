@@ -512,6 +512,9 @@ void MainFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.SetName(AppName);
 	aboutInfo.SetVersion(AppVersion);
 	aboutInfo.SetCopyright("(C) 2019 Ravbug");
+#if defined _WIN32
+	aboutInfo.SetIcon(wxIcon("IDI_WXWIN"));
+#endif
 	wxAboutBox(aboutInfo);
 }
 /**

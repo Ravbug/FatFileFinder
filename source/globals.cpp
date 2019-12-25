@@ -9,7 +9,7 @@
 #include <wx/wx.h>
 #pragma mark Shared functions
 static inline const std::string AppName = "FatFileFinder";
-static inline const std::string AppVersion = "1.0";
+static inline const std::string AppVersion = "0.1b";
 
 /**
 Fits a wxWindow to its contents, and then sets that size as the window's minimum size.
