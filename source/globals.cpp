@@ -8,7 +8,6 @@
 //
 #include <wx/wx.h>
 #include <fstream>
-#include <unistd.h>
 #pragma mark Shared functions
 static inline const std::string AppName = "FatFileFinder";
 static inline const std::string AppVersion = "1.0";
@@ -105,7 +104,23 @@ static inline std::string timeToString(std::filesystem::file_time_type inTime) {
  @return true if path is too long, false otherwise
  */
 static inline bool path_too_long(const std::string& inPath){
-	return inPath > 247;
+	return inPath.size() > 247;
+}
+
+static inline bool is_writable(const std::string& inPath) {
+	return false;
+}
+
+static inline bool is_executable(const std::string& inPath) {
+	return false;
+}
+
+static inline bool is_hidden(const std::string& inPath) {
+	return false;
+}
+
+static inline void reveal(const std::filesystem::path& fspath) {
+
 }
 
 #pragma mark macOS functions
@@ -141,6 +156,15 @@ static inline bool path_too_long(const std::string& inPath){
 	return p.leaf().string().size() > buf.f_namemax;
 }
 
+/**
+ Determines if an item is accessible using boost::filesystem
+ @param s the file_status object
+ @return true if accessible, false otherwise
+*/
+static inline bool can_access() {
+	return (s.permissions() & perms::others_read) != perms::no_perms || (s.permissions() & perms::owner_read) != perms::no_perms;
+}
+
 #pragma mark Linux functions
 #elif defined __linux__
 #include <limits.h>
@@ -169,11 +193,22 @@ static inline bool path_too_long(const std::string& inPath){
 //globals for both linux and windows
 #if defined __linux__ || defined _WIN32
 #define leaf() filename()
+
+/**
+ Determines if an item is accessible using std::filesystem
+ @param s the file_status object 
+ @return true if accessible, false otherwise
+*/
+static inline bool can_access(const std::filesystem::file_status& s) {
+	return (s.permissions() & std::filesystem::perms::others_read) != std::filesystem::perms::none || (s.permissions() & std::filesystem::perms::owner_read) != std::filesystem::perms::none;
+}
 #endif
 
 #pragma mark Unix-like functions
 #if defined __APPLE__ || defined __linux__
 #include <sys/param.h>
+#include <unistd.h>
+
 
 /**
  Determines if an item is write-able using stat

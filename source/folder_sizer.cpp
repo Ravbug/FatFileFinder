@@ -83,7 +83,7 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 		//is the item a folder? if so, defer sizing it
 		//check if can read the file
 		file_status s = status(p.path());
-		if ((s.permissions() & perms::others_read) != perms::no_perms || (s.permissions() & perms::owner_read) != perms::no_perms )
+		if (can_access(s))
 		{
 			if (is_directory(p)){
 				if (!skipFolders){

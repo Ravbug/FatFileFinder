@@ -23,7 +23,7 @@ using namespace std;
 	#include <filesystem>
 	using namespace std::filesystem;
 	typedef file_time_type fileTime;
-	typedef unitmax_t fileSize;
+	typedef size_t fileSize;
 #endif
 
 //structure definitions

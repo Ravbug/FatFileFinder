@@ -54,31 +54,31 @@ private:
 	wxDECLARE_EVENT_TABLE();
 	
 	//for drawing icons next to items in the list
-	unordered_map<string,string> icons = {
-		{".exe", "💾" },{".dll", "💾" },{".bat", "💾" },{".jar", "💾" },
-		{".iso", "💿" },{".bin", "💿"},
-		{".ai","🎨" },{".bmp","🎨" },{".gif","🎨" },{".ico","🎨" },{".jpeg","🎨" },{".jpg","🎨" },{".png","🎨" },{".psd","🎨" },{".svg","🎨" },{".tif","🎨" },
-		{".mp3","🎵" },{".aif","🎵" },{".ogg","🎵" },{".wav","🎵" },{".wma","🎵" },
-		{ ".mp4","🎞"},{ ".avi","🎞"},{ ".flv","🎞"},{ ".h264","🎞"},{ ".m4v","🎞"},{ ".mkv","🎞"},{ ".mov","🎞"},{ ".mpg","🎞"},{ ".wmv","🎞"},
-		{ ".7z","📦"},{ ".arj","📦"},{ ".pkg","📦"},{ ".rar","📦"},{ ".rpm","📦"},{ ".tar.gz","📦"},{ ".z","📦"},{ ".zip","📦"},
-		{ ".doc","📝"},{ ".docx","📝"},{ ".odt","📝"},{ ".pdf","📝"},{ ".rtf","📝"},{ ".tex","📝"}
+	unordered_map<string,wxString> icons = {
+		{".exe", L"💾" },{".dll", L"💾" },{".bat", L"💾" },{".jar", L"💾" },
+		{".iso", L"💿" },{".bin", L"💿"},
+		{".ai",L"🎨" },{".bmp",L"🎨" },{".gif",L"🎨" },{".ico",L"🎨" },{".jpeg","🎨" },{".jpg","🎨" },{".png","🎨" },{".psd","🎨" },{".svg","🎨" },{".tif","🎨" },
+		{".mp3",L"🎵" },{".aif",L"🎵" },{".ogg",L"🎵" },{".wav",L"🎵" },{".wma","🎵" },
+		{ ".mp4",L"🎞"},{ ".avi",L"🎞"},{ ".flv",L"🎞"},{ ".h264",L"🎞"},{ ".m4v","🎞"},{ ".mkv","🎞"},{ ".mov","🎞"},{ ".mpg","🎞"},{ ".wmv","🎞"},
+		{ ".7z",L"📦"},{ ".arj",L"📦"},{ ".pkg",L"📦"},{ ".rar",L"📦"},{ ".rpm","📦"},{ ".tar.gz","📦"},{ ".z","📦"},{ ".zip","📦"},
+		{ ".doc",L"📝"},{ ".docx",L"📝"},{ ".odt",L"📝"},{ ".pdf",L"📝"},{ ".rtf","📝"},{ ".tex","📝"}
 	};
-	const string FolderIcon = "📁";
+	const wxString FolderIcon = L"📁";
 	/**
 	 Return the icon for a file type
 	 @param extension the extension of the file
 	 @returns an emoji representing the file type
 	 */
-	string iconForExtension(const string& extension){
+	wxString iconForExtension(const string& extension){
 		//avoid crash checking unordered map for empty string
 		if (extension.size() == 0){
-			return "📟";
+			return L"📟";
 		}
 		try{
 			return icons.at(extension);
 		}
 		catch(exception e){
-			return "📄";
+			return L"📄";
 		}
 	}
 };
