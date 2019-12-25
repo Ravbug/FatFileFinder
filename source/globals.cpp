@@ -182,7 +182,7 @@ static inline bool path_too_long(const std::string& inPath){
  @param s the file_status object
  @return true if accessible, false otherwise
 */
-static inline bool can_access() {
+static inline bool can_access(const file_status& s) {
 	return (s.permissions() & perms::others_read) != perms::no_perms || (s.permissions() & perms::owner_read) != perms::no_perms;
 }
 
