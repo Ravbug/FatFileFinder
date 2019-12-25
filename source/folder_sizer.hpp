@@ -21,7 +21,7 @@ using namespace std;
 #else
 	#include <filesystem>
 	using namespace std::filesystem;
-	typedef file_time_type fileTime;
+	typedef time_t fileTime;
 #endif
 
 //structure definitions

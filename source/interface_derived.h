@@ -82,7 +82,7 @@ private:
 			return "📄";
 		}
 	}
-#else if defined _WIN32
+#elif defined _WIN32
 	//on Windows, unicode is not supported (for now)
 	const wxString FolderIcon = "";
 	wxString iconForExtension(const string& extension) {

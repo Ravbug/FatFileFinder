@@ -189,13 +189,15 @@ static inline bool can_access(const file_status& s) {
 #pragma mark Linux functions
 #elif defined __linux__
 #include <limits.h>
+#include <filesystem>
+#include <sys/statvfs.h>
 /**
  Determines if a path is too long to process. On Linux, a file path cannot exceed 4096 characters, and a filename cannot exceed 255 bytes.
  @param inPath the path to the file
  @return true if path is too long, false otherwise
  */
 static inline bool path_too_long(const std::string& inPath){
-	path p = path(inPath);
+	std::filesystem::path p(inPath);
 	struct statvfs buf;
 	statvfs(inPath.c_str(),&buf);
 	if (p.filename().string().size() > buf.f_namemax){
@@ -203,6 +205,11 @@ static inline bool path_too_long(const std::string& inPath){
 	}
 	return p.stem().string().size() > PATH_MAX;
 }
+
+/**
+ * The Reveal feature is not available on Linux because there is no standard file browser nor standard terminal, nor a standard way to interface with either.
+ */
+static inline void reveal(const std::string& path){}
 
 #else
 //place globals for systems here
@@ -281,7 +288,7 @@ static inline std::string permstr_for(const std::string& path){
  @return true if file is hidden (path starts with '.'), false otherwise
  */
 static inline bool is_hidden(const std::string& strpath){
-	path p = path(strpath);
+	std::filesystem::path p(strpath);
 	//true if path name starts with '.'
 	return p.leaf().string()[0] == '.';
 }
@@ -330,6 +337,10 @@ static inline std::string timeToString(time_t& inTime) {
  */
 static inline long long size_on_disk(const std::string& path){
 	return get_stat(path).st_blocks * DEV_BSIZE;
+}
+
+static inline time_t file_modify_time(const std::string& path){
+	return get_stat(path).st_mtime;
 }
 
 #endif

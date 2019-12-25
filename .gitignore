@@ -363,8 +363,11 @@ wxWidgets/lib/vc_x64_lib/
 # Linux compiled data
 wxWidgets/build/linux/
 linux-build/
+wxWidgets/autom4te.cache/
 
 # Mac OS temporary and compiled data
 *.DS_STORE
 wxWidgets/build/osx/setup/*
 /wxWidgets/build/msw/vc_mswud
+
+

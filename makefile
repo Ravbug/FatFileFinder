@@ -1,7 +1,7 @@
 # flags needed to build the target (compiler, target name, and compiler flags)
 CC = g++
 WXROOT := wxWidgets
-CFLAGS := `$(WXROOT)/build/linux/wx-config --cppflags` `$(WXROOT)/build/linux/wx-config --libs` -Wl,-rpath,$(WXROOT)/build/linux/lib/
+CFLAGS := `$(WXROOT)/build/linux/wx-config --cppflags` `$(WXROOT)/build/linux/wx-config --libs` -Wl,-rpath,$(WXROOT)/build/linux/lib/ -std=gnu++17
 target = wxWidgetsTemplate
 
 # location of source files
