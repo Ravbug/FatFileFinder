@@ -51,6 +51,12 @@ private:
 	void OnListSelection(wxTreeListEvent& event);
 	void OnCopy(wxCommandEvent& event);
 	void OnReveal(wxCommandEvent& event);
+	void OnSourceCode(wxCommandEvent& event){
+		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/");
+	}
+	void OnUpdates(wxCommandEvent& event){
+		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/releases/latest");
+	}
 	wxDECLARE_EVENT_TABLE();
 	
 #if defined __APPLE__ || defined __linux__
@@ -120,16 +126,8 @@ public:
 		if (!item1 || !item2){
 			return 0;
 		}
-		
-		//get needed data
-		double size1 = 0;
-		double size2 = 0;
-		//calculate the percentages
-		size1 = (double)item1->folderData->size;
-	
-		size2 = (double)item2->folderData->size;
 	
 		//return the difference
-		return size1 - size2;
+		return item1->folderData->size - item2->folderData->size;
 	}
 };

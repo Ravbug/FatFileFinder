@@ -28,6 +28,8 @@ wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 EVT_MENU(wxID_EXIT,  MainFrame::OnExit)
 EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
 EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
+EVT_MENU(wxID_INDENT, MainFrame::OnSourceCode)
+EVT_MENU(wxID_UP, MainFrame::OnUpdates)
 EVT_COMMAND(PROGEVT, progEvt, MainFrame::OnUpdateUI)
 EVT_COMMAND(RELOADEVT,progEvt, MainFrame::OnUpdateReload)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
@@ -42,6 +44,7 @@ wxEND_EVENT_TABLE()
 MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 {
 	//perform any additional setup here
+	SetLabel(AppName + " v" + AppVersion);
 	
 	//set the icon and fix scaling issues(windows and linux only)
 	#ifdef _WIN32
@@ -245,11 +248,11 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 		if (lastUpdateItem.IsOk()){
 			lastUpdateItem = fileBrowser->GetNextSibling(lastUpdateItem);
 			if (fd->subFolders[progIndex] != NULL){
-				unsigned long totalSize = fd->subFolders[progIndex]->size;
+				auto totalSize = fd->subFolders[progIndex]->size;
 				fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
 				fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
 				//add placeholder if one is not already there
-				if (fd->subFolders[progIndex]->num_items > 0 && !fileBrowser->GetFirstChild(lastUpdateItem).IsOk()){
+				if ((fd->subFolders[progIndex]->num_items > 0) && !fileBrowser->GetFirstChild(lastUpdateItem).IsOk()){
 					fileBrowser->AppendItem(lastUpdateItem, "[Placeholder]");
 				}
 			}
@@ -447,6 +450,7 @@ void MainFrame::OnListExpanding(wxTreeListEvent& event){
 			fileBrowser->DeleteItem(placeholder);
 		}
 		AddSubItems(item,data);
+		AddFiles(item, data);
 	}
 	//mark as loaded
 	loaded.insert(key);

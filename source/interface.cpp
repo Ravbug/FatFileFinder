@@ -14,7 +14,9 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 
 	statusBar = this->CreateStatusBar( 1, wxSTB_DEFAULT_STYLE, wxID_ANY );
+	wxMenuBar* menuBar;
 	menuBar = new wxMenuBar( 0 );
+	wxMenu* menuFile;
 	menuFile = new wxMenu();
 	wxMenuItem* openFolderMenu;
 	openFolderMenu = new wxMenuItem( menuFile, wxID_OPEN, wxString( wxT("Open Folder") ) + wxT('\t') + wxT("Ctrl-O"), wxT("Calculate the size a folder, and its sub folders"), wxITEM_NORMAL );
@@ -30,6 +32,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 
 	menuBar->Append( menuFile, wxT("File") );
 
+	wxMenu* menuWindow;
 	menuWindow = new wxMenu();
 	wxMenuItem* menuAbout;
 	menuAbout = new wxMenuItem( menuWindow, wxID_ABOUT, wxString( wxT("About FatFileFinder") ) , wxT("Show information about this application"), wxITEM_NORMAL );
@@ -40,6 +43,18 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	menuWindow->Append( menuQuit );
 
 	menuBar->Append( menuWindow, wxT("Window") );
+
+	wxMenu* menuHelp;
+	menuHelp = new wxMenu();
+	wxMenuItem* menuGit;
+	menuGit = new wxMenuItem( menuHelp, wxID_INDENT, wxString( wxT("GitHub Repository") ) , wxT("View the source code for this application"), wxITEM_NORMAL );
+	menuHelp->Append( menuGit );
+
+	wxMenuItem* menuUpdates;
+	menuUpdates = new wxMenuItem( menuHelp, wxID_UP, wxString( wxT("Check for Updates") ) , wxT("Visit the updates page"), wxITEM_NORMAL );
+	menuHelp->Append( menuUpdates );
+
+	menuBar->Append( menuHelp, wxT("Help") );
 
 	this->SetMenuBar( menuBar );
 
@@ -78,6 +93,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	mainSplitter->Connect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::mainSplitterOnIdle ), NULL, this );
 	mainSplitter->SetMinimumPaneSize( 220 );
 
+	wxPanel* directoryPanel;
 	directoryPanel = new wxPanel( mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxBoxSizer* browserSizer;
 	browserSizer = new wxBoxSizer( wxVERTICAL );
@@ -93,6 +109,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	directoryPanel->SetSizer( browserSizer );
 	directoryPanel->Layout();
 	browserSizer->Fit( directoryPanel );
+	wxPanel* propertyPanel;
 	propertyPanel = new wxPanel( mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxGridBagSizer* propertySizer;
 	propertySizer = new wxGridBagSizer( 0, 0 );
@@ -100,7 +117,9 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	propertySizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
 	propertyList = new wxDataViewListCtrl( propertyPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0 );
+	wxDataViewColumn* PLPropertyCol;
 	PLPropertyCol = propertyList->AppendTextColumn( wxT("Property"), wxDATAVIEW_CELL_INERT, 150, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
+	wxDataViewColumn* PLValueCol;
 	PLValueCol = propertyList->AppendTextColumn( wxT("Value"), wxDATAVIEW_CELL_ACTIVATABLE, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	propertySizer->Add( propertyList, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
 

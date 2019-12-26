@@ -43,20 +43,13 @@ class MainFrameBase : public wxFrame
 
 	protected:
 		wxStatusBar* statusBar;
-		wxMenuBar* menuBar;
-		wxMenu* menuFile;
-		wxMenu* menuWindow;
 		wxButton* openFolderBtn;
 		wxButton* reloadFolderBtn;
 		wxButton* stopSizeBtn;
 		wxGauge* progressBar;
 		wxSplitterWindow* mainSplitter;
-		wxPanel* directoryPanel;
 		wxTreeListCtrl* fileBrowser;
-		wxPanel* propertyPanel;
 		wxDataViewListCtrl* propertyList;
-		wxDataViewColumn* PLPropertyCol;
-		wxDataViewColumn* PLValueCol;
 		wxButton* copyPathBtn;
 		wxButton* revealBtn;
 
