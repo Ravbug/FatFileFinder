@@ -161,16 +161,27 @@ static inline std::array<bool, 13> file_attributes_for(const std::string& path) 
 //place macOS-specific globals here
 
 /**
+ Determines if a file is hidden
+ @param strpath the path to the file
+ @return true if file is hidden (path starts with '.'), false otherwise
+ */
+static inline bool is_hidden(const std::string& strpath){
+	path p(strpath);
+	//true if path name starts with '.'
+	return p.leaf().string()[0] == '.';
+}
+
+/**
  Reveal a folder or file in the Finder
  @param fspath the path to the file or folder
  */
-static inline void reveal(const path& fspath){
+static inline void reveal(const std::string& fspath){
 	std::string str;
-	if (std::filesystem::is_directory(path)){
-		str = path;
+	if (is_directory(fspath)){
+		str = fspath;
 	}
 	else{
-		std::filesystem::path p(path);
+		path p(fspath);
 		str = p.parent_path().string();
 	}
 	wxExecute(wxT("open \"" + str + "\""),wxEXEC_ASYNC);
@@ -233,6 +244,17 @@ static inline void reveal(const std::string& path){
 		str = p.parent_path().string();
 	}
 	wxExecute(wxT("xdg-open \"" + str + "\""), wxEXEC_ASYNC);
+}
+
+/**
+ Determines if a file is hidden
+ @param strpath the path to the file
+ @return true if file is hidden (path starts with '.'), false otherwise
+ */
+static inline bool is_hidden(const std::string& strpath){
+	std::filesystem::path p(strpath);
+	//true if path name starts with '.'
+	return p.leaf().string()[0] == '.';
 }
 
 #else
@@ -304,17 +326,6 @@ static inline std::string permstr_for(const std::string& path){
     perms[9] = '\0';
 	
 	return std::string(perms);
-}
-
-/**
- Determines if a file is hidden
- @param strpath the path to the file
- @return true if file is hidden (path starts with '.'), false otherwise
- */
-static inline bool is_hidden(const std::string& strpath){
-	std::filesystem::path p(strpath);
-	//true if path name starts with '.'
-	return p.leaf().string()[0] == '.';
 }
 
 /**
