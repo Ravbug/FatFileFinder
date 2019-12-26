@@ -15,6 +15,7 @@
 //include the icon file on linux
 #ifdef __linux
 #include "wxlin.xpm"
+#include "wxlin_s.xpm"
 #endif
 
 #define PROGEVT 2001
@@ -61,7 +62,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 		stopSizeBtn->SetLabel("Stop");
 
 	#elif __linux
-		SetIcon(wxIcon(wxICON(wxlin)));
+		SetIcon(wxIcon(wxICON(wxlin_s)));
 	#elif __APPLE__
 		//reveal button label lists Finder instead of Explorer
 		revealBtn->SetLabel("Reveal in Finder");
@@ -514,6 +515,8 @@ void MainFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.SetCopyright("(C) 2019 Ravbug");
 #if defined _WIN32
 	aboutInfo.SetIcon(wxIcon("IDI_WXWIN"));
+#elif defined __linux__
+	aboutInfo.SetIcon(wxICON(wxlin_s));
 #endif
 	wxAboutBox(aboutInfo);
 }

@@ -56,15 +56,15 @@ private:
 #if defined __APPLE__ || defined __linux__
 	//for drawing icons next to items in the list
 	const unordered_map<string,wxString> icons = {
-		{".exe", "💾" },{".dl", "💾" },{".bat", "💾" },{".jar", "💾" },
-		{".iso", "💿" },{".bin", "💿"},
-		{".ai","🎨" },{".bmp","🎨" },{".gif","🎨" },{".ico","🎨" },{".jpeg","🎨" },{".jpg","🎨" },{".png","🎨" },{".psd","🎨" },{".svg","🎨" },{".tif","🎨" },
-		{".mp3","🎵" },{".aif","🎵" },{".ogg","🎵" },{".wav","🎵" },{".wma","🎵" },
-		{ ".mp4","🎞"},{ ".avi","🎞"},{ ".flv","🎞"},{ ".h264","🎞"},{ ".m4v","🎞"},{ ".mkv","🎞"},{ ".mov","🎞"},{ ".mpg","🎞"},{ ".wmv","🎞"},
-		{ ".7z","📦"},{ ".arj","📦"},{ ".pkg","📦"},{ ".rar","📦"},{ ".rpm","📦"},{ ".tar.gz","📦"},{ ".z","📦"},{ ".zip","📦"},
-		{ ".doc","📝"},{ ".docx","📝"},{ ".odt","📝"},{ ".pdf","📝"},{ ".rtf","📝"},{ ".tex","📝"}
+		{".exe", L"💾" },{".dl", L"💾" },{".bat", L"💾" },{".jar", "💾" },
+		{".iso", L"💿" },{".bin", L"💿"},
+		{".ai",L"🎨" },{".bmp", L"🎨" },{".gif", L"🎨" },{".ico", L"🎨" },{".jpeg", L"🎨" },{".jpg", L"🎨" },{".png",L"🎨" },{".psd",L"🎨" },{".svg",L"🎨" },{".tif",L"🎨" },
+		{".mp3",L"🎵" },{".aif", L"🎵" },{".ogg", L"🎵" },{".wav", L"🎵" },{".wma", L"🎵" },
+		{ ".mp4",L"🎞"},{ ".avi", L"🎞"},{ ".flv", L"🎞"},{ ".h264", L"🎞"},{ ".m4v", L"🎞"},{ ".mkv", L"🎞"},{ ".mov",L"🎞"},{ ".mpg",L"🎞"},{ ".wmv",L"🎞"},
+		{ ".7z",L"📦"},{ ".arj", L"📦"},{ ".pkg", L"📦"},{ ".rar", L"📦"},{ ".rpm", L"📦"},{ ".tar.gz", L"📦"},{ ".z", L"📦"},{ ".zip",L"📦"},
+		{ ".doc",L"📝"},{ ".docx", L"📝"},{ ".odt", L"📝"},{ ".pdf", L"📝"},{ ".rtf", L"📝"},{ ".tex", L"📝"}
 	};
-	const wxString FolderIcon = "📁";
+	const wxString FolderIcon = L"📁";
 	/**
 	 Return the icon for a file type
 	 @param extension the extension of the file
@@ -73,13 +73,13 @@ private:
 	wxString iconForExtension(const string& extension){
 		//avoid crash checking unordered map for empty string
 		if (extension.size() == 0){
-			return "📟";
+			return L"📟";
 		}
 		try{
 			return icons.at(extension);
 		}
 		catch(exception e){
-			return "📄";
+			return L"📄";
 		}
 	}
 #elif defined _WIN32

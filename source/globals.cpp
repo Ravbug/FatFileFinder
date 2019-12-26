@@ -122,7 +122,15 @@ static inline bool is_hidden(const std::string& inPath) {
 }
 
 static inline void reveal(const std::filesystem::path& fspath) {
-	wxExecute(wxT("C:\\Windows\\explorer.exe \"" + fspath.string() + "\""), wxEXEC_ASYNC);
+	std::string str;
+	if (std::filesystem::is_directory(path)){
+		str = path;
+	}
+	else{
+		std::filesystem::path p(path);
+		str = p.parent_path().string();
+	}
+	wxExecute(wxT("C:\\Windows\\explorer.exe \"" + str + "\""), wxEXEC_ASYNC);
 
 }
 
@@ -157,11 +165,15 @@ static inline std::array<bool, 13> file_attributes_for(const std::string& path) 
  @param fspath the path to the file or folder
  */
 static inline void reveal(const path& fspath){
-	path p = fspath;
-	if (! is_directory(p)){
-		p = fspath.parent_path();
+	std::string str;
+	if (std::filesystem::is_directory(path)){
+		str = path;
 	}
-	wxExecute(wxT("open \"" + p.string() + "\""),wxEXEC_ASYNC);
+	else{
+		std::filesystem::path p(path);
+		str = p.parent_path().string();
+	}
+	wxExecute(wxT("open \"" + str + "\""),wxEXEC_ASYNC);
 }
 
 /**
@@ -207,9 +219,21 @@ static inline bool path_too_long(const std::string& inPath){
 }
 
 /**
- * The Reveal feature is not available on Linux because there is no standard file browser nor standard terminal, nor a standard way to interface with either.
+ * Shows a given path in the file browser.
+ * The Reveal feature uses xdg, which is not guarenteed to be present on Linux. If it is not present, the button will appear to do nothing.
+ * @param path the path to the file
  */
-static inline void reveal(const std::string& path){}
+static inline void reveal(const std::string& path){
+	std::string str;
+	if (std::filesystem::is_directory(path)){
+		str = path;
+	}
+	else{
+		std::filesystem::path p(path);
+		str = p.parent_path().string();
+	}
+	wxExecute(wxT("xdg-open \"" + str + "\""), wxEXEC_ASYNC);
+}
 
 #else
 //place globals for systems here

@@ -2,7 +2,7 @@
 CC = g++
 WXROOT := wxWidgets
 CFLAGS := `$(WXROOT)/build/linux/wx-config --cppflags` `$(WXROOT)/build/linux/wx-config --libs` -Wl,-rpath,$(WXROOT)/build/linux/lib/ -std=gnu++17
-target = wxWidgetsTemplate
+target = FatFileFinder
 
 # location of source files
 source_dir = source
