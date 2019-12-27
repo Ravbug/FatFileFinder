@@ -31,8 +31,9 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-#define TREELIST 1000
-#define COPYPATH 1001
+#define wxID_INFO 1000
+#define TREELIST 1001
+#define COPYPATH 1002
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class MainFrameBase
@@ -43,13 +44,17 @@ class MainFrameBase : public wxFrame
 
 	protected:
 		wxStatusBar* statusBar;
+		wxMenuItem* menuToggleSidebar;
 		wxButton* openFolderBtn;
 		wxButton* reloadFolderBtn;
 		wxButton* stopSizeBtn;
 		wxGauge* progressBar;
 		wxSplitterWindow* mainSplitter;
 		wxTreeListCtrl* fileBrowser;
+		wxPanel* propertyPanel;
 		wxDataViewListCtrl* propertyList;
+		wxDataViewColumn* PLPropertyCol;
+		wxDataViewColumn* PLValueCol;
 		wxButton* copyPathBtn;
 		wxButton* revealBtn;
 

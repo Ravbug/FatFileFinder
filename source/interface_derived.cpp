@@ -30,6 +30,7 @@ EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
 EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
 EVT_MENU(wxID_INDENT, MainFrame::OnSourceCode)
 EVT_MENU(wxID_UP, MainFrame::OnUpdates)
+EVT_MENU(wxID_INFO, MainFrame::OnToggleSidebar)
 EVT_COMMAND(PROGEVT, progEvt, MainFrame::OnUpdateUI)
 EVT_COMMAND(RELOADEVT,progEvt, MainFrame::OnUpdateReload)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
@@ -73,7 +74,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	
 	//set up the default values for the left side table
 #if defined __APPLE__ || defined __linux__
-	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t type","Permissions","Size on Disk"};
+	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t types","Permissions","Size on Disk"};
 #elif defined _WIN32
 	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable", "Is Archive", "Is Compressed", "Is Encrypted", "Integrity Stream", "No Indexing", "No Scrubbing", "Is Offline", "Recall on Access", "Is Reparse Point", "Is Sparse File", "Is System", "Is Temporary", "Is Virtual"};
 #endif
@@ -86,6 +87,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 		propertyList->AppendItem(items);
 	}
 	
+	PLPropertyCol->SetWidth(wxCOL_WIDTH_AUTOSIZE);
 	//create the sorting object
 	fileBrowser->SetItemComparator(new sizeComparator());
 }
@@ -206,6 +208,9 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	}
 
 #endif
+	//fix width
+	PLValueCol->SetWidth(wxCOL_WIDTH_AUTOSIZE);
+	
 	//also show selected item in the status bar
 	statusBar->SetStatusText(p.string());
 }

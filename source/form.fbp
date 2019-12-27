@@ -142,6 +142,19 @@
                         <property name="shortcut"></property>
                         <property name="unchecked_bitmap"></property>
                     </object>
+                    <object class="wxMenuItem" expanded="0">
+                        <property name="bitmap"></property>
+                        <property name="checked">0</property>
+                        <property name="enabled">1</property>
+                        <property name="help">Close FatFileFilder</property>
+                        <property name="id">wxID_EXIT</property>
+                        <property name="kind">wxITEM_NORMAL</property>
+                        <property name="label">Close</property>
+                        <property name="name">menuQuit</property>
+                        <property name="permission">none</property>
+                        <property name="shortcut">Ctrl-W</property>
+                        <property name="unchecked_bitmap"></property>
+                    </object>
                 </object>
                 <object class="wxMenu" expanded="1">
                     <property name="label">Window</property>
@@ -158,19 +171,6 @@
                         <property name="name">menuAbout</property>
                         <property name="permission">none</property>
                         <property name="shortcut"></property>
-                        <property name="unchecked_bitmap"></property>
-                    </object>
-                    <object class="wxMenuItem" expanded="0">
-                        <property name="bitmap"></property>
-                        <property name="checked">0</property>
-                        <property name="enabled">1</property>
-                        <property name="help">Close FatFileFilder</property>
-                        <property name="id">wxID_EXIT</property>
-                        <property name="kind">wxITEM_NORMAL</property>
-                        <property name="label">Close</property>
-                        <property name="name">menuQuit</property>
-                        <property name="permission">none</property>
-                        <property name="shortcut">Ctrl-W</property>
                         <property name="unchecked_bitmap"></property>
                     </object>
                 </object>
@@ -202,6 +202,19 @@
                         <property name="name">menuUpdates</property>
                         <property name="permission">none</property>
                         <property name="shortcut"></property>
+                        <property name="unchecked_bitmap"></property>
+                    </object>
+                    <object class="wxMenuItem" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="checked">0</property>
+                        <property name="enabled">1</property>
+                        <property name="help"></property>
+                        <property name="id">wxID_INFO</property>
+                        <property name="kind">wxITEM_NORMAL</property>
+                        <property name="label">Hide Sidebar</property>
+                        <property name="name">menuToggleSidebar</property>
+                        <property name="permission">protected</property>
+                        <property name="shortcut">Ctrl-I</property>
                         <property name="unchecked_bitmap"></property>
                     </object>
                 </object>
@@ -764,7 +777,7 @@
                                 <property name="pane_border">1</property>
                                 <property name="pane_position"></property>
                                 <property name="pane_size"></property>
-                                <property name="permission">none</property>
+                                <property name="permission">protected</property>
                                 <property name="pin_button">1</property>
                                 <property name="pos"></property>
                                 <property name="resize">Resizable</property>
@@ -822,7 +835,7 @@
                                                 <property name="label">Property</property>
                                                 <property name="mode">wxDATAVIEW_CELL_INERT</property>
                                                 <property name="name">PLPropertyCol</property>
-                                                <property name="permission">none</property>
+                                                <property name="permission">protected</property>
                                                 <property name="type">Text</property>
                                                 <property name="width">150</property>
                                             </object>
@@ -833,7 +846,7 @@
                                                 <property name="label">Value</property>
                                                 <property name="mode">wxDATAVIEW_CELL_ACTIVATABLE</property>
                                                 <property name="name">PLValueCol</property>
-                                                <property name="permission">none</property>
+                                                <property name="permission">protected</property>
                                                 <property name="type">Text</property>
                                                 <property name="width">-1</property>
                                             </object>

@@ -30,6 +30,10 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	stopSizingMenu = new wxMenuItem( menuFile, wxID_STOP, wxString( wxT("Stop Sizing Folder") ) , wxT("Stop the current size calculation"), wxITEM_NORMAL );
 	menuFile->Append( stopSizingMenu );
 
+	wxMenuItem* menuQuit;
+	menuQuit = new wxMenuItem( menuFile, wxID_EXIT, wxString( wxT("Close") ) + wxT('\t') + wxT("Ctrl-W"), wxT("Close FatFileFilder"), wxITEM_NORMAL );
+	menuFile->Append( menuQuit );
+
 	menuBar->Append( menuFile, wxT("File") );
 
 	wxMenu* menuWindow;
@@ -37,10 +41,6 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	wxMenuItem* menuAbout;
 	menuAbout = new wxMenuItem( menuWindow, wxID_ABOUT, wxString( wxT("About FatFileFinder") ) , wxT("Show information about this application"), wxITEM_NORMAL );
 	menuWindow->Append( menuAbout );
-
-	wxMenuItem* menuQuit;
-	menuQuit = new wxMenuItem( menuWindow, wxID_EXIT, wxString( wxT("Close") ) + wxT('\t') + wxT("Ctrl-W"), wxT("Close FatFileFilder"), wxITEM_NORMAL );
-	menuWindow->Append( menuQuit );
 
 	menuBar->Append( menuWindow, wxT("Window") );
 
@@ -53,6 +53,9 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	wxMenuItem* menuUpdates;
 	menuUpdates = new wxMenuItem( menuHelp, wxID_UP, wxString( wxT("Check for Updates") ) , wxT("Visit the updates page"), wxITEM_NORMAL );
 	menuHelp->Append( menuUpdates );
+
+	menuToggleSidebar = new wxMenuItem( menuHelp, wxID_INFO, wxString( wxT("Hide Sidebar") ) + wxT('\t') + wxT("Ctrl-I"), wxEmptyString, wxITEM_NORMAL );
+	menuHelp->Append( menuToggleSidebar );
 
 	menuBar->Append( menuHelp, wxT("Help") );
 
@@ -109,7 +112,6 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	directoryPanel->SetSizer( browserSizer );
 	directoryPanel->Layout();
 	browserSizer->Fit( directoryPanel );
-	wxPanel* propertyPanel;
 	propertyPanel = new wxPanel( mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxGridBagSizer* propertySizer;
 	propertySizer = new wxGridBagSizer( 0, 0 );
@@ -117,9 +119,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	propertySizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
 	propertyList = new wxDataViewListCtrl( propertyPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0 );
-	wxDataViewColumn* PLPropertyCol;
 	PLPropertyCol = propertyList->AppendTextColumn( wxT("Property"), wxDATAVIEW_CELL_INERT, 150, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
-	wxDataViewColumn* PLValueCol;
 	PLValueCol = propertyList->AppendTextColumn( wxT("Value"), wxDATAVIEW_CELL_ACTIVATABLE, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	propertySizer->Add( propertyList, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
 

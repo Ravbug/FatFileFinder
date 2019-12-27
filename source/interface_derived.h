@@ -57,6 +57,19 @@ private:
 	void OnUpdates(wxCommandEvent& event){
 		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/releases/latest");
 	}
+	void OnToggleSidebar(wxCommandEvent& event){
+		if (!mainSplitter->IsSplit()){
+			mainSplitter->SplitVertically(mainSplitter->GetWindow1(),propertyPanel);
+			mainSplitter->SetSashPosition(mainSplitter->GetSize().x * 3.0/4);
+			mainSplitter->UpdateSize();
+			menuToggleSidebar->SetItemLabel("Hide Sidebar\tCtrl-I");
+		}
+		else{
+			mainSplitter->Unsplit();
+			mainSplitter->UpdateSize();
+			menuToggleSidebar->SetItemLabel("Show Sidebar\tCtrl-I");
+		}
+	}
 	wxDECLARE_EVENT_TABLE();
 	
 #if defined __APPLE__ || defined __linux__
