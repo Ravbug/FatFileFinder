@@ -139,7 +139,7 @@ public:
 		if (!item1 || !item2){
 			return 0;
 		}
-	
+
 		//return the difference
 		return item1->folderData->size - item2->folderData->size;
 	}

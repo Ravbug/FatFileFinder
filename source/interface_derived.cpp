@@ -377,7 +377,7 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	StructurePtrData* ptr = (StructurePtrData*)fileBrowser->GetItemData(selected);
 	
 	//only resize folders, if a file is selected, stop
-	if (ptr == NULL || ptr->folderData == NULL){return;}
+	if (ptr == NULL || ptr->folderData == NULL || !ptr->folderData->isFolder){return;}
 	
 	//check if the folder still exists
 	if (exists(ptr->folderData->Path)){

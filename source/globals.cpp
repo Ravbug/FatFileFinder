@@ -40,6 +40,23 @@ static inline time_t file_modify_time(const std::string& path) {
 	return get_stat(path).st_mtime;
 }
 
+/**
+ Converts a time_t to a formatted date string
+ @param inTime the time_t to convert
+ @return formatted date string
+ */
+static inline std::string timeToString(time_t& inTime) {
+	tm* time;
+	time_t tm = inTime;
+	time = localtime(&tm);
+	if (time != NULL) {
+		char dateString[100];
+		strftime(dateString, 50, "%x %X", time);
+		return dateString;
+	}
+	return "Unavailable";
+}
+
 
 #pragma mark Windows functions
 #if defined _WIN32
@@ -92,13 +109,6 @@ inline void dpi_scale(wxWindow* window) {
 	float fac = get_WIN_dpi_multiple();
 	wxSize size = window->GetSize();
 	window->SetSize(wxSize(size.GetWidth() * fac,size.GetHeight()*fac));
-}
-
-static inline std::string timeToString(time_t inTime) {
-	//time_t cftime = decltype(inTime)::clock::to_time_t(inTime);
-	//return std::asctime(std::localtime(&cftime));
-	//std::chrono::system_clock::to_time_t((std::chrono::time_point<std::chrono::time_point)inTime);
-	return "Test";
 }
 
 /**
@@ -350,23 +360,6 @@ static inline std::string modet_type_for(const std::string& path){
 	}
 	//omit trailing comma
 	return result.substr(0,result.length()-2);
-}
-
-/**
- Converts a time_t to a formatted date string
- @param inTime the time_t to convert
- @return formatted date string
- */
-static inline std::string timeToString(time_t& inTime) {
-	tm* time;
-	time_t tm = inTime;
-	time = localtime(&tm);
-	if (time != NULL){
-		char dateString[100];
-		strftime(dateString, 50, "%x %X", time);
-		return dateString;
-	}
-	return "Unavailable";
 }
 
 /**
