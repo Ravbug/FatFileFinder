@@ -34,24 +34,24 @@ private:
 	int progIndex = 0;
 	wxTreeListItem lastUpdateItem;
 
-	string GetPathFromDialog(const string& message);
-	void AddSubItems(const wxTreeListItem& item, DirectoryData* data);
-	void SizeRootFolder(const string& folder);
-	void PopulateSidebar(StructurePtrData* data);
-	void AddFiles(wxTreeListItem root, DirectoryData* data);
+	string GetPathFromDialog(const string&);
+	void AddSubItems(const wxTreeListItem&, DirectoryData*);
+	void SizeRootFolder(const string&);
+	void PopulateSidebar(StructurePtrData*);
+	void AddFiles(wxTreeListItem root, DirectoryData*);
 	
-	void OnExit(wxCommandEvent& event);
-	void OnAbout(wxCommandEvent& event);
-	void OnOpenFolder(wxCommandEvent& event);
-	void OnStopSizing(wxCommandEvent& event);
-	void OnReloadFolder(wxCommandEvent& event);
-	void OnUpdateUI(wxCommandEvent& event);
-	void OnUpdateReload(wxCommandEvent& event);
-	void OnListExpanding(wxTreeListEvent& event);
-	void OnListSelection(wxTreeListEvent& event);
-	void OnCopy(wxCommandEvent& event);
-	void OnReveal(wxCommandEvent& event);
-	void OnSourceCode(wxCommandEvent& event){
+	void OnExit(wxCommandEvent&);
+	void OnAbout(wxCommandEvent&);
+	void OnOpenFolder(wxCommandEvent&);
+	void OnStopSizing(wxCommandEvent&);
+	void OnReloadFolder(wxCommandEvent&);
+	void OnUpdateUI(wxCommandEvent&);
+	void OnUpdateReload(wxCommandEvent&);
+	void OnListExpanding(wxTreeListEvent&);
+	void OnListSelection(wxTreeListEvent&);
+	void OnCopy(wxCommandEvent&);
+	void OnReveal(wxCommandEvent&);
+	void OnSourceCode(wxCommandEvent&){
 		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/");
 	}
 	void OnUpdates(wxCommandEvent& event){
@@ -130,6 +130,10 @@ public:
  */
 class sizeComparator : public wxTreeListItemComparator{
 public:
+	//attribution: https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
+	template <typename T> int sgn(T val) {
+		return (T(0) < val) - (val < T(0));
+	}
 	int Compare(wxTreeListCtrl *treelist, unsigned column, wxTreeListItem first, wxTreeListItem second){
 		//get client data
 		StructurePtrData* item1 = (StructurePtrData*)treelist->GetItemData(first);
@@ -140,7 +144,7 @@ public:
 			return 0;
 		}
 
-		//return the difference
-		return item1->folderData->size - item2->folderData->size;
+		//return -1, 0, or 1 
+		return sgn(item1->folderData->size - item2->folderData->size);
 	}
 };

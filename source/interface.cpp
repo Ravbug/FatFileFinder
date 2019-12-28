@@ -30,10 +30,6 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	stopSizingMenu = new wxMenuItem( menuFile, wxID_STOP, wxString( wxT("Stop Sizing Folder") ) , wxT("Stop the current size calculation"), wxITEM_NORMAL );
 	menuFile->Append( stopSizingMenu );
 
-	wxMenuItem* menuQuit;
-	menuQuit = new wxMenuItem( menuFile, wxID_EXIT, wxString( wxT("Close") ) + wxT('\t') + wxT("Ctrl-W"), wxT("Close FatFileFilder"), wxITEM_NORMAL );
-	menuFile->Append( menuQuit );
-
 	menuBar->Append( menuFile, wxT("File") );
 
 	wxMenu* menuWindow;
@@ -41,6 +37,10 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	wxMenuItem* menuAbout;
 	menuAbout = new wxMenuItem( menuWindow, wxID_ABOUT, wxString( wxT("About FatFileFinder") ) , wxT("Show information about this application"), wxITEM_NORMAL );
 	menuWindow->Append( menuAbout );
+
+	wxMenuItem* menuQuit;
+	menuQuit = new wxMenuItem( menuWindow, wxID_EXIT, wxString( wxT("Close") ) + wxT('\t') + wxT("Ctrl-W"), wxT("Close FatFileFilder"), wxITEM_NORMAL );
+	menuWindow->Append( menuQuit );
 
 	menuBar->Append( menuWindow, wxT("Window") );
 

@@ -77,7 +77,6 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 	if (!skipFolders){
 		data->subFolders.clear();
 	}
-	
 	// iterate through the items in the folder
 	for(auto& p : directory_iterator(data->Path)){
 		//is the item a folder? if so, defer sizing it
@@ -93,7 +92,7 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 			}
 			else{
 				//size the file, add its details to the structure
-				DirectoryData* file = new DirectoryData(p.path().string(),file_size(p));
+				DirectoryData* file = new DirectoryData(p.path().string(),stat_file_size(p.path().string()));
 				data->files_size += file->size;
 				file->parent = data;
 				file->modifyDate = file_modify_time(file->Path);
@@ -108,7 +107,7 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
  @param fileSize the size of the item in bytes
  @returns unitized string, example "12 KB"
  */
-string folderSizer::sizeToString(const unsigned long& fileSize){
+string folderSizer::sizeToString(const fileSize& fileSize){
 	string formatted = "";
 	int size = 1000;		//MB = 100, MiB = 1024
 	array<string,5> suffix { " bytes", " KB", " MB", " GB", " TB" };
@@ -195,6 +194,6 @@ string folderSizer::percentOfParent(DirectoryData* data){
 	if (data == NULL || data->parent == NULL){return "[waiting]";}
 	//round to 2 decimal places, then attach unit
 	char buffer[10];
-	sprintf(buffer,"%.1f",(double)data->size / data->parent->size * 100);
+	sprintf(buffer,"%.1f",(long double)data->size / (long double)data->parent->size * 100);
 	return string(buffer) + "%";
 }

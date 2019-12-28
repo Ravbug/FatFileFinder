@@ -21,29 +21,32 @@ using namespace std;
 	#include <filesystem>
 	using namespace std::filesystem;
 #endif
+typedef int64_t fileSize;
+
 
 //structure definitions
 struct DirectoryData{
 	string Path;
 	//see typedefs for platform-specific types
-	size_t size = 0;
+	fileSize size = 0;
 	time_t modifyDate;
 	
 	bool isFolder;
 	
-	DirectoryData(string inPath, bool folder){
+	DirectoryData(const string& inPath, bool folder){
 		Path = inPath;
 		isFolder = folder;
 	}
-	DirectoryData(string inPath, size_t inSize){
+	DirectoryData(const string& inPath, fileSize inSize){
 		Path = inPath;
 		size = inSize;
 		isFolder = false;
 	}
+
 	//for back navigation
 	DirectoryData* parent = NULL;
 	
-	unsigned long files_size = 1;
+	fileSize files_size = 1;
 	unsigned long num_items = 0;
 	vector<DirectoryData*> subFolders;
 	vector<DirectoryData*> files;
@@ -73,10 +76,10 @@ class folderSizer{
 public:
 	folderSizer();
 	~folderSizer();
-	DirectoryData* SizeFolder(const string& folder, const progCallback& progress);
-	void sizeImmediate(DirectoryData* data, const bool& skipFolders = false);
-	vector<DirectoryData*> getSuperFolders(DirectoryData* data);
-	static string percentOfParent(DirectoryData* data);
-	static string sizeToString(const unsigned long& fileSize);
-	static void recalculateStats(DirectoryData* data);
+	DirectoryData* SizeFolder(const string&, const progCallback&);
+	void sizeImmediate(DirectoryData*, const bool& skipFolders = false);
+	vector<DirectoryData*> getSuperFolders(DirectoryData*);
+	static string percentOfParent(DirectoryData*);
+	static string sizeToString(const fileSize&);
+	static void recalculateStats(DirectoryData*);
 };

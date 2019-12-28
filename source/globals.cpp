@@ -7,6 +7,7 @@
 //  Copyright © 2019 Ravbug. All rights reserved.
 //
 #include <wx/wx.h>
+#include <stdint.h>
 #pragma mark Shared functions
 static inline const std::string AppName = "FatFileFinder";
 static inline const std::string AppVersion = "0.1b";
@@ -38,6 +39,18 @@ inline struct stat get_stat(const std::string& path){
 
 static inline time_t file_modify_time(const std::string& path) {
 	return get_stat(path).st_mtime;
+}
+
+static inline time_t file_create_time(const std::string& path) {
+	return get_stat(path).st_ctime;
+}
+
+static inline time_t file_access_time(const std::string& path) {
+	return get_stat(path).st_atime;
+}
+
+static inline int64_t stat_file_size(const std::string& path) {
+	return get_stat(path).st_size;
 }
 
 /**
