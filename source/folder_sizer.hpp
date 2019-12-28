@@ -13,7 +13,6 @@
 using namespace std;
 
 #ifdef __APPLE__
-	typedef time_t fileTime;
 	#include <boost/filesystem.hpp>
 	#include <boost/range/iterator_range.hpp>
 	using namespace boost::filesystem;
@@ -21,7 +20,6 @@ using namespace std;
 #else
 	#include <filesystem>
 	using namespace std::filesystem;
-	typedef time_t fileTime;
 #endif
 
 //structure definitions
@@ -29,7 +27,7 @@ struct DirectoryData{
 	string Path;
 	//see typedefs for platform-specific types
 	size_t size = 0;
-	fileTime modifyDate;
+	time_t modifyDate;
 	
 	bool isFolder;
 	

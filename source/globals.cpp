@@ -36,6 +36,10 @@ inline struct stat get_stat(const std::string& path){
 	return buf;
 }
 
+static inline time_t file_modify_time(const std::string& path) {
+	return get_stat(path).st_mtime;
+}
+
 
 #pragma mark Windows functions
 #if defined _WIN32
@@ -90,7 +94,7 @@ inline void dpi_scale(wxWindow* window) {
 	window->SetSize(wxSize(size.GetWidth() * fac,size.GetHeight()*fac));
 }
 
-static inline std::string timeToString(std::filesystem::file_time_type inTime) {
+static inline std::string timeToString(time_t inTime) {
 	//time_t cftime = decltype(inTime)::clock::to_time_t(inTime);
 	//return std::asctime(std::localtime(&cftime));
 	//std::chrono::system_clock::to_time_t((std::chrono::time_point<std::chrono::time_point)inTime);
@@ -123,11 +127,11 @@ static inline bool is_hidden(const std::string& inPath) {
 
 static inline void reveal(const std::filesystem::path& fspath) {
 	std::string str;
-	if (std::filesystem::is_directory(path)){
-		str = path;
+	if (std::filesystem::is_directory(fspath)){
+		str = fspath.string();
 	}
 	else{
-		std::filesystem::path p(path);
+		std::filesystem::path p(fspath);
 		str = p.parent_path().string();
 	}
 	wxExecute(wxT("C:\\Windows\\explorer.exe \"" + str + "\""), wxEXEC_ASYNC);
@@ -372,10 +376,6 @@ static inline std::string timeToString(time_t& inTime) {
  */
 static inline long long size_on_disk(const std::string& path){
 	return get_stat(path).st_blocks * DEV_BSIZE;
-}
-
-static inline time_t file_modify_time(const std::string& path){
-	return get_stat(path).st_mtime;
 }
 
 #endif
