@@ -25,6 +25,10 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 	}
 	
 	DirectoryData* fd = new DirectoryData(folder,true);
+
+	if (abort) {
+		return fd;
+	}
 	
 	//calculate the size of the immediate files in the folder
 	try{
@@ -49,8 +53,6 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 		if (fd->subFolders[i] != NULL){
 			fd->num_items += fd->subFolders[i]->num_items + 1;
 			fd->size += fd->subFolders[i]->size;
-			//set modified time
-			fd->modifyDate = file_modify_time(fd->Path);
 			num++;
 			//check for zero size
 			if (fd->size == 0){
@@ -95,7 +97,6 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 				DirectoryData* file = new DirectoryData(p.path().string(),stat_file_size(p.path().string()));
 				data->files_size += file->size;
 				file->parent = data;
-				file->modifyDate = file_modify_time(file->Path);
 				data->files.push_back(file);
 			}
 		}

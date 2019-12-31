@@ -58,7 +58,7 @@ static inline int64_t stat_file_size(const std::string& path) {
  @param inTime the time_t to convert
  @return formatted date string
  */
-static inline std::string timeToString(time_t& inTime) {
+static inline std::string timeToString(const time_t& inTime) {
 	tm* time;
 	time_t tm = inTime;
 	time = localtime(&tm);

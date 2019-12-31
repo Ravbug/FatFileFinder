@@ -70,6 +70,10 @@ private:
 			menuToggleSidebar->SetItemLabel("Show Sidebar\tCtrl-I");
 		}
 	}
+	void OnAbort(wxCommandEvent& event) {
+		wxMessageBox("Stopped Sizing");
+		sizer.abort = true;
+	}
 	wxDECLARE_EVENT_TABLE();
 	
 #if defined __APPLE__ || defined __linux__

@@ -29,7 +29,6 @@ struct DirectoryData{
 	string Path;
 	//see typedefs for platform-specific types
 	fileSize size = 0;
-	time_t modifyDate;
 	
 	bool isFolder;
 	
@@ -82,4 +81,6 @@ public:
 	static string percentOfParent(DirectoryData*);
 	static string sizeToString(const fileSize&);
 	static void recalculateStats(DirectoryData*);
+
+	bool abort = false;
 };

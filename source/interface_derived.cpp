@@ -36,6 +36,7 @@ EVT_COMMAND(RELOADEVT,progEvt, MainFrame::OnUpdateReload)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
 EVT_BUTTON(COPYPATH, MainFrame::OnCopy)
 EVT_BUTTON(wxID_FIND, MainFrame::OnReveal)
+EVT_BUTTON(wxID_STOP, MainFrame::OnAbort)
 EVT_MENU(wxID_REFRESH,MainFrame::OnReloadFolder)
 EVT_BUTTON(wxID_REFRESH,MainFrame::OnReloadFolder)
 EVT_TREELIST_ITEM_EXPANDING(TREELIST,MainFrame::OnListExpanding)
@@ -74,9 +75,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	
 	//set up the default values for the left side table
 #if defined __APPLE__ || defined __linux__
-	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable","mode_t types","Permissions","Size on Disk"};
+	string properties[] = {"Name","Size","Type","Items","Modified","Created","Accessed","Is Hidden", "Is Read Only","Is Executable","mode_t types","Permissions","Size on Disk"};
 #elif defined _WIN32
-	string properties[] = {"Name","Size","Type","Items","Modified","Is Hidden", "Is Read Only","Is Executable", "Is Archive", "Is Compressed", "Is Encrypted", "Integrity Stream", "No Indexing", "No Scrubbing", "Is Offline", "Recall on Access", "Is Reparse Point", "Is Sparse File", "Is System", "Is Temporary", "Is Virtual"};
+	string properties[] = {"Name","Size","Type","Items","Modified","Created","Accessed","Is Hidden", "Is Read Only","Is Executable", "Is Archive", "Is Compressed", "Is Encrypted", "Integrity Stream", "No Indexing", "No Scrubbing", "Is Offline", "Recall on Access", "Is Reparse Point", "Is Sparse File", "Is System", "Is Temporary", "Is Virtual"};
 #endif
 	for (const string& p : properties){
 		//pairs, because 2 columns
@@ -103,6 +104,8 @@ void MainFrame::SizeRootFolder(const string& folder){
 	loaded.clear();
 	//clear old cells
 	fileBrowser->DeleteAllItems();
+	//enable sizing 
+	sizer.abort = false;
 	
 	worker = thread([&](string folder){
 		//called on progress updates
@@ -132,23 +135,28 @@ void MainFrame::SizeRootFolder(const string& folder){
 void MainFrame::AddSubItems(const wxTreeListItem& item,DirectoryData* data){
 	for(DirectoryData* d : data->subFolders){
 		//add the item, with its client data pointer
-		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + path(d->Path).leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
+		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + path(d == NULL? "[NULL]" : d->Path).leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
 		//set the other strings on the item
-		if (d->size > 0){
-			fileBrowser->SetItemText(added, 2, folderSizer::sizeToString(d->size));
-			fileBrowser->SetItemText(added,1,folderSizer::percentOfParent(d));
+		if (d == NULL) {
+			fileBrowser->SetItemText(added, 2, "[not loaded]");
+			fileBrowser->SetItemText(added, 1, "[not loaded]");
 		}
-		else{
-			fileBrowser->SetItemText(added,2,"[sizing]");
-			fileBrowser->SetItemText(added,1,"[waiting]");
+		else {
+			if (d->size > 0) {
+				fileBrowser->SetItemText(added, 2, folderSizer::sizeToString(d->size));
+				fileBrowser->SetItemText(added, 1, folderSizer::percentOfParent(d));
+			}
+			else {
+				fileBrowser->SetItemText(added, 2, "[sizing]");
+				fileBrowser->SetItemText(added, 1, "[waiting]");
+			}
+			//add placeholder to get disclosure triangle if there are sub items to show
+			if (d->subFolders.size() > 0 || d->files.size() > 0) {
+				fileBrowser->AppendItem(added, "Placeholder");
+			}
+			//add this item's files
+			AddFiles(added, d);
 		}
-		
-		//add placeholder to get disclosure triangle if there are sub items to show
-		if(d->subFolders.size() > 0 || d->files.size() > 0){
-			fileBrowser->AppendItem(added, "Placeholder");
-		}
-		//add this item's files
-		AddFiles(added,d);
 	}
 }
 /**
@@ -177,16 +185,18 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	propertyList->SetTextValue(p.leaf().string(), 0, 1);
 	
 	//modified date
-	propertyList->SetTextValue(timeToString(ptr->modifyDate),4,1);
+	propertyList->SetTextValue(timeToString(file_modify_time(ptr->Path)),4,1);
+	propertyList->SetTextValue(timeToString(file_create_time(ptr->Path)), 5, 1);
+	propertyList->SetTextValue(timeToString(file_access_time(ptr->Path)), 6, 1);
 	
 	//Is read only
-	propertyList->SetTextValue(is_writable(ptr->Path)? "No" : "Yes", 6, 1);
+	propertyList->SetTextValue(is_writable(ptr->Path)? "No" : "Yes", 8, 1);
 	
 	//Is executable
-	propertyList->SetTextValue(is_executable(ptr->Path)? "Yes" : "No", 7, 1);
+	propertyList->SetTextValue(is_executable(ptr->Path)? "Yes" : "No", 9, 1);
 	
 	//Is Hidden
-	propertyList->SetTextValue(is_hidden(ptr->Path)? "Yes" : "No", 5, 1);
+	propertyList->SetTextValue(is_hidden(ptr->Path)? "Yes" : "No", 7, 1);
 	
 #if defined __APPLE__ || defined __linux__
 	//mode_t
@@ -204,7 +214,7 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	auto args = file_attributes_for(ptr->Path);
 
 	for (int i = 0; i < args.size(); i++) {
-		propertyList->SetTextValue(args[i] ? "Yes" : "No", 8+i, 1);
+		propertyList->SetTextValue(args[i] ? "Yes" : "No", 9+i, 1);
 	}
 
 #endif
@@ -381,8 +391,18 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	
 	//check if the folder still exists
 	if (exists(ptr->folderData->Path)){
+		//enable sizing 
+		sizer.abort = false;
+
 		//Prepend item with same name, but [sizing for folder]
-		wxTreeListItem replaced = fileBrowser->InsertItem(fileBrowser->GetItemParent(selected),selected, fileBrowser->GetItemText(selected));
+		wxTreeListItem replaced;
+		try {
+			replaced = fileBrowser->InsertItem(fileBrowser->GetItemParent(selected), selected, fileBrowser->GetItemText(selected));
+		}
+		catch (exception) {
+			wxMessageBox("This item is not fully loaded.\nSize a folder completely before refreshing.", "Unable to size");
+			return;
+		}
 		fileBrowser->SetItemText(replaced, 2, "[sizing]");
 		
 		//create a thread to size that folder, return when finished
