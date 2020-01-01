@@ -195,6 +195,6 @@ string folderSizer::percentOfParent(DirectoryData* data){
 	if (data == NULL || data->parent == NULL){return "[waiting]";}
 	//round to 2 decimal places, then attach unit
 	char buffer[10];
-	sprintf(buffer,"%.1f",(long double)data->size / (long double)data->parent->size * 100);
+	sprintf(buffer,"%.1Lf",(long double)data->size / (long double)data->parent->size * 100);
 	return string(buffer) + "%";
 }
