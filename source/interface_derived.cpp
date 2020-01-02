@@ -281,7 +281,13 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	if(progIndex == fd->subFolders.size()){
 		wxTreeListItem item = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
 		for(DirectoryData* data : fd->subFolders){
-			fileBrowser->SetItemText(item, 1,folderSizer::percentOfParent(data));
+			if (data->size == 0) {
+				fileBrowser->SetItemText(item, 1, "???");
+				fileBrowser->SetItemText(item, 2, "[read error]");
+			}
+			else {
+				fileBrowser->SetItemText(item, 1, folderSizer::percentOfParent(data));
+			}
 			item = fileBrowser->GetNextSibling(item);
 		}
 		//sort the collumns descending
@@ -319,7 +325,13 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 	//get percents
 	wxTreeListItem item = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
 	for(DirectoryData* data : folderData->subFolders){
-		fileBrowser->SetItemText(item, 1,folderSizer::percentOfParent(data));
+		if (data->size == 0) {
+			fileBrowser->SetItemText(item, 1, "???");
+			fileBrowser->SetItemText(item, 2, "[read error]");
+		}
+		else {
+			fileBrowser->SetItemText(item, 1, folderSizer::percentOfParent(data));
+		}
 		item = fileBrowser->GetNextSibling(item);
 	}
 	

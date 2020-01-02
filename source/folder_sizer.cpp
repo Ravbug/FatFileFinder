@@ -36,32 +36,28 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 	}
 	catch(exception){
 		//notify user?
-		return NULL;
+		return fd;
 	}
 	
 	fd->size = fd->files_size;
 	fd->num_items = fd->files.size();
 	
 	//recursively size the folders in the folder
-	float num = 0;
 	for (int i = 0; i < fd->subFolders.size(); i++){
 		fd->subFolders[i] = SizeFolder(fd->subFolders[i]->Path, nullptr);
-		//error handle
-		if (fd->subFolders[i] == NULL){continue;}
+		
 		//update parent
-		fd->subFolders[i]->parent = fd;
 		if (fd->subFolders[i] != NULL){
+			fd->subFolders[i]->parent = fd;
 			fd->num_items += fd->subFolders[i]->num_items + 1;
 			fd->size += fd->subFolders[i]->size;
-			num++;
 			//check for zero size
 			if (fd->size == 0){
 				fd->size = 1;
 			}
-			
-			if (progress != nullptr){
-				progress(num / fd->subFolders.size(),fd);
-			}
+		}
+		if (progress != nullptr) {
+			progress((float)(i + 1) / fd->subFolders.size(), fd);
 		}
 	}
 
