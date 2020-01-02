@@ -8,6 +8,7 @@
 //
 #include <wx/wx.h>
 #include <stdint.h>
+#include <filesystem>
 #pragma mark Shared functions
 static inline const std::string AppName = "FatFileFinder";
 static inline const std::string AppVersion = "0.1b";
@@ -54,6 +55,15 @@ static inline int64_t stat_file_size(const std::string& path) {
 }
 
 /**
+ Determines if an item is accessible using std::filesystem
+ @param s the file_status object
+ @return true if accessible, false otherwise
+*/
+static inline bool can_access(const std::filesystem::file_status& s) {
+	return (s.permissions() & std::filesystem::perms::others_read) != std::filesystem::perms::none || (s.permissions() & std::filesystem::perms::owner_read) != std::filesystem::perms::none;
+}
+
+/**
  Converts a time_t to a formatted date string
  @param inTime the time_t to convert
  @return formatted date string
@@ -81,7 +91,6 @@ static inline std::string timeToString(const time_t& inTime) {
 #include <windows.h>
 #include <winnt.h>
 #include <array>
-#include <filesystem>
 
 /**
 @return the calculated display scale factor using GDI+
@@ -181,10 +190,11 @@ static inline std::array<bool, 13> file_attributes_for(const std::string& path) 
 
 #pragma mark macOS functions
 #elif defined __APPLE__
-	#include <boost/filesystem.hpp>
-	#include <boost/range/iterator_range.hpp>
+//	#include <boost/filesystem.hpp>
+//	#include <boost/range/iterator_range.hpp>
 	#include <sys/statvfs.h>
-	using namespace boost::filesystem;
+//	using namespace boost::filesystem;
+	using namespace std::filesystem;
 //place macOS-specific globals here
 
 /**
@@ -195,7 +205,7 @@ static inline std::array<bool, 13> file_attributes_for(const std::string& path) 
 static inline bool is_hidden(const std::string& strpath){
 	path p(strpath);
 	//true if path name starts with '.'
-	return p.leaf().string()[0] == '.';
+	return p.filename().string()[0] == '.';
 }
 
 /**
@@ -224,22 +234,12 @@ static inline bool path_too_long(const std::string& inPath){
 	path p = path(inPath);
 	struct statvfs buf;
 	statvfs(inPath.c_str(),&buf);
-	return p.leaf().string().size() > buf.f_namemax;
-}
-
-/**
- Determines if an item is accessible using boost::filesystem
- @param s the file_status object
- @return true if accessible, false otherwise
-*/
-static inline bool can_access(const file_status& s) {
-	return (s.permissions() & perms::others_read) != perms::no_perms || (s.permissions() & perms::owner_read) != perms::no_perms;
+	return p.filename().string().size() > buf.f_namemax;
 }
 
 #pragma mark Linux functions
 #elif defined __linux__
 #include <limits.h>
-#include <filesystem>
 #include <sys/statvfs.h>
 /**
  Determines if a path is too long to process. On Linux, a file path cannot exceed 4096 characters, and a filename cannot exceed 255 bytes.
@@ -295,14 +295,6 @@ static inline bool is_hidden(const std::string& strpath){
 #if defined __linux__ || defined _WIN32
 #define leaf() filename()
 
-/**
- Determines if an item is accessible using std::filesystem
- @param s the file_status object 
- @return true if accessible, false otherwise
-*/
-static inline bool can_access(const std::filesystem::file_status& s) {
-	return (s.permissions() & std::filesystem::perms::others_read) != std::filesystem::perms::none || (s.permissions() & std::filesystem::perms::owner_read) != std::filesystem::perms::none;
-}
 #endif
 
 #pragma mark Unix-like functions

@@ -135,7 +135,7 @@ void MainFrame::SizeRootFolder(const string& folder){
 void MainFrame::AddSubItems(const wxTreeListItem& item,DirectoryData* data){
 	for(DirectoryData* d : data->subFolders){
 		//add the item, with its client data pointer
-		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + path(d == NULL? "[NULL]" : d->Path).leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
+		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + path(d == NULL? "[NULL]" : d->Path).filename().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
 		//set the other strings on the item
 		if (d == NULL) {
 			fileBrowser->SetItemText(added, 2, "[not loaded]");
@@ -182,7 +182,7 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 		propertyList->SetTextValue(to_string(spd->folderData->num_items),3,1);
 	}
 	ptr = spd->folderData;
-	propertyList->SetTextValue(p.leaf().string(), 0, 1);
+	propertyList->SetTextValue(p.filename().string(), 0, 1);
 	
 	//modified date
 	propertyList->SetTextValue(timeToString(file_modify_time(ptr->Path)),4,1);
@@ -233,7 +233,7 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 void MainFrame::AddFiles(wxTreeListItem root, DirectoryData* data){
 	//populate files
 	for(DirectoryData* f : data->files){
-		wxTreeListItem fileItem = fileBrowser->AppendItem(root,iconForExtension(path(f->Path).extension().string()) + "\t" + path(f->Path).leaf().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
+		wxTreeListItem fileItem = fileBrowser->AppendItem(root,iconForExtension(path(f->Path).extension().string()) + "\t" + path(f->Path).filename().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
 		fileBrowser->SetItemText(fileItem, 2, folderSizer::sizeToString(f->size));
 		fileBrowser->SetItemText(fileItem, 1,folderSizer::percentOfParent(f));
 	}
@@ -487,7 +487,7 @@ void MainFrame::OnListExpanding(wxTreeListEvent& event){
 			fileBrowser->DeleteItem(placeholder);
 		}
 		AddSubItems(item,data);
-		if (data->parent == folderData){
+		if (data->parent == folderData && data->subFolders.size() == 0){
 			AddFiles(item, data);
 		}
 	}

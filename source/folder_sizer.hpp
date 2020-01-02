@@ -10,16 +10,16 @@
 #include <stdio.h>
 #include <functional>
 #include <vector>
+#include <filesystem>
 using namespace std;
+using namespace std::filesystem;
 
 #ifdef __APPLE__
-	#include <boost/filesystem.hpp>
-	#include <boost/range/iterator_range.hpp>
-	using namespace boost::filesystem;
-	#define ofstream_scope boost::filesystem
+//	#include <boost/filesystem.hpp>
+//	#include <boost/range/iterator_range.hpp>
+//	using namespace boost::filesystem;
+//	#define ofstream_scope boost::filesystem
 #else
-	#include <filesystem>
-	using namespace std::filesystem;
 #endif
 typedef int64_t fileSize;
 

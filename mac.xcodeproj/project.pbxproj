@@ -750,11 +750,11 @@
 					"\"$(BOOSTROOT)/unix/include\"",
 				);
 				LIBRARY_SEARCH_PATHS = "$(BOOSTROOT)/unix/lib";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "$(BOOSTROOT)/unix/lib/libboost_filesystem.a";
+				OTHER_LDFLAGS = "";
 				SDKROOT = macosx;
 				WXPLATFORM = __WXOSX_COCOA__;
 				WXROOT = "$(PROJECT_DIR)/wxWidgets";
@@ -819,10 +819,10 @@
 					"\"$(BOOSTROOT)/unix/include\"",
 				);
 				LIBRARY_SEARCH_PATHS = "$(BOOSTROOT)/unix/lib";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				OTHER_LDFLAGS = "$(BOOSTROOT)/unix/lib/libboost_filesystem.a";
+				OTHER_LDFLAGS = "";
 				SDKROOT = macosx;
 				WXPLATFORM = __WXOSX_COCOA__;
 				WXROOT = "$(PROJECT_DIR)/wxWidgets";
@@ -842,7 +842,6 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1b;
-				OTHER_LDFLAGS = "$(OTHER_LDFLAGS)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.wxTemplateDynamic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -859,7 +858,6 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1b;
-				OTHER_LDFLAGS = "$(OTHER_LDFLAGS)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.wxTemplateDynamic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -890,7 +888,6 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1b;
-				OTHER_LDFLAGS = "$(OTHER_LDFLAGS)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.wxTemplateStatic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -921,7 +918,6 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1b;
-				OTHER_LDFLAGS = "$(OTHER_LDFLAGS)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.wxTemplateStatic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
