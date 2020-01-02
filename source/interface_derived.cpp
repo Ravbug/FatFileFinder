@@ -475,7 +475,9 @@ void MainFrame::OnListExpanding(wxTreeListEvent& event){
 			fileBrowser->DeleteItem(placeholder);
 		}
 		AddSubItems(item,data);
-		AddFiles(item, data);
+		if (data->parent == folderData){
+			AddFiles(item, data);
+		}
 	}
 	//mark as loaded
 	loaded.insert(key);
