@@ -25,8 +25,10 @@
 #include <wx/treelist.h>
 #include <wx/sizer.h>
 #include <wx/panel.h>
-#include <wx/dataview.h>
+#include <wx/textctrl.h>
+#include <wx/stattext.h>
 #include <wx/splitter.h>
+#include <wx/dataview.h>
 #include <wx/frame.h>
 
 ///////////////////////////////////////////////////////////////////////////
@@ -45,12 +47,17 @@ class MainFrameBase : public wxFrame
 	protected:
 		wxStatusBar* statusBar;
 		wxMenuItem* menuToggleSidebar;
+		wxMenuItem* menuToggleLog;
 		wxButton* openFolderBtn;
 		wxButton* reloadFolderBtn;
 		wxButton* stopSizeBtn;
 		wxGauge* progressBar;
 		wxSplitterWindow* mainSplitter;
+		wxSplitterWindow* browserSplitter;
 		wxTreeListCtrl* fileBrowser;
+		wxPanel* logPanel;
+		wxTextCtrl* logCtrl;
+		wxButton* m_button7;
 		wxPanel* propertyPanel;
 		wxDataViewListCtrl* propertyList;
 		wxDataViewColumn* PLPropertyCol;
@@ -68,6 +75,12 @@ class MainFrameBase : public wxFrame
 		{
 			mainSplitter->SetSashPosition( 700 );
 			mainSplitter->Disconnect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::mainSplitterOnIdle ), NULL, this );
+		}
+
+		void browserSplitterOnIdle( wxIdleEvent& )
+		{
+			browserSplitter->SetSashPosition( 800 );
+			browserSplitter->Disconnect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::browserSplitterOnIdle ), NULL, this );
 		}
 
 };

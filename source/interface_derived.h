@@ -70,6 +70,19 @@ private:
 			menuToggleSidebar->SetItemLabel("Show Sidebar\tCtrl-I");
 		}
 	}
+	void OnToggleLog(wxCommandEvent& event){
+		if (!browserSplitter->IsSplit()){
+			browserSplitter->SplitHorizontally(browserSplitter->GetWindow1(),logPanel);
+			browserSplitter->SetSashPosition(browserSplitter->GetSize().x * 3.0/4);
+			browserSplitter->UpdateSize();
+			menuToggleLog->SetItemLabel("Hide Log\tCtrl-L");
+		}
+		else{
+			browserSplitter->Unsplit();
+			browserSplitter->UpdateSize();
+			menuToggleLog->SetItemLabel("Show Log\tCtrl-L");
+		}
+	}
 	void OnAbort(wxCommandEvent& event) {
 		if (!sizer.abort) {
 			wxMessageBox("Stopped Sizing");

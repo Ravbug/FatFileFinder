@@ -57,6 +57,9 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	menuToggleSidebar = new wxMenuItem( menuHelp, wxID_INFO, wxString( wxT("Hide Sidebar") ) + wxT('\t') + wxT("Ctrl-I"), wxEmptyString, wxITEM_NORMAL );
 	menuHelp->Append( menuToggleSidebar );
 
+	menuToggleLog = new wxMenuItem( menuHelp, wxID_JUSTIFY_CENTER, wxString( wxT("Show Log") ) + wxT('\t') + wxT("Ctrl-L"), wxEmptyString, wxITEM_NORMAL );
+	menuHelp->Append( menuToggleLog );
+
 	menuBar->Append( menuHelp, wxT("Help") );
 
 	this->SetMenuBar( menuBar );
@@ -101,12 +104,57 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	wxBoxSizer* browserSizer;
 	browserSizer = new wxBoxSizer( wxVERTICAL );
 
-	fileBrowser = new wxTreeListCtrl( directoryPanel, TREELIST, wxDefaultPosition, wxDefaultSize, wxTL_DEFAULT_STYLE|wxTL_SINGLE );
+	browserSplitter = new wxSplitterWindow( directoryPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE|wxSP_NOBORDER|wxSP_PERMIT_UNSPLIT|wxSP_THIN_SASH );
+	browserSplitter->SetSashGravity( 1 );
+	browserSplitter->Connect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::browserSplitterOnIdle ), NULL, this );
+	browserSplitter->SetMinimumPaneSize( 150 );
+
+	wxPanel* browserPanel;
+	browserPanel = new wxPanel( browserSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* browserSizerInner;
+	browserSizerInner = new wxBoxSizer( wxVERTICAL );
+
+	fileBrowser = new wxTreeListCtrl( browserPanel, TREELIST, wxDefaultPosition, wxDefaultSize, wxTL_DEFAULT_STYLE|wxTL_SINGLE );
 	fileBrowser->AppendColumn( wxT("File Name"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_LEFT, wxCOL_RESIZABLE );
 	fileBrowser->AppendColumn( wxT("Percentage"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER, wxCOL_RESIZABLE|wxCOL_SORTABLE );
 	fileBrowser->AppendColumn( wxT("Size"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_RIGHT, wxCOL_RESIZABLE|wxCOL_SORTABLE );
 
-	browserSizer->Add( fileBrowser, 1, wxEXPAND | wxALL, 5 );
+	browserSizerInner->Add( fileBrowser, 1, wxEXPAND | wxALL, 5 );
+
+
+	browserPanel->SetSizer( browserSizerInner );
+	browserPanel->Layout();
+	browserSizerInner->Fit( browserPanel );
+	logPanel = new wxPanel( browserSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxGridBagSizer* logSizer;
+	logSizer = new wxGridBagSizer( 0, 0 );
+	logSizer->SetFlexibleDirection( wxBOTH );
+	logSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+
+	logCtrl = new wxTextCtrl( logPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_BESTWRAP|wxTE_MULTILINE|wxTE_READONLY );
+	logSizer->Add( logCtrl, wxGBPosition( 0, 0 ), wxGBSpan( 1, 3 ), wxEXPAND|wxTOP|wxRIGHT, 5 );
+
+	wxStaticText* m_staticText1;
+	m_staticText1 = new wxStaticText( logPanel, wxID_ANY, wxT("Error Log"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText1->Wrap( -1 );
+	logSizer->Add( m_staticText1, wxGBPosition( 1, 0 ), wxGBSpan( 1, 1 ), wxALL, 5 );
+
+	wxButton* m_button6;
+	m_button6 = new wxButton( logPanel, wxID_ANY, wxT("Copy Log"), wxDefaultPosition, wxDefaultSize, 0 );
+	logSizer->Add( m_button6, wxGBPosition( 1, 1 ), wxGBSpan( 1, 1 ), wxALL, 5 );
+
+	m_button7 = new wxButton( logPanel, wxID_ANY, wxT("Clear Log"), wxDefaultPosition, wxDefaultSize, 0 );
+	logSizer->Add( m_button7, wxGBPosition( 1, 2 ), wxGBSpan( 1, 1 ), wxALL, 5 );
+
+
+	logSizer->AddGrowableCol( 0 );
+	logSizer->AddGrowableRow( 0 );
+
+	logPanel->SetSizer( logSizer );
+	logPanel->Layout();
+	logSizer->Fit( logPanel );
+	browserSplitter->SplitHorizontally( browserPanel, logPanel, 800 );
+	browserSizer->Add( browserSplitter, 1, wxEXPAND, 5 );
 
 
 	directoryPanel->SetSizer( browserSizer );

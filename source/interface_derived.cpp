@@ -31,6 +31,7 @@ EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
 EVT_MENU(wxID_INDENT, MainFrame::OnSourceCode)
 EVT_MENU(wxID_UP, MainFrame::OnUpdates)
 EVT_MENU(wxID_INFO, MainFrame::OnToggleSidebar)
+EVT_MENU(wxID_JUSTIFY_CENTER, MainFrame::OnToggleLog)
 EVT_COMMAND(PROGEVT, progEvt, MainFrame::OnUpdateUI)
 EVT_COMMAND(RELOADEVT,progEvt, MainFrame::OnUpdateReload)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
@@ -91,6 +92,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	PLPropertyCol->SetWidth(wxCOL_WIDTH_AUTOSIZE);
 	//create the sorting object
 	fileBrowser->SetItemComparator(new sizeComparator());
+	
+	// default unsplit
+	browserSplitter->Unsplit();
 }
 
 /**
@@ -275,7 +279,7 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	}
 	progIndex++;
 	//set titlebar
-	SetTitle(AppName + " - Sizing " + to_string(prog) + "% " + fd->Path + " [" + folderSizer::sizeToString(fd->size) + "]");
+	SetTitle(AppName + " v" + AppVersion + " - Sizing " + to_string(prog) + "% " + fd->Path + " [" + folderSizer::sizeToString(fd->size) + "]");
 	
 	//set percentage on completion
 	if(progIndex == fd->subFolders.size()){
