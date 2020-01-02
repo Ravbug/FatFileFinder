@@ -71,8 +71,10 @@ private:
 		}
 	}
 	void OnAbort(wxCommandEvent& event) {
-		wxMessageBox("Stopped Sizing");
-		sizer.abort = true;
+		if (!sizer.abort) {
+			wxMessageBox("Stopped Sizing");
+			sizer.abort = true;
+		}
 	}
 	wxDECLARE_EVENT_TABLE();
 	

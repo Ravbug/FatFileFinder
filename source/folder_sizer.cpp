@@ -20,11 +20,10 @@ folderSizer::~folderSizer(){}
  @return the FolderData structure representing the entire directory tree
  */
 DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback& progress){
+	DirectoryData* fd = new DirectoryData(folder, true);
 	if (path_too_long(folder)){
-		return NULL;
+		return fd;
 	}
-	
-	DirectoryData* fd = new DirectoryData(folder,true);
 
 	if (abort) {
 		return fd;
@@ -34,9 +33,10 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 	try{
 		sizeImmediate(fd);
 	}
-	catch(exception){
+	catch(exception e){
 		//notify user?
-		return fd;
+		wxMessageBox("Exception sizing " + folder + "\n" + e.what() ,"Error sizing");
+		return NULL;
 	}
 	
 	fd->size = fd->files_size;
@@ -76,26 +76,30 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 		data->subFolders.clear();
 	}
 	// iterate through the items in the folder
-	for(auto& p : directory_iterator(data->Path)){
+	for(auto& p : directory_iterator(data->Path,directory_options::skip_permission_denied)){
 		//is the item a folder? if so, defer sizing it
 		//check if can read the file
-		file_status s = status(p.path());
-		if (can_access(s))
-		{
-			if (is_directory(p)){
-				if (!skipFolders){
-					DirectoryData* sub = new DirectoryData(p.path().string(),true);
-					data->subFolders.push_back(sub);
+		try {
+			file_status s = status(p.path());
+			if (can_access(s))
+			{
+				if (is_directory(p)) {
+					if (!skipFolders) {
+						DirectoryData* sub = new DirectoryData(p.path().string(), true);
+						data->subFolders.push_back(sub);
+					}
+				}
+				else {
+					//size the file, add its details to the structure
+					DirectoryData* file = new DirectoryData(p.path().string(), stat_file_size(p.path().string()));
+					data->files_size += file->size;
+					file->parent = data;
+					data->files.push_back(file);
+
 				}
 			}
-			else{
-				//size the file, add its details to the structure
-				DirectoryData* file = new DirectoryData(p.path().string(),stat_file_size(p.path().string()));
-				data->files_size += file->size;
-				file->parent = data;
-				data->files.push_back(file);
-			}
 		}
+		catch (exception) {}
 	}
 }
 

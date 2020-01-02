@@ -30,7 +30,7 @@ struct DirectoryData{
 	//see typedefs for platform-specific types
 	fileSize size = 0;
 	
-	bool isFolder;
+	bool isFolder = false;
 	
 	DirectoryData(const string& inPath, bool folder){
 		Path = inPath;
@@ -82,5 +82,5 @@ public:
 	static string sizeToString(const fileSize&);
 	static void recalculateStats(DirectoryData*);
 
-	bool abort = false;
+	bool abort = true;
 };

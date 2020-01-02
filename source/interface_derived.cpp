@@ -214,7 +214,7 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	auto args = file_attributes_for(ptr->Path);
 
 	for (int i = 0; i < args.size(); i++) {
-		propertyList->SetTextValue(args[i] ? "Yes" : "No", 9+i, 1);
+		propertyList->SetTextValue(args[i] ? "Yes" : "No", 10+i, 1);
 	}
 
 #endif
