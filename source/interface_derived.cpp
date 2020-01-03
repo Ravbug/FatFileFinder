@@ -208,13 +208,13 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	
 #if defined __APPLE__ || defined __linux__
 	//mode_t
-	propertyList->SetTextValue(modet_type_for(ptr->Path), 8, 1);
+	propertyList->SetTextValue(modet_type_for(ptr->Path), 10, 1);
 
 	//perms string
-	propertyList->SetTextValue(permstr_for(ptr->Path), 9, 1);
+	propertyList->SetTextValue(permstr_for(ptr->Path), 11, 1);
 	
 	//Size on disk
-	propertyList->SetTextValue(!ptr->isFolder? folderSizer::sizeToString(size_on_disk(ptr->Path)) : "-", 10, 1);
+	propertyList->SetTextValue(!ptr->isFolder? folderSizer::sizeToString(size_on_disk(ptr->Path)) : "-", 12, 1);
 	
 # elif defined _WIN32
 
@@ -283,7 +283,10 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	}
 	progIndex++;
 	//set titlebar
-	UpdateTitlebar(prog, folderSizer::sizeToString(fd->size));
+	{
+		string sizestr = folderSizer::sizeToString(fd->size);
+		UpdateTitlebar(prog, sizestr);
+	}
 	
 	//set percentage on completion
 	if(progIndex == fd->subFolders.size()){
@@ -344,7 +347,7 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 	}
 	
 	//update titlebar
-	SetTitle(AppName + " - Sizing " + to_string(100) + "% " + folderData->Path + " [" + folderSizer::sizeToString(folderData->size) + "]");
+	UpdateTitlebar(100,folderSizer::sizeToString(folderData->size));
 }
 
 void MainFrame::OnCopy(wxCommandEvent& event){

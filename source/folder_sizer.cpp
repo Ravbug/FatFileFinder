@@ -36,10 +36,10 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 	try{
 		sizeImmediate(fd);
 	}
-	catch(exception e){
+	catch(filesystem_error e){
 		//notify user
 		Log("Exception sizing directory " + folder + "\n" + e.what());
-		return NULL;
+		return fd;
 	}
 	
 	fd->size = fd->files_size;
@@ -102,7 +102,7 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 				}
 			}
 		}
-		catch (exception e) {
+		catch (filesystem_error e) {
 			Log("Error sizing file " + p.path().string() + "\n" + e.what());
 		}
 	}
