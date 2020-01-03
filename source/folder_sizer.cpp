@@ -10,9 +10,9 @@
 #include <array>
 
 //constructor and destructor
-folderSizer::folderSizer()
+folderSizer::folderSizer(wxWindow* Parent)
 {
-	//MainWindow = owner;
+	ParentWindow = Parent;
 }
 folderSizer::~folderSizer(){}
 
@@ -38,7 +38,7 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 	}
 	catch(exception e){
 		//notify user
-		//MainWindow->Log("Exception sizing directory " + folder + "\n" + e.what());
+		Log("Exception sizing directory " + folder + "\n" + e.what());
 		return NULL;
 	}
 	
@@ -103,7 +103,7 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 			}
 		}
 		catch (exception e) {
-			//MainWindow->Log("Error sizing file " + p.path().string() + "\n" + e.what());
+			Log("Error sizing file " + p.path().string() + "\n" + e.what());
 		}
 	}
 }

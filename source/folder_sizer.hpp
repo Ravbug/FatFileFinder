@@ -75,8 +75,9 @@ typedef function<void(float progress, DirectoryData* data)> progCallback;
 class folderSizer{
 public:
 	bool abort = true;
+	wxWindow* ParentWindow;
 
-	folderSizer();
+	folderSizer(wxWindow*);
 	~folderSizer();
 	DirectoryData* SizeFolder(const string&, const progCallback&);
 	void sizeImmediate(DirectoryData*, const bool& skipFolders = false);
@@ -84,5 +85,15 @@ public:
 	static string percentOfParent(DirectoryData*);
 	static string sizeToString(const fileSize&);
 	static void recalculateStats(DirectoryData*);
+
+	/**
+	Display a message in the log
+	@param msg the string to display
+	*/
+	void Log(const string& msg) {
+		wxCommandEvent* evt = new wxCommandEvent(progEvt, LOGEVT);
+		evt->SetString(msg);
+		ParentWindow->GetEventHandler()->QueueEvent(evt);
+	}
 
 };

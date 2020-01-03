@@ -9,7 +9,6 @@
 #include "interface_derived.h"
 #include <wx/generic/aboutdlgg.h>
 #include <wx/aboutdlg.h>
-#include <wx/clipbrd.h>
 
 //include the icon file on linux
 #ifdef __linux
@@ -19,20 +18,22 @@
 
 //Declare event mapping here
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
-EVT_MENU(wxID_EXIT,  MainFrame::OnExit)
+EVT_MENU(wxID_EXIT, MainFrame::OnExit)
 EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
-EVT_MENU(wxID_OPEN,MainFrame::OnOpenFolder)
+EVT_MENU(wxID_OPEN, MainFrame::OnOpenFolder)
 EVT_MENU(wxID_INDENT, MainFrame::OnSourceCode)
 EVT_MENU(wxID_UP, MainFrame::OnUpdates)
 EVT_MENU(wxID_INFO, MainFrame::OnToggleSidebar)
 EVT_MENU(wxID_JUSTIFY_CENTER, MainFrame::OnToggleLog)
 EVT_COMMAND(PROGEVT, progEvt, MainFrame::OnUpdateUI)
-EVT_COMMAND(RELOADEVT,progEvt, MainFrame::OnUpdateReload)
+EVT_COMMAND(RELOADEVT, progEvt, MainFrame::OnUpdateReload)
 EVT_COMMAND(LOGEVT, progEvt, MainFrame::OnLog)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
 EVT_BUTTON(COPYPATH, MainFrame::OnCopy)
 EVT_BUTTON(wxID_FIND, MainFrame::OnReveal)
 EVT_BUTTON(wxID_STOP, MainFrame::OnAbort)
+EVT_BUTTON(wxID_CLEAR, MainFrame::OnClearLog)
+EVT_BUTTON(wxID_COPY, MainFrame::OnCopyLog)
 EVT_MENU(wxID_REFRESH,MainFrame::OnReloadFolder)
 EVT_BUTTON(wxID_REFRESH,MainFrame::OnReloadFolder)
 EVT_TREELIST_ITEM_EXPANDING(TREELIST,MainFrame::OnListExpanding)
@@ -99,6 +100,13 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 void MainFrame::SizeRootFolder(const string& folder){
 	//deallocate existing data
 	delete folderData;
+	//clear the log
+	logCtrl->SetValue("");
+	//hide the log
+	if (browserSplitter->IsSplit()) {
+		wxCommandEvent e;
+		OnToggleLog(e);
+	}
 	progIndex = 0;
 	loaded.clear();
 	//clear old cells
@@ -563,4 +571,43 @@ void MainFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.SetIcon(wxICON(wxlin_s));
 #endif
 	wxAboutBox(aboutInfo);
+}
+
+/**
+Toggle the info sidebar
+Called when the menu is activated
+@param event the event from the caller (unused)
+*/
+void MainFrame::OnToggleSidebar(wxCommandEvent& event) {
+	if (!mainSplitter->IsSplit()) {
+		mainSplitter->SplitVertically(mainSplitter->GetWindow1(), propertyPanel);
+		mainSplitter->SetSashPosition(mainSplitter->GetSize().x * 3.0 / 4);
+		mainSplitter->UpdateSize();
+		menuToggleSidebar->SetItemLabel("Hide Sidebar\tCtrl-I");
+	}
+	else {
+		userClosedLog = true;
+		mainSplitter->Unsplit();
+		mainSplitter->UpdateSize();
+		menuToggleSidebar->SetItemLabel("Show Sidebar\tCtrl-I");
+	}
+}
+
+/**
+Toggle the log panel
+Called when the menu is activated
+@param event the event from the caller (unused)
+*/
+void MainFrame::OnToggleLog(wxCommandEvent& event) {
+	if (!browserSplitter->IsSplit()) {
+		browserSplitter->SplitHorizontally(browserSplitter->GetWindow1(), logPanel);
+		browserSplitter->SetSashPosition(browserSplitter->GetSize().x * 3.0 / 4);
+		browserSplitter->UpdateSize();
+		menuToggleLog->SetItemLabel("Hide Log\tCtrl-L");
+	}
+	else {
+		browserSplitter->Unsplit();
+		browserSplitter->UpdateSize();
+		menuToggleLog->SetItemLabel("Show Log\tCtrl-L");
+	}
 }

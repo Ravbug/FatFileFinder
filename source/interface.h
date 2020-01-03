@@ -57,7 +57,6 @@ class MainFrameBase : public wxFrame
 		wxTreeListCtrl* fileBrowser;
 		wxPanel* logPanel;
 		wxTextCtrl* logCtrl;
-		wxButton* m_button7;
 		wxPanel* propertyPanel;
 		wxDataViewListCtrl* propertyList;
 		wxDataViewColumn* PLPropertyCol;

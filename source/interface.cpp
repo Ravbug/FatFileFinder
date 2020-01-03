@@ -140,10 +140,11 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	logSizer->Add( m_staticText1, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL, 5 );
 
 	wxButton* m_button6;
-	m_button6 = new wxButton( logPanel, wxID_ANY, wxT("Copy Log"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_button6 = new wxButton( logPanel, wxID_COPY, wxT("Copy Log"), wxDefaultPosition, wxDefaultSize, 0 );
 	logSizer->Add( m_button6, wxGBPosition( 0, 1 ), wxGBSpan( 1, 1 ), wxALL, 5 );
 
-	m_button7 = new wxButton( logPanel, wxID_ANY, wxT("Clear Log"), wxDefaultPosition, wxDefaultSize, 0 );
+	wxButton* m_button7;
+	m_button7 = new wxButton( logPanel, wxID_CLEAR, wxT("Clear Log"), wxDefaultPosition, wxDefaultSize, 0 );
 	logSizer->Add( m_button7, wxGBPosition( 0, 2 ), wxGBSpan( 1, 1 ), wxALL, 5 );
 
 

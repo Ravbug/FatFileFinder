@@ -15,6 +15,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <wx/treebase.h>
+#include <wx/clipbrd.h>
 
 using namespace std;
 
@@ -31,13 +32,19 @@ public:
 	Log a message to the console
 	@param msg the string to log
 	*/
-	void Log(const string& msg) {
-		wxCommandEvent event(progEvt, LOGEVT);
-		event.SetString(msg);
-		wxPostEvent(this, event);
+	void Log(const wxString& msg) {
+		logCtrl->AppendText(msg + "\n");
+		if (!userClosedLog && !browserSplitter->IsSplit()) {
+			auto e = wxCommandEvent();
+			OnToggleLog(e);
+		}
 	}
+	void OnLog(wxCommandEvent& evt) {
+		Log(evt.GetString());
+	}
+
 private:
-	folderSizer sizer;
+	folderSizer sizer = folderSizer(this);
 	DirectoryData* folderData = NULL;
 	thread worker;
 	unordered_set<string> loaded;
@@ -60,50 +67,30 @@ private:
 	void OnListExpanding(wxTreeListEvent&);
 	void OnListSelection(wxTreeListEvent&);
 	void OnCopy(wxCommandEvent&);
+	void OnToggleSidebar(wxCommandEvent&);
+	void OnToggleLog(wxCommandEvent&);
 	void OnReveal(wxCommandEvent&);
-	void OnLog(wxCommandEvent& evt) {
-		logCtrl->AppendText((evt.GetString()) + "\n");
-		if (!userClosedLog && !browserSplitter->IsSplit()) {
-			OnToggleLog(evt);
-		}
-	}
+
 	void OnSourceCode(wxCommandEvent&){
 		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/");
 	}
 	void OnUpdates(wxCommandEvent& event){
 		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/releases/latest");
 	}
-	void OnToggleSidebar(wxCommandEvent& event){
-		if (!mainSplitter->IsSplit()){
-			mainSplitter->SplitVertically(mainSplitter->GetWindow1(),propertyPanel);
-			mainSplitter->SetSashPosition(mainSplitter->GetSize().x * 3.0/4);
-			mainSplitter->UpdateSize();
-			menuToggleSidebar->SetItemLabel("Hide Sidebar\tCtrl-I");
-		}
-		else{
-			userClosedLog = true;
-			mainSplitter->Unsplit();
-			mainSplitter->UpdateSize();
-			menuToggleSidebar->SetItemLabel("Show Sidebar\tCtrl-I");
-		}
-	}
-	void OnToggleLog(wxCommandEvent& event){
-		if (!browserSplitter->IsSplit()){
-			browserSplitter->SplitHorizontally(browserSplitter->GetWindow1(),logPanel);
-			browserSplitter->SetSashPosition(browserSplitter->GetSize().x * 3.0/4);
-			browserSplitter->UpdateSize();
-			menuToggleLog->SetItemLabel("Hide Log\tCtrl-L");
-		}
-		else{
-			browserSplitter->Unsplit();
-			browserSplitter->UpdateSize();
-			menuToggleLog->SetItemLabel("Show Log\tCtrl-L");
-		}
-	}
 	void OnAbort(wxCommandEvent& event) {
 		if (!sizer.abort) {
 			wxMessageBox("Stopped Sizing");
 			sizer.abort = true;
+		}
+	}
+	void OnClearLog(wxCommandEvent& event) {
+		logCtrl->SetValue("");
+	}
+	void OnCopyLog(wxCommandEvent& event) {
+		//copy values to the clipboard
+		if (wxTheClipboard->Open()) {
+			wxTheClipboard->SetData(new wxTextDataObject(logCtrl->GetValue()));
+			wxTheClipboard->Close();
 		}
 	}
 	wxDECLARE_EVENT_TABLE();

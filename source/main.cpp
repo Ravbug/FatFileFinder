@@ -16,16 +16,29 @@
 
 #include "interface_derived.h"
 
-class MyApp: public wxApp
+class FatFileFinder: public wxApp
 {
 public:
     virtual bool OnInit();
+    virtual int FilterEvent(wxEvent&);
+    MainFrame* frame;
 };
 
-wxIMPLEMENT_APP(MyApp);
-bool MyApp::OnInit()
+wxIMPLEMENT_APP(FatFileFinder);
+bool FatFileFinder::OnInit()
 {
-    MainFrame *frame = new MainFrame( );
+    frame = new MainFrame( );
     frame->Show( true );
     return true;
+}
+
+//for catching global events
+int FatFileFinder::FilterEvent(wxEvent& event) {
+    if (event.GetId() == LOGEVT && event.IsCommandEvent()) {
+        wxCommandEvent* ce = (wxCommandEvent*)(event.Clone());
+        frame->OnLog(*ce);
+        delete ce;
+        return true;
+    }
+    return -1;
 }
