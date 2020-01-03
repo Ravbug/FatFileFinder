@@ -283,7 +283,7 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	}
 	progIndex++;
 	//set titlebar
-	SetTitle(AppName + " v" + AppVersion + " - Sizing " + to_string(prog) + "% " + fd->Path + " [" + folderSizer::sizeToString(fd->size) + "]");
+	UpdateTitlebar(prog, folderSizer::sizeToString(fd->size));
 	
 	//set percentage on completion
 	if(progIndex == fd->subFolders.size()){
@@ -470,11 +470,17 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	else{
 		//subtract from the size
 		ptr->folderData->parent->size -= ptr->folderData->size;
+
+		ptr->folderData->resetStats();
 		
-		//remove the item if it does not exist
-		fileBrowser->DeleteItem(selected);
 		//recalculate the items, size values
 		folderSizer::recalculateStats(ptr->folderData);
+
+		UpdateTitlebar(100, folderSizer::sizeToString(folderData->size));
+
+
+		//remove the item if it does not exist
+		fileBrowser->DeleteItem(selected);
 	}
 }
 

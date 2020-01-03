@@ -93,6 +93,9 @@ private:
 			wxTheClipboard->Close();
 		}
 	}
+	void UpdateTitlebar(int prog, const string& size) {
+		SetTitle(AppName + " v" + AppVersion + " - Sizing " + to_string(prog) + "% " + folderData->Path + " [" + size + "]");
+	}
 	wxDECLARE_EVENT_TABLE();
 	
 #if defined __APPLE__ || defined __linux__

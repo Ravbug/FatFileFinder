@@ -52,18 +52,24 @@ struct DirectoryData{
 	vector<DirectoryData*> files;
 	//destructor
 	~DirectoryData(){
+		resetStats();
+	}
+	
+	void resetStats() {
 		//deallocate each of the files
-		for(DirectoryData* file : files){
+		for (DirectoryData* file : files) {
 			delete file;
 		}
 		//deallocate each of the subfolders
-		for(DirectoryData* folder : subFolders){
+		for (DirectoryData* folder : subFolders) {
 			delete folder;
 		}
 		subFolders.clear();
 		files.clear();
+		size = 0;
+		files_size = 0;
+		num_items = 0;
 	}
-	
 };
 
 //callback definitions
