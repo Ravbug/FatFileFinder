@@ -10,7 +10,10 @@
 #include <array>
 
 //constructor and destructor
-folderSizer::folderSizer(){}
+folderSizer::folderSizer()
+{
+	//MainWindow = owner;
+}
 folderSizer::~folderSizer(){}
 
 /**
@@ -34,8 +37,8 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 		sizeImmediate(fd);
 	}
 	catch(exception e){
-		//notify user?
-		wxMessageBox("Exception sizing " + folder + "\n" + e.what() ,"Error sizing");
+		//notify user
+		//MainWindow->Log("Exception sizing directory " + folder + "\n" + e.what());
 		return NULL;
 	}
 	
@@ -99,7 +102,9 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 				}
 			}
 		}
-		catch (exception) {}
+		catch (exception e) {
+			//MainWindow->Log("Error sizing file " + p.path().string() + "\n" + e.what());
+		}
 	}
 }
 

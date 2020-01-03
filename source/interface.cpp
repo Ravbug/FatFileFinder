@@ -105,7 +105,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	browserSizer = new wxBoxSizer( wxVERTICAL );
 
 	browserSplitter = new wxSplitterWindow( directoryPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE|wxSP_NOBORDER|wxSP_PERMIT_UNSPLIT|wxSP_THIN_SASH );
-	browserSplitter->SetSashGravity( 1 );
+	browserSplitter->SetSashGravity( 0.7 );
 	browserSplitter->Connect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::browserSplitterOnIdle ), NULL, this );
 	browserSplitter->SetMinimumPaneSize( 150 );
 
@@ -132,23 +132,23 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	logSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
 	logCtrl = new wxTextCtrl( logPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_BESTWRAP|wxTE_MULTILINE|wxTE_READONLY );
-	logSizer->Add( logCtrl, wxGBPosition( 0, 0 ), wxGBSpan( 1, 3 ), wxEXPAND|wxTOP|wxRIGHT, 5 );
+	logSizer->Add( logCtrl, wxGBPosition( 1, 0 ), wxGBSpan( 1, 3 ), wxEXPAND|wxTOP|wxRIGHT, 5 );
 
 	wxStaticText* m_staticText1;
 	m_staticText1 = new wxStaticText( logPanel, wxID_ANY, wxT("Error Log"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText1->Wrap( -1 );
-	logSizer->Add( m_staticText1, wxGBPosition( 1, 0 ), wxGBSpan( 1, 1 ), wxALL, 5 );
+	logSizer->Add( m_staticText1, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL, 5 );
 
 	wxButton* m_button6;
 	m_button6 = new wxButton( logPanel, wxID_ANY, wxT("Copy Log"), wxDefaultPosition, wxDefaultSize, 0 );
-	logSizer->Add( m_button6, wxGBPosition( 1, 1 ), wxGBSpan( 1, 1 ), wxALL, 5 );
+	logSizer->Add( m_button6, wxGBPosition( 0, 1 ), wxGBSpan( 1, 1 ), wxALL, 5 );
 
 	m_button7 = new wxButton( logPanel, wxID_ANY, wxT("Clear Log"), wxDefaultPosition, wxDefaultSize, 0 );
-	logSizer->Add( m_button7, wxGBPosition( 1, 2 ), wxGBSpan( 1, 1 ), wxALL, 5 );
+	logSizer->Add( m_button7, wxGBPosition( 0, 2 ), wxGBSpan( 1, 1 ), wxALL, 5 );
 
 
 	logSizer->AddGrowableCol( 0 );
-	logSizer->AddGrowableRow( 0 );
+	logSizer->AddGrowableRow( 1 );
 
 	logPanel->SetSizer( logSizer );
 	logPanel->Layout();

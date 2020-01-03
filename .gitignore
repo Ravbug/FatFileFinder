@@ -352,6 +352,8 @@ MigrationBackup/
 *.exp
 *.dll
 
+*.FileListAbsolute.txt
+
 # wxWidgets compiled data
 wxWidgets/lib/vc_dll/
 wxWidgets/lib/vc_lib/

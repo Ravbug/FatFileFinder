@@ -6,7 +6,6 @@
 // This file contains the implementation for the main GUI.
 // Place constructors and function definitons here.
 
-#include "globals.cpp"
 #include "interface_derived.h"
 #include <wx/generic/aboutdlgg.h>
 #include <wx/aboutdlg.h>
@@ -17,11 +16,6 @@
 #include "wxlin.xpm"
 #include "wxlin_s.xpm"
 #endif
-
-#define PROGEVT 2001
-#define RELOADEVT 2002
-
-wxDEFINE_EVENT(progEvt, wxCommandEvent);
 
 //Declare event mapping here
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
@@ -34,6 +28,7 @@ EVT_MENU(wxID_INFO, MainFrame::OnToggleSidebar)
 EVT_MENU(wxID_JUSTIFY_CENTER, MainFrame::OnToggleLog)
 EVT_COMMAND(PROGEVT, progEvt, MainFrame::OnUpdateUI)
 EVT_COMMAND(RELOADEVT,progEvt, MainFrame::OnUpdateReload)
+EVT_COMMAND(LOGEVT, progEvt, MainFrame::OnLog)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
 EVT_BUTTON(COPYPATH, MainFrame::OnCopy)
 EVT_BUTTON(wxID_FIND, MainFrame::OnReveal)
@@ -110,6 +105,7 @@ void MainFrame::SizeRootFolder(const string& folder){
 	fileBrowser->DeleteAllItems();
 	//enable sizing 
 	sizer.abort = false;
+	userClosedLog = false;
 	
 	worker = thread([&](string folder){
 		//called on progress updates
@@ -409,6 +405,7 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	if (exists(ptr->folderData->Path)){
 		//enable sizing 
 		sizer.abort = false;
+		userClosedLog = false;
 
 		//Prepend item with same name, but [sizing for folder]
 		wxTreeListItem replaced;
@@ -566,10 +563,4 @@ void MainFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.SetIcon(wxICON(wxlin_s));
 #endif
 	wxAboutBox(aboutInfo);
-}
-/**
- Aborts the background sizing operation
- */
-void MainFrame::OnStopSizing(wxCommandEvent& event){
-	//update the UI
 }

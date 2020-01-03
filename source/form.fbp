@@ -719,7 +719,7 @@
                                             <property name="pin_button">1</property>
                                             <property name="pos"></property>
                                             <property name="resize">Resizable</property>
-                                            <property name="sashgravity">1</property>
+                                            <property name="sashgravity">0.7</property>
                                             <property name="sashpos">800</property>
                                             <property name="sashsize">-1</property>
                                             <property name="show">1</property>
@@ -924,7 +924,7 @@
                                                         <property name="empty_cell_size"></property>
                                                         <property name="flexible_direction">wxBOTH</property>
                                                         <property name="growablecols">0</property>
-                                                        <property name="growablerows">0</property>
+                                                        <property name="growablerows">1</property>
                                                         <property name="hgap">0</property>
                                                         <property name="minimum_size"></property>
                                                         <property name="name">logSizer</property>
@@ -936,7 +936,7 @@
                                                             <property name="colspan">3</property>
                                                             <property name="column">0</property>
                                                             <property name="flag">wxEXPAND|wxTOP|wxRIGHT</property>
-                                                            <property name="row">0</property>
+                                                            <property name="row">1</property>
                                                             <property name="rowspan">1</property>
                                                             <object class="wxTextCtrl" expanded="1">
                                                                 <property name="BottomDockable">1</property>
@@ -1003,7 +1003,7 @@
                                                             <property name="colspan">1</property>
                                                             <property name="column">0</property>
                                                             <property name="flag">wxALL</property>
-                                                            <property name="row">1</property>
+                                                            <property name="row">0</property>
                                                             <property name="rowspan">1</property>
                                                             <object class="wxStaticText" expanded="1">
                                                                 <property name="BottomDockable">1</property>
@@ -1067,7 +1067,7 @@
                                                             <property name="colspan">1</property>
                                                             <property name="column">1</property>
                                                             <property name="flag">wxALL</property>
-                                                            <property name="row">1</property>
+                                                            <property name="row">0</property>
                                                             <property name="rowspan">1</property>
                                                             <object class="wxButton" expanded="1">
                                                                 <property name="BottomDockable">1</property>
@@ -1142,7 +1142,7 @@
                                                             <property name="colspan">1</property>
                                                             <property name="column">2</property>
                                                             <property name="flag">wxALL</property>
-                                                            <property name="row">1</property>
+                                                            <property name="row">0</property>
                                                             <property name="rowspan">1</property>
                                                             <object class="wxButton" expanded="1">
                                                                 <property name="BottomDockable">1</property>

@@ -8,6 +8,7 @@
 // This file contains the definition for GUI events and methods
 // Define the user interface elements with wxFormBuilder
 
+#include "globals.cpp"
 #include "interface.h"
 #include "folder_sizer.hpp"
 #include <thread>
@@ -26,6 +27,15 @@ class MainFrame : public MainFrameBase
 {
 public:
 	MainFrame(wxWindow* parent = NULL);
+	/**
+	Log a message to the console
+	@param msg the string to log
+	*/
+	void Log(const string& msg) {
+		wxCommandEvent event(progEvt, LOGEVT);
+		event.SetString(msg);
+		wxPostEvent(this, event);
+	}
 private:
 	folderSizer sizer;
 	DirectoryData* folderData = NULL;
@@ -33,6 +43,7 @@ private:
 	unordered_set<string> loaded;
 	int progIndex = 0;
 	wxTreeListItem lastUpdateItem;
+	bool userClosedLog = false;
 
 	string GetPathFromDialog(const string&);
 	void AddSubItems(const wxTreeListItem&, DirectoryData*);
@@ -43,7 +54,6 @@ private:
 	void OnExit(wxCommandEvent&);
 	void OnAbout(wxCommandEvent&);
 	void OnOpenFolder(wxCommandEvent&);
-	void OnStopSizing(wxCommandEvent&);
 	void OnReloadFolder(wxCommandEvent&);
 	void OnUpdateUI(wxCommandEvent&);
 	void OnUpdateReload(wxCommandEvent&);
@@ -51,6 +61,12 @@ private:
 	void OnListSelection(wxTreeListEvent&);
 	void OnCopy(wxCommandEvent&);
 	void OnReveal(wxCommandEvent&);
+	void OnLog(wxCommandEvent& evt) {
+		logCtrl->AppendText((evt.GetString()) + "\n");
+		if (!userClosedLog && !browserSplitter->IsSplit()) {
+			OnToggleLog(evt);
+		}
+	}
 	void OnSourceCode(wxCommandEvent&){
 		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/");
 	}
@@ -65,6 +81,7 @@ private:
 			menuToggleSidebar->SetItemLabel("Hide Sidebar\tCtrl-I");
 		}
 		else{
+			userClosedLog = true;
 			mainSplitter->Unsplit();
 			mainSplitter->UpdateSize();
 			menuToggleSidebar->SetItemLabel("Show Sidebar\tCtrl-I");

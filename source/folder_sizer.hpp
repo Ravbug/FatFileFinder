@@ -11,6 +11,7 @@
 #include <functional>
 #include <vector>
 #include <filesystem>
+#include <wx/event.h>
 using namespace std;
 using namespace std::filesystem;
 
@@ -73,6 +74,8 @@ typedef function<void(float progress, DirectoryData* data)> progCallback;
  */
 class folderSizer{
 public:
+	bool abort = true;
+
 	folderSizer();
 	~folderSizer();
 	DirectoryData* SizeFolder(const string&, const progCallback&);
@@ -82,5 +85,4 @@ public:
 	static string sizeToString(const fileSize&);
 	static void recalculateStats(DirectoryData*);
 
-	bool abort = true;
 };

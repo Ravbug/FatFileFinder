@@ -12,6 +12,10 @@
 #pragma mark Shared functions
 static inline const std::string AppName = "FatFileFinder";
 static inline const std::string AppVersion = "0.1b";
+#define PROGEVT 2001
+#define RELOADEVT 2002
+#define LOGEVT 2003
+wxDEFINE_EVENT(progEvt, wxCommandEvent);
 
 /**
 Fits a wxWindow to its contents, and then sets that size as the window's minimum size.
