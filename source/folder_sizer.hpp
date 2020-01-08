@@ -32,6 +32,7 @@ struct DirectoryData{
 	fileSize size = 0;
 	
 	bool isFolder = false;
+	bool isSymlink = false;
 	
 	DirectoryData(const string& inPath, bool folder){
 		Path = inPath;

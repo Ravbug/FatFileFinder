@@ -32,13 +32,19 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 		return fd;
 	}
 	
+	if (is_symlink(path(folder))){
+		fd->size = 1;
+		fd->isSymlink = true;
+		return fd;
+	}
+	
 	//calculate the size of the immediate files in the folder
 	try{
 		sizeImmediate(fd);
 	}
 	catch(filesystem_error e){
 		//notify user
-		Log("Exception sizing directory " + folder + "\n" + e.what());
+		Log("Error sizing " + folder + "\n" + e.what());
 		return fd;
 	}
 	
@@ -84,6 +90,10 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 		//check if can read the file
 		try {
 			file_status s = status(p.path());
+			if (is_symlink(s)){
+				//skip symbolic link
+				continue;
+			}
 			if (can_access(s))
 			{
 				if (is_directory(p)) {

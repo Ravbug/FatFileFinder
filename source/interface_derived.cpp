@@ -72,9 +72,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	
 	//set up the default values for the left side table
 #if defined __APPLE__ || defined __linux__
-	string properties[] = {"Name","Size","Type","Items","Modified","Created","Accessed","Is Hidden", "Is Read Only","Is Executable","mode_t types","Permissions","Size on Disk"};
+	string properties[] = {"Name","Size","Type","Items","Modified","Created","Accessed","Is Hidden", "Is Read Only","Is Executable","Is Symbolic Link", "mode_t types","Permissions","Size on Disk"};
 #elif defined _WIN32
-	string properties[] = {"Name","Size","Type","Items","Modified","Created","Accessed","Is Hidden", "Is Read Only","Is Executable", "Is Archive", "Is Compressed", "Is Encrypted", "Integrity Stream", "No Indexing", "No Scrubbing", "Is Offline", "Recall on Access", "Is Reparse Point", "Is Sparse File", "Is System", "Is Temporary", "Is Virtual"};
+	string properties[] = {"Name","Size","Type","Items","Modified","Created","Accessed","Is Hidden", "Is Read Only","Is Executable", "Is Symbolic Link", "Is Archive", "Is Compressed", "Is Encrypted", "Integrity Stream", "No Indexing", "No Scrubbing", "Is Offline", "Recall on Access", "Is Reparse Point", "Is Sparse File", "Is System", "Is Temporary", "Is Virtual"};
 #endif
 	for (const string& p : properties){
 		//pairs, because 2 columns
@@ -203,18 +203,21 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	//Is executable
 	propertyList->SetTextValue(is_executable(ptr->Path)? "Yes" : "No", 9, 1);
 	
+	//is symbolic link
+	propertyList->SetTextValue(ptr->isSymlink? "Yes" : "No", 10, 1);
+	
 	//Is Hidden
 	propertyList->SetTextValue(is_hidden(ptr->Path)? "Yes" : "No", 7, 1);
 	
 #if defined __APPLE__ || defined __linux__
 	//mode_t
-	propertyList->SetTextValue(modet_type_for(ptr->Path), 10, 1);
+	propertyList->SetTextValue(modet_type_for(ptr->Path), 11, 1);
 
 	//perms string
-	propertyList->SetTextValue(permstr_for(ptr->Path), 11, 1);
+	propertyList->SetTextValue(permstr_for(ptr->Path), 12, 1);
 	
 	//Size on disk
-	propertyList->SetTextValue(!ptr->isFolder? folderSizer::sizeToString(size_on_disk(ptr->Path)) : "-", 12, 1);
+	propertyList->SetTextValue(!ptr->isFolder? folderSizer::sizeToString(size_on_disk(ptr->Path)) : "-", 13, 1);
 	
 # elif defined _WIN32
 
@@ -222,7 +225,7 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	auto args = file_attributes_for(ptr->Path);
 
 	for (int i = 0; i < args.size(); i++) {
-		propertyList->SetTextValue(args[i] ? "Yes" : "No", 10+i, 1);
+		propertyList->SetTextValue(args[i] ? "Yes" : "No", 11+i, 1);
 	}
 
 #endif

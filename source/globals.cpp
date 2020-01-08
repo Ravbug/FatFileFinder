@@ -358,7 +358,7 @@ static inline std::string permstr_for(const std::string& path){
  */
 static inline std::string modet_type_for(const std::string& path){
 	mode_t perm = get_stat(path).st_mode;
-	std::string types[] = {"symbolic link", "regular file", "block device", "directory", "character device", "FIFO"};
+	std::string types[] = {"regular file", "block device", "directory", "character device", "FIFO"};
 	int perms[] = {S_IFLNK, S_IFREG, S_IFBLK, S_IFDIR, S_IFCHR, S_IFIFO};
 	
 	std::string result;
