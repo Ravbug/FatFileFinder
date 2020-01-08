@@ -32,10 +32,13 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 		return fd;
 	}
 	
-	if (is_symlink(path(folder))){
-		fd->size = 1;
-		fd->isSymlink = true;
-		return fd;
+	{
+		std::error_code ec;
+		if (is_symlink(path(folder),ec)){
+			fd->size = 1;
+			fd->isSymlink = true;
+			return fd;
+		}
 	}
 	
 	//calculate the size of the immediate files in the folder
