@@ -24,15 +24,17 @@ folderSizer::~folderSizer(){}
  */
 DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback& progress){
 	DirectoryData* fd = new DirectoryData(folder, true);
-	if (path_too_long(folder)){
-		return fd;
-	}
-
+	
 	if (abort) {
 		return fd;
 	}
 	
+	if (path_too_long(folder)){
+		return fd;
+	}
+	
 	{
+		//skip symbolic links
 		std::error_code ec;
 		if (is_symlink(path(folder),ec)){
 			fd->size = 1;

@@ -42,18 +42,34 @@ inline struct stat get_stat(const std::string& path){
 	return buf;
 }
 
+/**
+ @param path the path to the file
+ @return a time_t representing the modification date of the path
+ */
 static inline time_t file_modify_time(const std::string& path) {
 	return get_stat(path).st_mtime;
 }
 
+/**
+@param path the path to the file
+@return a time_t representing the creation time of the path
+*/
 static inline time_t file_create_time(const std::string& path) {
 	return get_stat(path).st_ctime;
 }
 
+/**
+@param path the path to the file
+@return a time_t representing the last access time of the path
+*/
 static inline time_t file_access_time(const std::string& path) {
 	return get_stat(path).st_atime;
 }
 
+/**
+@param path the path to the file
+@return a 64-bit int representing the size of the file as provided by stat
+*/
 static inline int64_t stat_file_size(const std::string& path) {
 	return get_stat(path).st_size;
 }
@@ -146,21 +162,39 @@ static inline bool path_too_long(const std::string& inPath){
 	return inPath.size() > 247;
 }
 
+/**
+ Determines if with current permissions the target path can be written to (Windows only)
+ @param inPath the path to the file
+ @return true if the path is writable
+ */
 static inline bool is_writable(const std::string& inPath) {
 	mode_t mode = get_stat(inPath).st_mode;
 	return mode & _S_IWRITE;
 }
 
+/**
+Determines if with current permissions the target path can be executed (Windows only)
+@param inPath the path to the file
+@return true if the path is executable
+*/
 static inline bool is_executable(const std::string& inPath) {
 	mode_t mode = get_stat(inPath).st_mode;
 	return mode & _S_IEXEC && mode & _S_IFDIR;
 }
 
+/**
+@param inPath the path to the file
+@return true if the file is hidden (according to GetFileAttributesA)
+ */
 static inline bool is_hidden(const std::string& inPath) {
 	DWORD attributes = GetFileAttributesA(inPath.c_str());
 	return attributes & FILE_ATTRIBUTE_HIDDEN;
 }
 
+/**
+ Reveals a path in File Explorer
+ @param fspath the path to the file
+ */
 static inline void reveal(const std::filesystem::path& fspath) {
 	std::string str;
 	if (std::filesystem::is_directory(fspath)){
