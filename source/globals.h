@@ -1,8 +1,8 @@
 //
-//  globals.cpp
+//  globals.h
 //
 //	Place global constants or functions without classes in this file.
-//	Then #include "globals.cpp" in files that need them
+//	Then #include "globals.h" in files that need them
 //
 //  Copyright © 2019 Ravbug. All rights reserved.
 //
@@ -107,7 +107,7 @@ static inline std::string timeToString(const time_t& inTime) {
 
 //windows.h must be the first include, and must be placed before using namespace std.
 //if they are not in this order, the compiler will not be able to resolve byte
-//ensure globals.cpp is the first include in every file
+//ensure globals.h is the first include in every file
 #include <windows.h>
 #include <winnt.h>
 #include <array>

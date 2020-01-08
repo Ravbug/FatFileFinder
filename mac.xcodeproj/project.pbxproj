@@ -25,8 +25,8 @@
 		AADF6A2F222B360200991DD2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADF6A2E222B360200991DD2 /* IOKit.framework */; };
 		AADF6A31222B360700991DD2 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADF6A30222B360700991DD2 /* AppKit.framework */; };
 		AADF6A33222B360C00991DD2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADF6A32222B360C00991DD2 /* Foundation.framework */; };
-		AAE2C40C2326D46A003C381B /* globals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAE2C40B2326D46A003C381B /* globals.cpp */; };
-		AAE2C40D2326D46A003C381B /* globals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAE2C40B2326D46A003C381B /* globals.cpp */; };
+		AAE2C40C2326D46A003C381B /* globals.h in Sources */ = {isa = PBXBuildFile; fileRef = AAE2C40B2326D46A003C381B /* globals.h */; };
+		AAE2C40D2326D46A003C381B /* globals.h in Sources */ = {isa = PBXBuildFile; fileRef = AAE2C40B2326D46A003C381B /* globals.h */; };
 		AAE2C4292326D967003C381B /* interface_derived.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAE2C4272326D967003C381B /* interface_derived.cpp */; };
 		AAE2C42A2326D967003C381B /* interface_derived.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAE2C4272326D967003C381B /* interface_derived.cpp */; };
 		AAF0562A233682620024DFEE /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAF05610233682610024DFEE /* WebKit.framework */; };
@@ -252,7 +252,7 @@
 		AADF6A2E222B360200991DD2 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		AADF6A30222B360700991DD2 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		AADF6A32222B360C00991DD2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		AAE2C40B2326D46A003C381B /* globals.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = globals.cpp; sourceTree = "<group>"; };
+		AAE2C40B2326D46A003C381B /* globals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = globals.h; sourceTree = "<group>"; };
 		AAE2C4272326D967003C381B /* interface_derived.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = interface_derived.cpp; sourceTree = "<group>"; };
 		AAE2C4282326D967003C381B /* interface_derived.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interface_derived.h; sourceTree = "<group>"; };
 		AAF05610233682610024DFEE /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
@@ -336,7 +336,7 @@
 				AAE2C4272326D967003C381B /* interface_derived.cpp */,
 				AA897A5F23355BE8002C9756 /* folder_sizer.hpp */,
 				AA897A5E23355BE8002C9756 /* folder_sizer.cpp */,
-				AAE2C40B2326D46A003C381B /* globals.cpp */,
+				AAE2C40B2326D46A003C381B /* globals.h */,
 				AA1D0FCA222A0A4B00678304 /* wxcocoa.xcconfig */,
 				AA1D0FCB222A0A4B00678304 /* wxdebug.xcconfig */,
 				AA1D0FC9222A0A4A00678304 /* wxrelease.xcconfig */,
@@ -657,7 +657,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AAE2C40C2326D46A003C381B /* globals.cpp in Sources */,
+				AAE2C40C2326D46A003C381B /* globals.h in Sources */,
 				AAE2C4292326D967003C381B /* interface_derived.cpp in Sources */,
 				AAF9D87D222B14E900437548 /* main.cpp in Sources */,
 				AA897A6023355BE8002C9756 /* folder_sizer.cpp in Sources */,
@@ -669,7 +669,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AAE2C40D2326D46A003C381B /* globals.cpp in Sources */,
+				AAE2C40D2326D46A003C381B /* globals.h in Sources */,
 				AAE2C42A2326D967003C381B /* interface_derived.cpp in Sources */,
 				AAD015C0222B2FE300E25CB7 /* main.cpp in Sources */,
 				AA897A6123355BE8002C9756 /* folder_sizer.cpp in Sources */,
@@ -692,7 +692,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BOOSTROOT = "$(PROJECT_DIR)/boost";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
@@ -747,9 +746,8 @@
 					"\"$(WXROOT)/src/regex\"",
 					"\"$(WXROOT)/build/osx/setup/$(WXTOOLKIT)/include\"",
 					"\"$(WXROOT)/include\"",
-					"\"$(BOOSTROOT)/unix/include\"",
 				);
-				LIBRARY_SEARCH_PATHS = "$(BOOSTROOT)/unix/lib";
+				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -767,7 +765,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BOOSTROOT = "$(PROJECT_DIR)/boost";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
@@ -816,9 +813,8 @@
 					"\"$(WXROOT)/src/regex\"",
 					"\"$(WXROOT)/build/osx/setup/$(WXTOOLKIT)/include\"",
 					"\"$(WXROOT)/include\"",
-					"\"$(BOOSTROOT)/unix/include\"",
 				);
-				LIBRARY_SEARCH_PATHS = "$(BOOSTROOT)/unix/lib";
+				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -880,7 +876,6 @@
 					"\"$(WXROOT)/src/png\"",
 					"\"$(WXROOT)/src/jpeg\"",
 					"\"$(WXROOT)/src/zlib\"",
-					"\"$(BOOSTROOT)/unix/include\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/source/Info_cocoa.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -910,7 +905,6 @@
 					"\"$(WXROOT)/src/png\"",
 					"\"$(WXROOT)/src/jpeg\"",
 					"\"$(WXROOT)/src/zlib\"",
-					"\"$(BOOSTROOT)/unix/include\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/source/Info_cocoa.plist";
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -5,7 +5,7 @@
 //  Copyright © 2019 Ravbug. All rights reserved.
 //
 
-#include "globals.cpp"
+#include "globals.h"
 #include "folder_sizer.hpp"
 #include <array>
 

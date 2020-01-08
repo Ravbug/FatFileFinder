@@ -8,7 +8,7 @@
 // This file contains the definition for GUI events and methods
 // Define the user interface elements with wxFormBuilder
 
-#include "globals.cpp"
+#include "globals.h"
 #include "interface.h"
 #include "folder_sizer.hpp"
 #include <thread>
