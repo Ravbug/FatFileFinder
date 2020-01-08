@@ -44,7 +44,7 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 	}
 	catch(filesystem_error e){
 		//notify user
-		Log("Error sizing " + folder + "\n" + e.what());
+		Log("Error sizing directory" + folder + "\n" + e.what());
 		return fd;
 	}
 	
