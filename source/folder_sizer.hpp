@@ -10,10 +10,9 @@
 #include <stdio.h>
 #include <functional>
 #include <vector>
-#include <filesystem>
 #include <wx/event.h>
+#include "DirectoryData.hpp"
 using namespace std;
-using namespace std::filesystem;
 
 #ifdef __APPLE__
 //	#include <boost/filesystem.hpp>
@@ -22,56 +21,6 @@ using namespace std::filesystem;
 //	#define ofstream_scope boost::filesystem
 #else
 #endif
-typedef int64_t fileSize;
-
-
-//structure definitions
-struct DirectoryData{
-	string Path;
-	//see typedefs for platform-specific types
-	fileSize size = 0;
-	
-	bool isFolder = false;
-	bool isSymlink = false;
-	
-	DirectoryData(const string& inPath, bool folder){
-		Path = inPath;
-		isFolder = folder;
-	}
-	DirectoryData(const string& inPath, fileSize inSize){
-		Path = inPath;
-		size = inSize;
-		isFolder = false;
-	}
-
-	//for back navigation
-	DirectoryData* parent = NULL;
-	
-	fileSize files_size = 1;
-	unsigned long num_items = 0;
-	vector<DirectoryData*> subFolders;
-	vector<DirectoryData*> files;
-	//destructor
-	~DirectoryData(){
-		resetStats();
-	}
-	
-	void resetStats() {
-		//deallocate each of the files
-		for (DirectoryData* file : files) {
-			delete file;
-		}
-		//deallocate each of the subfolders
-		for (DirectoryData* folder : subFolders) {
-			delete folder;
-		}
-		subFolders.clear();
-		files.clear();
-		size = 0;
-		files_size = 0;
-		num_items = 0;
-	}
-};
 
 //callback definitions
 typedef function<void(float progress, DirectoryData* data)> progCallback;
@@ -88,10 +37,7 @@ public:
 	~folderSizer();
 	DirectoryData* SizeFolder(const string&, const progCallback&);
 	void sizeImmediate(DirectoryData*, const bool& skipFolders = false);
-	vector<DirectoryData*> getSuperFolders(DirectoryData*);
-	static string percentOfParent(DirectoryData*);
 	static string sizeToString(const fileSize&);
-	static void recalculateStats(DirectoryData*);
 
 	/**
 	Display a message in the log

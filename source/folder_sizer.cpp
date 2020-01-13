@@ -7,7 +7,11 @@
 
 #include "globals.h"
 #include "folder_sizer.hpp"
+#include <filesystem>
 #include <array>
+
+using namespace std::filesystem;
+
 
 //constructor and destructor
 folderSizer::folderSizer(wxWindow* Parent)
@@ -130,7 +134,7 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
  */
 string folderSizer::sizeToString(const fileSize& fileSize){
 	string formatted = "";
-	int size = 1000;		//MB = 100, MiB = 1024
+	int size = 1000;		//MB = 1000, MiB = 1024
 	array<string,5> suffix { " bytes", " KB", " MB", " GB", " TB" };
 
 	for (int i = 0; i < suffix.size(); i++)
@@ -154,67 +158,3 @@ string folderSizer::sizeToString(const fileSize& fileSize){
 	return formatted;
 }
 
-/**
- Recalculate the size and the number of items in a FolderData struct.
- Does not make filesystem calls, instead uses only the data in the FolderData struct.
- Modifies the properties of the struct.
- @param data the FolderData to resize
- */
-void folderSizer::recalculateStats(DirectoryData* data){
-	//error handle
-	if (data == NULL){return;}
-	
-	if (data->subFolders.size() > 0){
-		data->num_items = data->files.size();
-		//calculate file size
-		data->files_size = 1;
-		for (DirectoryData* file : data->files){
-			data->files_size += file->size;
-		}
-		data->size = data->files_size;
-		
-		for(DirectoryData* sub : data->subFolders){
-			//error handle
-			if (sub == NULL) {continue;}
-			folderSizer::recalculateStats(sub);
-			data->num_items += sub->num_items + 1;
-			data->size += sub->size;
-			data->files_size += sub->files_size;
-		}
-	}
-}
-
-/**
- Find all the single super-items on this tree
- @param data the node to find the super items for
- @returns vector of all the pointers that make up a single chain to data
- */
-vector<DirectoryData*> folderSizer::getSuperFolders(DirectoryData* data){
-	vector<DirectoryData*> folders;
-	//recursively advance up the hierarchy
-	function<DirectoryData*(DirectoryData*)> recurse = [&](DirectoryData* d) -> DirectoryData* {
-		if (d->parent != NULL){
-			folders.push_back((DirectoryData*)d->parent);
-			return recurse((DirectoryData*)d->parent);
-		}
-		else{
-			return d;
-		}
-	};
-	recurse(data);
-	
-	return folders;
-}
-
-/**
- Return a string representing the item's % size of the superitem
- @param data the sub item to calculate
- @returns size rounded to 1 decimal place e.g (5.2%)
- */
-string folderSizer::percentOfParent(DirectoryData* data){
-	if (data == NULL || data->parent == NULL){return "[waiting]";}
-	//round to 2 decimal places, then attach unit
-	char buffer[10];
-	sprintf(buffer,"%.1Lf",(long double)data->size / (long double)data->parent->size * 100);
-	return string(buffer) + "%";
-}

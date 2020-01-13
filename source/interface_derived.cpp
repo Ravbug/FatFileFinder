@@ -152,7 +152,7 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,DirectoryData* data){
 		else {
 			if (d->size > 0) {
 				fileBrowser->SetItemText(added, 2, folderSizer::sizeToString(d->size));
-				fileBrowser->SetItemText(added, 1, folderSizer::percentOfParent(d));
+				fileBrowser->SetItemText(added, 1, d->percentOfParent());
 			}
 			else {
 				fileBrowser->SetItemText(added, 2, "[sizing]");
@@ -246,7 +246,7 @@ void MainFrame::AddFiles(wxTreeListItem root, DirectoryData* data){
 	for(DirectoryData* f : data->files){
 		wxTreeListItem fileItem = fileBrowser->AppendItem(root,iconForExtension(path(f->Path).extension().string()) + "\t" + path(f->Path).filename().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
 		fileBrowser->SetItemText(fileItem, 2, folderSizer::sizeToString(f->size));
-		fileBrowser->SetItemText(fileItem, 1,folderSizer::percentOfParent(f));
+		fileBrowser->SetItemText(fileItem, 1, f->percentOfParent());
 	}
 }
 
@@ -300,7 +300,7 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 				fileBrowser->SetItemText(item, 2, "[read error]");
 			}
 			else {
-				fileBrowser->SetItemText(item, 1, folderSizer::percentOfParent(data));
+				fileBrowser->SetItemText(item, 1, data->percentOfParent());
 			}
 			item = fileBrowser->GetNextSibling(item);
 		}
@@ -325,7 +325,7 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 	*old = *repl;
 	
 	//recalculate the items, size values
-	folderSizer::recalculateStats(folderData);
+	folderData->recalculateStats();
 	
 	//redraw the view
 	fileBrowser->DeleteAllItems();
@@ -344,7 +344,7 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 			fileBrowser->SetItemText(item, 2, "[read error]");
 		}
 		else {
-			fileBrowser->SetItemText(item, 1, folderSizer::percentOfParent(data));
+			fileBrowser->SetItemText(item, 1, data->percentOfParent());
 		}
 		item = fileBrowser->GetNextSibling(item);
 	}
@@ -439,7 +439,7 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 				//check that the item still exists
 				if (int(progress*100) == 100 && replaced && replaced.IsOk()){
 					//get the super folders that need to check for moves
-					vector<DirectoryData*> superItems = sizer.getSuperFolders(oldptr);
+					vector<DirectoryData*> superItems = oldptr->getSuperFolders();
 					
 					//update file sizes (modifying the data structure on multiple threads is a bad idea, but in this case it should be fine)
 					for(DirectoryData* i : superItems){
@@ -480,7 +480,7 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 		ptr->folderData->resetStats();
 		
 		//recalculate the items, size values
-		folderSizer::recalculateStats(ptr->folderData);
+		ptr->folderData->recalculateStats();
 
 		UpdateTitlebar(100, folderSizer::sizeToString(folderData->size));
 
