@@ -374,6 +374,7 @@ void MainFrame::OnCopy(wxCommandEvent& event){
 	//copy values to the clipboard
 	if(wxTheClipboard->Open()){
 		 wxTheClipboard->SetData( new wxTextDataObject(data->Path) );
+		wxTheClipboard->Flush();
 		wxTheClipboard->Close();
 	}
 }

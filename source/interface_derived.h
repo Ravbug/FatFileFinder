@@ -79,7 +79,7 @@ private:
 	}
 	void OnAbort(wxCommandEvent& event) {
 		if (!sizer.abort) {
-			wxMessageBox("Stopped Sizing");
+			wxMessageBox("File percentage calculations will be incorrect.\nReload an individual item to size it, or Open this folder and resize it to calculate all items.","Stopped Sizing");
 			sizer.abort = true;
 		}
 	}
@@ -90,6 +90,7 @@ private:
 		//copy values to the clipboard
 		if (wxTheClipboard->Open()) {
 			wxTheClipboard->SetData(new wxTextDataObject(logCtrl->GetValue()));
+			wxTheClipboard->Flush();
 			wxTheClipboard->Close();
 		}
 	}
