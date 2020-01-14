@@ -845,7 +845,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1b;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.wxTemplateDynamic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -861,7 +861,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1b;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.wxTemplateDynamic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -890,7 +890,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1b;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.wxTemplateStatic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -919,7 +919,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1b;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.wxTemplateStatic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

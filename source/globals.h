@@ -11,7 +11,7 @@
 #include <filesystem>
 #pragma mark Shared functions
 static inline const std::string AppName = "FatFileFinder";
-static inline const std::string AppVersion = "0.1b";
+static inline const std::string AppVersion = "1.0";
 #define PROGEVT 2001
 #define RELOADEVT 2002
 #define LOGEVT 2003
