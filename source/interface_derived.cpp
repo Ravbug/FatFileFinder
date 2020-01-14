@@ -9,6 +9,7 @@
 #include "interface_derived.h"
 #include <wx/generic/aboutdlgg.h>
 #include <wx/aboutdlg.h>
+#include <wx/gdicmn.h>
 
 //include the icon file on linux
 #ifdef __linux
@@ -496,6 +497,10 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
  @param event the wxTreeListEvent sent by the item that is expanding
  */
 void MainFrame::OnListExpanding(wxTreeListEvent& event){
+	
+	//set cursor
+	wxSetCursor(wxCURSOR_WAIT);
+	
 	wxTreeListItem item = event.GetItem();
 	// add this item's immediate sub-items to the list
 	StructurePtrData* spd = (StructurePtrData*)fileBrowser->GetItemData(item);
@@ -515,6 +520,9 @@ void MainFrame::OnListExpanding(wxTreeListEvent& event){
 	}
 	//mark as loaded
 	loaded.insert(key);
+	
+	//reset cursor
+	wxSetCursor(wxNullCursor);
 }
 
 /**
