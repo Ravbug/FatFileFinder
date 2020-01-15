@@ -10,6 +10,7 @@
 #include <wx/generic/aboutdlgg.h>
 #include <wx/aboutdlg.h>
 #include <wx/gdicmn.h>
+using namespace std::filesystem;
 
 //include the icon file on linux
 #ifdef __linux

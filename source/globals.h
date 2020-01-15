@@ -321,7 +321,7 @@ static inline void reveal(const std::string& path){
 static inline bool is_hidden(const std::string& strpath){
 	std::filesystem::path p(strpath);
 	//true if path name starts with '.'
-	return p.leaf().string()[0] == '.';
+	return p.filename().string()[0] == '.';
 }
 
 #else
