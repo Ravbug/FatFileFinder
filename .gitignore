@@ -371,5 +371,4 @@ wxWidgets/autom4te.cache/
 *.DS_STORE
 wxWidgets/build/osx/setup/*
 /wxWidgets/build/msw/vc_mswud
-
-
+mac.xcodeproj/project.xcworkspace/xcuserdata/main.xcuserdatad/UserInterfaceState.xcuserstate
