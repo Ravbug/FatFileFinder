@@ -13,11 +13,11 @@ class DirectoryData{
 public:
 	string Path;
 	//see typedefs for platform-specific types
-	fileSize size = 0;
-	fileSize files_size = 1;
-	unsigned long num_items = 0;
-	bool isFolder = false;
-	bool isSymlink = false;
+	fileSize size;
+	fileSize files_size;
+	unsigned long num_items;
+	bool isFolder;
+	bool isSymlink;
 	
 	//for back navigation
 	DirectoryData* parent = NULL;
@@ -29,11 +29,14 @@ public:
 	DirectoryData(const string& inPath, bool folder){
 		Path = inPath;
 		isFolder = folder;
-	}
-	DirectoryData(const string& inPath, fileSize inSize){
-		Path = inPath;
-		size = inSize;
+		size = 0;
+		files_size = 1;
+		num_items = 0;
 		isFolder = false;
+		isSymlink = false;
+	}
+	DirectoryData(const string& inPath, fileSize inSize) : DirectoryData(inPath, false){
+		size = inSize;
 	}
 	//destructor
 	~DirectoryData(){

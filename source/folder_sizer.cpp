@@ -29,22 +29,16 @@ folderSizer::~folderSizer(){}
 DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback& progress){
 	DirectoryData* fd = new DirectoryData(folder, true);
 	
-	if (abort) {
+	if (abort || path_too_long(folder)) {
 		return fd;
 	}
 	
-	if (path_too_long(folder)){
+	//skip symbolic links
+	std::error_code ec;
+	if (is_symlink(path(folder),ec)){
+		fd->size = 1;
+		fd->isSymlink = true;
 		return fd;
-	}
-	
-	{
-		//skip symbolic links
-		std::error_code ec;
-		if (is_symlink(path(folder),ec)){
-			fd->size = 1;
-			fd->isSymlink = true;
-			return fd;
-		}
 	}
 	
 	//calculate the size of the immediate files in the folder
@@ -99,11 +93,7 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 		//check if can read the file
 		try {
 			file_status s = status(p.path());
-			if (is_symlink(s)){
-				//skip symbolic link
-				continue;
-			}
-			if (can_access(s))
+			if (/*!is_symlink(s) &&*/ can_access(s))
 			{
 				if (is_directory(p)) {
 					if (!skipFolders) {
@@ -117,7 +107,7 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 					data->files_size += file->size;
 					file->parent = data;
 					data->files.push_back(file);
-
+					//cout << file->Path << ": " << file->size << endl;
 				}
 			}
 		}
