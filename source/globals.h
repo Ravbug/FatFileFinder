@@ -6,6 +6,7 @@
 //
 //  Copyright © 2019 Ravbug. All rights reserved.
 //
+#pragma once
 #include <wx/wx.h>
 #include <stdint.h>
 #include <filesystem>
@@ -15,6 +16,7 @@ static inline const std::string AppVersion = "1.0";
 #define PROGEVT 2001
 #define RELOADEVT 2002
 #define LOGEVT 2003
+typedef uint64_t fileSize;
 wxDEFINE_EVENT(progEvt, wxCommandEvent);
 
 /**
@@ -70,7 +72,7 @@ static inline time_t file_access_time(const std::string& path) {
 @param path the path to the file
 @return a 64-bit int representing the size of the file as provided by stat
 */
-static inline int64_t stat_file_size(const std::string& path) {
+static inline fileSize stat_file_size(const std::string& path) {
 	return get_stat(path).st_size;
 }
 
@@ -410,7 +412,7 @@ static inline std::string modet_type_for(const std::string& path){
  @param path the path to the file
  @return number of bytes representing the file	on disk
  */
-static inline long long size_on_disk(const std::string& path){
+static inline fileSize size_on_disk(const std::string& path){
 	return get_stat(path).st_blocks * DEV_BSIZE;
 }
 

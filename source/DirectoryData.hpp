@@ -6,9 +6,8 @@
 //
 
 #pragma once
+#include "globals.h"
 using namespace std;
-
-typedef int64_t fileSize;
 
 class DirectoryData{
 public:
