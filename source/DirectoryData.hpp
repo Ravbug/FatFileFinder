@@ -32,7 +32,6 @@ public:
 		size = 0;
 		files_size = 1;
 		num_items = 0;
-		isFolder = false;
 		isSymlink = false;
 	}
 	DirectoryData(const string& inPath, fileSize inSize) : DirectoryData(inPath, false){
