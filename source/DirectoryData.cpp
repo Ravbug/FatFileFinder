@@ -46,7 +46,7 @@ void DirectoryData::recalculateStats(){
 		
 		for(DirectoryData* sub : subFolders){
 			//error handle
-			if (sub == NULL) {continue;}
+			if (sub == nullptr) {continue;}
 			sub->recalculateStats();
 			num_items += sub->num_items + 1;
 			size += sub->size;
@@ -63,7 +63,7 @@ vector<DirectoryData*> DirectoryData::getSuperFolders(){
 	vector<DirectoryData*> folders;
 	//recursively advance up the hierarchy
 	function<DirectoryData*(DirectoryData*)> recurse = [&](DirectoryData* d) -> DirectoryData* {
-		if (d->parent != NULL){
+		if (d->parent != nullptr){
 			folders.push_back((DirectoryData*)d->parent);
 			return recurse((DirectoryData*)d->parent);
 		}
@@ -81,7 +81,7 @@ Return a string representing the item's % size of the superitem
 @returns size rounded to 1 decimal place e.g (5.2%)
 */
 string DirectoryData::percentOfParent(){
-	if (parent == NULL){return "[waiting]";}
+	if (parent == nullptr){return "[waiting]";}
 	//round to 2 decimal places, then attach unit
 	char buffer[10];
 	sprintf(buffer,"%.1Lf",(long double)size / (long double)parent->size * 100);

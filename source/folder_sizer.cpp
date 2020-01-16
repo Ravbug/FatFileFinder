@@ -59,7 +59,7 @@ DirectoryData* folderSizer::SizeFolder(const string& folder, const progCallback&
 		fd->subFolders[i] = SizeFolder(fd->subFolders[i]->Path, nullptr);
 		
 		//update parent
-		if (fd->subFolders[i] != NULL){
+		if (fd->subFolders[i] != nullptr){
 			fd->subFolders[i]->parent = fd;
 			fd->num_items += fd->subFolders[i]->num_items + 1;
 			fd->size += fd->subFolders[i]->size;

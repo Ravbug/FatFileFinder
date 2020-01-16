@@ -27,7 +27,7 @@ class StructurePtrData;
 class MainFrame : public MainFrameBase
 {
 public:
-	MainFrame(wxWindow* parent = NULL);
+	MainFrame(wxWindow* parent = nullptr);
 	/**
 	Log a message to the console
 	@param msg the string to log
@@ -45,7 +45,7 @@ public:
 
 private:
 	folderSizer sizer = folderSizer(this);
-	DirectoryData* folderData = NULL;
+	DirectoryData* folderData = nullptr;
 	thread worker;
 	unordered_set<string> loaded;
 	int progIndex = 0;
@@ -143,8 +143,8 @@ private:
  */
 class StructurePtrData : public wxTreeItemData{
 public:
-	DirectoryData* folderData = NULL;
-	DirectoryData* reloadData = NULL;
+	DirectoryData* folderData = nullptr;
+	DirectoryData* reloadData = nullptr;
 	//constructors
 	StructurePtrData(DirectoryData* data):wxTreeItemData(){
 		folderData = data;
@@ -163,8 +163,11 @@ public:
 	}
 	int Compare(wxTreeListCtrl *treelist, unsigned column, wxTreeListItem first, wxTreeListItem second){
 		//get client data
-		StructurePtrData* item1 = (StructurePtrData*)treelist->GetItemData(first);
-		StructurePtrData* item2 = (StructurePtrData*)treelist->GetItemData(second);
+		StructurePtrData* item1 = nullptr;
+		StructurePtrData* item2 = nullptr;
+		
+		item1 = (StructurePtrData*)treelist->GetItemData(first);
+		item2 = (StructurePtrData*)treelist->GetItemData(second);
 		
 		//error checking
 		if (!item1 || !item2){

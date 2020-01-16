@@ -20,7 +20,7 @@ public:
 	bool isSymlink;
 	
 	//for back navigation
-	DirectoryData* parent = NULL;
+	DirectoryData* parent = nullptr;
 	
 	//for holding items
 	vector<DirectoryData*> subFolders;

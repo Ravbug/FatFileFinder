@@ -94,7 +94,7 @@ static inline std::string timeToString(const time_t& inTime) {
 	tm* time;
 	time_t tm = inTime;
 	time = localtime(&tm);
-	if (time != NULL) {
+	if (time != nullptr) {
 		char dateString[100];
 		strftime(dateString, 50, "%x %X", time);
 		return dateString;

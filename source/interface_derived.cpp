@@ -145,9 +145,9 @@ void MainFrame::SizeRootFolder(const string& folder){
 void MainFrame::AddSubItems(const wxTreeListItem& item,DirectoryData* data){
 	for(DirectoryData* d : data->subFolders){
 		//add the item, with its client data pointer
-		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + path(d == NULL? "[NULL]" : d->Path).filename().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
+		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + path(d == nullptr? "[NULL]" : d->Path).filename().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
 		//set the other strings on the item
-		if (d == NULL) {
+		if (d == nullptr) {
 			fileBrowser->SetItemText(added, 2, "[not loaded]");
 			fileBrowser->SetItemText(added, 1, "[not loaded]");
 		}
@@ -174,7 +174,7 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,DirectoryData* data){
  @param spd the StructurePtrData object stored in the tree cell
  */
 void MainFrame::PopulateSidebar(StructurePtrData* spd){
-	if (spd == NULL){return;}
+	if (spd == nullptr){return;}
 	
 	//make sure item still exists
 	DirectoryData* ptr;
@@ -275,7 +275,7 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 		//update the most recent leaf
 		if (lastUpdateItem.IsOk()){
 			lastUpdateItem = fileBrowser->GetNextSibling(lastUpdateItem);
-			if (fd->subFolders[progIndex] != NULL){
+			if (fd->subFolders[progIndex] != nullptr){
 				auto totalSize = fd->subFolders[progIndex]->size;
 				fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
 				fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
@@ -369,7 +369,7 @@ void MainFrame::OnCopy(wxCommandEvent& event){
 	//get the pointer to use
 	DirectoryData* data = ptr->folderData;
 	
-	if (data == NULL){
+	if (data == nullptr){
 		//if no pointer, don't try to copy
 		return;
 	}
@@ -394,7 +394,7 @@ void MainFrame::OnReveal(wxCommandEvent& event){
 	
 	//get the pointer to use
 	DirectoryData* data = ptr->folderData;
-	if (ptr == NULL){
+	if (ptr == nullptr){
 		//if no pointer, don't try to open
 		return;
 	}
@@ -416,7 +416,7 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	StructurePtrData* ptr = (StructurePtrData*)fileBrowser->GetItemData(selected);
 	
 	//only resize folders, if a file is selected, stop
-	if (ptr == NULL || ptr->folderData == NULL || !ptr->folderData->isFolder){return;}
+	if (ptr == nullptr || ptr->folderData == nullptr || !ptr->folderData->isFolder){return;}
 	
 	//check if the folder still exists
 	if (exists(ptr->folderData->Path)){
@@ -547,7 +547,7 @@ void MainFrame::OnListSelection(wxTreeListEvent& event){
 string MainFrame::GetPathFromDialog(const string& message)
 {
 	//present the dialog
-	wxDirDialog dlg(NULL, message, "", wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
+	wxDirDialog dlg(nullptr, message, "", wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
 	if (dlg.ShowModal() == wxID_CANCEL) {
 		return string("");
 	}
