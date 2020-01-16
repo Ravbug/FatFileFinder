@@ -40,7 +40,7 @@ inline void fitWindowMinSize(wxWindow* window) {
  */
 inline struct stat get_stat(const std::string& path){
 	struct stat buf;
-	stat(path.c_str(),&buf);
+	lstat(path.c_str(),&buf);
 	return buf;
 }
 
