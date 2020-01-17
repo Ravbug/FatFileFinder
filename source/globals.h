@@ -37,10 +37,15 @@ inline void fitWindowMinSize(wxWindow* window) {
  Calls stat on a path
  @param path the path to get stat for
  @return a stat struct representing the path
+ @note On Windows this function invokes stat, on other platforms it uses lstat
  */
 inline struct stat get_stat(const std::string& path){
 	struct stat buf;
-	lstat(path.c_str(),&buf);
+#if defined _WIN32
+	stat(path.c_str(), &buf);
+#else
+	lstat(path.c_str(), &buf);
+#endif
 	return buf;
 }
 

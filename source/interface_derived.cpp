@@ -246,7 +246,10 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 void MainFrame::AddFiles(wxTreeListItem root, DirectoryData* data){
 	//populate files
 	for(DirectoryData* f : data->files){
-		wxTreeListItem fileItem = fileBrowser->AppendItem(root,iconForExtension(path(f->Path).extension().string()) + "\t" + path(f->Path).filename().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(f));
+		wxString icon = iconForExtension(path(f->Path).extension().string());
+		wxString itemName = icon + "\t" + path(f->Path).filename().string();
+		StructurePtrData* spd = new StructurePtrData(f);
+		wxTreeListItem fileItem = fileBrowser->AppendItem(root,icon,wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,spd);
 		fileBrowser->SetItemText(fileItem, 2, folderSizer::sizeToString(f->size));
 		fileBrowser->SetItemText(fileItem, 1, f->percentOfParent());
 	}

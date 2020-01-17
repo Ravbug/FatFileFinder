@@ -165,17 +165,18 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\DirectoryData.cpp" />
     <ClCompile Include="source\folder_sizer.cpp" />
-    <ClCompile Include="source\globals.cpp" />
     <ClCompile Include="source\interface.cpp" />
     <ClCompile Include="source\interface_derived.cpp" />
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="source\DirectoryData.hpp" />
     <ClInclude Include="source\folder_sizer.hpp" />
+    <ClInclude Include="source\globals.h" />
     <ClInclude Include="source\interface.h" />
-    <ClInclude Include="source\interface.hpp" />
     <ClInclude Include="source\interface_derived.h" />
   </ItemGroup>
   <ItemGroup>
