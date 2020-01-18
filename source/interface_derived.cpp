@@ -337,6 +337,8 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 	//clear the cache
 	loaded.clear();
 	
+	bool sortdir = false;
+	auto col = DisableSorting(sortdir);
 	AddSubItems(fileBrowser->GetRootItem(),folderData);
 	AddFiles(fileBrowser->GetRootItem(),folderData);
 	
@@ -355,6 +357,7 @@ void MainFrame::OnUpdateReload(wxCommandEvent& event){
 	
 	//update titlebar
 	UpdateTitlebar(100,folderSizer::sizeToString(folderData->size));
+	EnableSorting(col,sortdir);
 }
 
 void MainFrame::OnCopy(wxCommandEvent& event){
@@ -511,6 +514,8 @@ void MainFrame::OnListExpanding(wxTreeListEvent& event){
 	string key = data->Path;
 	//prevent trying to load already loaded items
 	if (loaded.find(key) == loaded.end()){
+		bool dir = false;
+		auto col = DisableSorting(dir);
 		//remove the placeholder item
 		wxTreeListItem placeholder = fileBrowser->GetFirstChild(item);
 		if (placeholder.IsOk()){
@@ -520,6 +525,7 @@ void MainFrame::OnListExpanding(wxTreeListEvent& event){
 		if (data->parent == folderData && data->subFolders.size() == 0){
 			AddFiles(item, data);
 		}
+		EnableSorting(col,dir);
 	}
 	//mark as loaded
 	loaded.insert(key);

@@ -99,6 +99,32 @@ private:
 	}
 	wxDECLARE_EVENT_TABLE();
 	
+	/**
+	 Disables sorting the tree view
+	 @param direction (modify) the boolean to store the direction of the sort
+	 @return the column that was set to unsort
+	 */
+	unsigned DisableSorting(bool& direction){
+		unsigned uCol = -1;
+		if (fileBrowser->GetSortColumn(&uCol,&direction)) {
+			wxDataViewCtrl* pView = fileBrowser->GetDataView();
+			wxDataViewColumn* pCol = pView->GetColumn(uCol);
+			pCol->UnsetAsSortKey();
+		}
+		return uCol;
+	}
+	
+	/**
+	 Re-enables sorting
+	 @param col the column to use as the sort column
+	 @param direction true to sort ascending, false to sort descending
+	 */
+	void EnableSorting(const unsigned& col, const bool& direction){
+		if (col != -1){
+			fileBrowser->SetSortColumn(col, direction);
+		}
+	}
+	
 #if defined __APPLE__ || defined __linux__
 	//for drawing icons next to items in the list
 	const unordered_map<string,wxString> icons = {
