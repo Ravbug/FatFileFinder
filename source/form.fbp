@@ -209,7 +209,7 @@
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
                         <property name="help"></property>
-                        <property name="id">wxID_INFO</property>
+                        <property name="id">wxID_PROPERTIES</property>
                         <property name="kind">wxITEM_NORMAL</property>
                         <property name="label">Hide Sidebar</property>
                         <property name="name">menuToggleSidebar</property>
@@ -222,7 +222,7 @@
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
                         <property name="help"></property>
-                        <property name="id">wxID_JUSTIFY_CENTER</property>
+                        <property name="id">wxID_JUSTIFY_FILL</property>
                         <property name="kind">wxITEM_NORMAL</property>
                         <property name="label">Show Log</property>
                         <property name="name">menuToggleLog</property>

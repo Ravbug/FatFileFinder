@@ -54,10 +54,10 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	menuUpdates = new wxMenuItem( menuHelp, wxID_UP, wxString( wxT("Check for Updates") ) , wxT("Visit the updates page"), wxITEM_NORMAL );
 	menuHelp->Append( menuUpdates );
 
-	menuToggleSidebar = new wxMenuItem( menuHelp, wxID_INFO, wxString( wxT("Hide Sidebar") ) + wxT('\t') + wxT("Ctrl-I"), wxEmptyString, wxITEM_NORMAL );
+	menuToggleSidebar = new wxMenuItem( menuHelp, wxID_PROPERTIES, wxString( wxT("Hide Sidebar") ) + wxT('\t') + wxT("Ctrl-I"), wxEmptyString, wxITEM_NORMAL );
 	menuHelp->Append( menuToggleSidebar );
 
-	menuToggleLog = new wxMenuItem( menuHelp, wxID_JUSTIFY_CENTER, wxString( wxT("Show Log") ) + wxT('\t') + wxT("Ctrl-L"), wxEmptyString, wxITEM_NORMAL );
+	menuToggleLog = new wxMenuItem( menuHelp, wxID_JUSTIFY_FILL, wxString( wxT("Show Log") ) + wxT('\t') + wxT("Ctrl-L"), wxEmptyString, wxITEM_NORMAL );
 	menuHelp->Append( menuToggleLog );
 
 	menuBar->Append( menuHelp, wxT("Help") );
