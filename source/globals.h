@@ -16,7 +16,7 @@ static inline const std::string AppVersion = "1.0";
 #define PROGEVT 2001
 #define RELOADEVT 2002
 #define LOGEVT 2003
-typedef uint64_t fileSize;
+typedef int64_t fileSize;
 wxDEFINE_EVENT(progEvt, wxCommandEvent);
 
 /**
