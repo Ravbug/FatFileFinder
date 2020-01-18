@@ -165,7 +165,9 @@ void MainFrame::AddSubItems(const wxTreeListItem& item,DirectoryData* data){
 				fileBrowser->AppendItem(added, "Placeholder");
 			}
 			//add this item's files
-			AddFiles(added, d);
+			if (d->parent != folderData) {
+				AddFiles(added, d);
+			}
 		}
 	}
 }
