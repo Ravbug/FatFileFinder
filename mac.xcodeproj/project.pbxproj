@@ -15,9 +15,9 @@
 		AA0A148423CCBE410092E9AA /* DirectoryData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA0A148123CCBE410092E9AA /* DirectoryData.cpp */; };
 		AA14A0EE222A1217002C4553 /* libwx_osx_cocoa.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = AA1D0F81222A0A1D00678304 /* libwx_osx_cocoa.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AA14A0F3222A1219002C4553 /* libwx_osx_cocoa.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1D0F81222A0A1D00678304 /* libwx_osx_cocoa.dylib */; };
-		AA8759DD23D0D4AD00A17A44 /* libwx_osx_cocoa.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1D0F81222A0A1D00678304 /* libwx_osx_cocoa.dylib */; };
 		AA897A6023355BE8002C9756 /* folder_sizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA897A5E23355BE8002C9756 /* folder_sizer.cpp */; };
 		AA897A6123355BE8002C9756 /* folder_sizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA897A5E23355BE8002C9756 /* folder_sizer.cpp */; };
+		AAAA4D7F23D2D56B003D8CCD /* libwx_osx_cocoa_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1D0F83222A0A1D00678304 /* libwx_osx_cocoa_static.a */; };
 		AAD015C0222B2FE300E25CB7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAF9D87B222B14E900437548 /* main.cpp */; };
 		AADF6A25222B359700991DD2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADF6A0B222B359700991DD2 /* CoreFoundation.framework */; };
 		AADF6A27222B35B300991DD2 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADF6A26222B35B300991DD2 /* CoreGraphics.framework */; };
@@ -282,9 +282,9 @@
 				AADF6A31222B360700991DD2 /* AppKit.framework in Frameworks */,
 				AADF6A2F222B360200991DD2 /* IOKit.framework in Frameworks */,
 				AADF6A2D222B35E800991DD2 /* Carbon.framework in Frameworks */,
-				AA8759DD23D0D4AD00A17A44 /* libwx_osx_cocoa.dylib in Frameworks */,
 				AADF6A2B222B35E200991DD2 /* CoreText.framework in Frameworks */,
 				AADF6A29222B35DA00991DD2 /* ImageIO.framework in Frameworks */,
+				AAAA4D7F23D2D56B003D8CCD /* libwx_osx_cocoa_static.a in Frameworks */,
 				AADF6A27222B35B300991DD2 /* CoreGraphics.framework in Frameworks */,
 				AADF6A25222B359700991DD2 /* CoreFoundation.framework in Frameworks */,
 			);
