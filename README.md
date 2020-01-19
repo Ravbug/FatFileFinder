@@ -5,6 +5,8 @@ This cross-platform app sweeps a folder or drive and displays the size of each i
 This version is a rewrite of my [Windows-only version](https://github.com/Ravbug/FatFileFinder) in C++, using the [wxWidgets](https://www.wxwidgets.org) library for GUI. 
 Similar to [WinDirStat](https://windirstat.net/), but lighter and uses a background thread.
 
+Visit [here](https://github.com/Ravbug/FatFileFinder) to use the legacy Windows-only version.
+
 ## How to Install
 1. Ensure your system meets the minimum requirements:
    - macOS 10.15 or higher (I cannot support 10.14 or lower because of unsupported STL features, sorry!)
