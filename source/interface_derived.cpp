@@ -185,7 +185,7 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 		propertyList->SetTextValue(folderSizer::sizeToString(spd->folderData->size), 1, 1);
 		string ext = p.extension().string();
 		//special case for files with no extension
-		propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "extensionless" : ext.substr(1)) + " File", 2, 1);
+		propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "" : ext.substr(1)) + " File", 2, 1);
 		propertyList->SetTextValue("",3,1);
 	}
 	else{
