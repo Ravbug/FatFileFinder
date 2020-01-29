@@ -49,14 +49,12 @@ private:
 	thread worker;
 	unordered_set<string> loaded;
 	int progIndex = 0;
-	wxTreeListItem lastUpdateItem;
+	wxDataViewItem lastUpdateItem;
 	bool userClosedLog = false;
 
 	string GetPathFromDialog(const string&);
-	void AddSubItems(const wxTreeListItem&, DirectoryData*);
 	void SizeRootFolder(const string&);
 	void PopulateSidebar(StructurePtrData*);
-	void AddFiles(wxTreeListItem root, DirectoryData*);
 	
 	void OnExit(wxCommandEvent&);
 	void OnAbout(wxCommandEvent&);
@@ -64,8 +62,6 @@ private:
 	void OnReloadFolder(wxCommandEvent&);
 	void OnUpdateUI(wxCommandEvent&);
 	void OnUpdateReload(wxCommandEvent&);
-	void OnListExpanding(wxTreeListEvent&);
-	void OnListSelection(wxTreeListEvent&);
 	void OnCopy(wxCommandEvent&);
 	void OnToggleSidebar(wxCommandEvent&);
 	void OnToggleLog(wxCommandEvent&);
@@ -106,11 +102,11 @@ private:
 	 */
 	unsigned DisableSorting(bool& direction){
 		unsigned uCol = -1;
-		if (fileBrowser->GetSortColumn(&uCol,&direction)) {
-			wxDataViewCtrl* pView = fileBrowser->GetDataView();
-			wxDataViewColumn* pCol = pView->GetColumn(uCol);
-			pCol->UnsetAsSortKey();
-		}
+//		if (fileBrowser->GetSortColumn(&uCol,&direction)) {
+//			wxDataViewCtrl* pView = fileBrowser->GetDataView();
+//			wxDataViewColumn* pCol = pView->GetColumn(uCol);
+//			pCol->UnsetAsSortKey();
+//		}
 		return uCol;
 	}
 	
@@ -121,7 +117,7 @@ private:
 	 */
 	void EnableSorting(const unsigned& col, const bool& direction){
 		if (col != -1){
-			fileBrowser->SetSortColumn(col, direction);
+//			fileBrowser->SetSortColumn(col, direction);
 		}
 	}
 	
@@ -181,26 +177,26 @@ public:
  Class for defining custom sorting in a wxTreeListCtrl.
  Overrides the Compare method.
  */
-class sizeComparator : public wxTreeListItemComparator{
-public:
-	//attribution: https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
-	template <typename T> int sgn(T val) {
-		return (T(0) < val) - (val < T(0));
-	}
-	int Compare(wxTreeListCtrl *treelist, unsigned column, wxTreeListItem first, wxTreeListItem second){
-		//get client data
-		StructurePtrData* item1 = nullptr;
-		StructurePtrData* item2 = nullptr;
-		
-		item1 = (StructurePtrData*)treelist->GetItemData(first);
-		item2 = (StructurePtrData*)treelist->GetItemData(second);
-		
-		//error checking
-		if (!item1 || !item2){
-			return 0;
-		}
-
-		//return -1, 0, or 1 
-		return sgn(item1->folderData->size - item2->folderData->size);
-	}
-};
+//class sizeComparator : public wxTreeListItemComparator{
+//public:
+//	//attribution: https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
+//	template <typename T> int sgn(T val) {
+//		return (T(0) < val) - (val < T(0));
+//	}
+//	int Compare(wxTreeListCtrl *treelist, unsigned column, wxTreeListItem first, wxTreeListItem second){
+//		//get client data
+//		StructurePtrData* item1 = nullptr;
+//		StructurePtrData* item2 = nullptr;
+//		
+//		item1 = (StructurePtrData*)treelist->GetItemData(first);
+//		item2 = (StructurePtrData*)treelist->GetItemData(second);
+//		
+//		//error checking
+//		if (!item1 || !item2){
+//			return 0;
+//		}
+//
+//		//return -1, 0, or 1 
+//		return sgn(item1->folderData->size - item2->folderData->size);
+//	}
+//};

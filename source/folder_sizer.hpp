@@ -37,7 +37,6 @@ public:
 	~folderSizer();
 	DirectoryData* SizeFolder(const string&, const progCallback&);
 	void sizeImmediate(DirectoryData*, const bool& skipFolders = false);
-	static string sizeToString(const fileSize&);
 
 	/**
 	Display a message in the log

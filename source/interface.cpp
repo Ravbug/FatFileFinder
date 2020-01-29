@@ -114,12 +114,9 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	wxBoxSizer* browserSizerInner;
 	browserSizerInner = new wxBoxSizer( wxVERTICAL );
 
-	fileBrowser = new wxTreeListCtrl( browserPanel, TREELIST, wxDefaultPosition, wxDefaultSize, wxTL_DEFAULT_STYLE|wxTL_SINGLE );
-	fileBrowser->AppendColumn( wxT("File Name"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_LEFT, wxCOL_RESIZABLE );
-	fileBrowser->AppendColumn( wxT("Percentage"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER, wxCOL_RESIZABLE|wxCOL_SORTABLE );
-	fileBrowser->AppendColumn( wxT("Size"), wxCOL_WIDTH_AUTOSIZE, wxALIGN_RIGHT, wxCOL_RESIZABLE|wxCOL_SORTABLE );
-
-	browserSizerInner->Add( fileBrowser, 1, wxEXPAND | wxALL, 5 );
+	scrollView = new wxScrolledWindow( browserPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHSCROLL|wxVSCROLL );
+	scrollView->SetScrollRate( 5, 5 );
+	browserSizerInner->Add( scrollView, 1, wxEXPAND | wxALL, 5 );
 
 
 	browserPanel->SetSizer( browserSizerInner );
@@ -196,5 +193,33 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 }
 
 MainFrameBase::~MainFrameBase()
+{
+}
+
+FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
+{
+	wxFlexGridSizer* mainSizer;
+	mainSizer = new wxFlexGridSizer( 0, 1, 0, 0 );
+	mainSizer->AddGrowableCol( 0 );
+	mainSizer->AddGrowableRow( 1 );
+	mainSizer->SetFlexibleDirection( wxBOTH );
+	mainSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+
+	ItemName = new wxStaticText( this, wxID_ANY, wxT("Name"), wxDefaultPosition, wxDefaultSize, 0 );
+	ItemName->Wrap( -1 );
+	mainSizer->Add( ItemName, 0, wxALL, 5 );
+
+	ListCtrl = new wxDataViewListCtrl( this, FDISP, wxDefaultPosition, wxDefaultSize, 0 );
+	nameCol = ListCtrl->AppendTextColumn( wxT("File Name"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_RESIZABLE );
+	percentCol = ListCtrl->AppendProgressColumn( wxT("Percent"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_RESIZABLE );
+	sizeCol = ListCtrl->AppendProgressColumn( wxT("Size"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_RESIZABLE );
+	mainSizer->Add( ListCtrl, 0, wxALL|wxEXPAND, 5 );
+
+
+	this->SetSizer( mainSizer );
+	this->Layout();
+}
+
+FolderDisplayBase::~FolderDisplayBase()
 {
 }

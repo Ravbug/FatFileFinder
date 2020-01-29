@@ -22,7 +22,7 @@
 #include <wx/button.h>
 #include <wx/gauge.h>
 #include <wx/gbsizer.h>
-#include <wx/treelist.h>
+#include <wx/scrolwin.h>
 #include <wx/sizer.h>
 #include <wx/panel.h>
 #include <wx/textctrl.h>
@@ -33,8 +33,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-#define TREELIST 1000
-#define COPYPATH 1001
+#define COPYPATH 1000
+#define FDISP 1001
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class MainFrameBase
@@ -53,7 +53,7 @@ class MainFrameBase : public wxFrame
 		wxGauge* progressBar;
 		wxSplitterWindow* mainSplitter;
 		wxSplitterWindow* browserSplitter;
-		wxTreeListCtrl* fileBrowser;
+		wxScrolledWindow* scrollView;
 		wxPanel* logPanel;
 		wxTextCtrl* logCtrl;
 		wxPanel* propertyPanel;
@@ -80,6 +80,27 @@ class MainFrameBase : public wxFrame
 			browserSplitter->SetSashPosition( 800 );
 			browserSplitter->Disconnect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::browserSplitterOnIdle ), NULL, this );
 		}
+
+};
+
+///////////////////////////////////////////////////////////////////////////////
+/// Class FolderDisplayBase
+///////////////////////////////////////////////////////////////////////////////
+class FolderDisplayBase : public wxPanel
+{
+	private:
+
+	protected:
+		wxStaticText* ItemName;
+		wxDataViewListCtrl* ListCtrl;
+		wxDataViewColumn* nameCol;
+		wxDataViewColumn* percentCol;
+		wxDataViewColumn* sizeCol;
+
+	public:
+
+		FolderDisplayBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+		~FolderDisplayBase();
 
 };
 

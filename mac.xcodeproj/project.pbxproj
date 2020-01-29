@@ -19,6 +19,8 @@
 		AA897A6123355BE8002C9756 /* folder_sizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA897A5E23355BE8002C9756 /* folder_sizer.cpp */; };
 		AAAA4D7F23D2D56B003D8CCD /* libwx_osx_cocoa_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1D0F83222A0A1D00678304 /* libwx_osx_cocoa_static.a */; };
 		AAD015C0222B2FE300E25CB7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAF9D87B222B14E900437548 /* main.cpp */; };
+		AADEBAF623E1D40B00A34F27 /* FolderDisplay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AADEBAF423E1D40B00A34F27 /* FolderDisplay.cpp */; };
+		AADEBAF723E1D40B00A34F27 /* FolderDisplay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AADEBAF423E1D40B00A34F27 /* FolderDisplay.cpp */; };
 		AADF6A25222B359700991DD2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADF6A0B222B359700991DD2 /* CoreFoundation.framework */; };
 		AADF6A27222B35B300991DD2 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADF6A26222B35B300991DD2 /* CoreGraphics.framework */; };
 		AADF6A29222B35DA00991DD2 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADF6A28222B35DA00991DD2 /* ImageIO.framework */; };
@@ -248,6 +250,8 @@
 		AA897A5E23355BE8002C9756 /* folder_sizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = folder_sizer.cpp; sourceTree = "<group>"; };
 		AA897A5F23355BE8002C9756 /* folder_sizer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = folder_sizer.hpp; sourceTree = "<group>"; };
 		AAD015CD222B2FE300E25CB7 /* FatFileFinder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FatFileFinder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AADEBAF423E1D40B00A34F27 /* FolderDisplay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FolderDisplay.cpp; sourceTree = "<group>"; };
+		AADEBAF523E1D40B00A34F27 /* FolderDisplay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FolderDisplay.hpp; sourceTree = "<group>"; };
 		AADF6A0B222B359700991DD2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		AADF6A26222B35B300991DD2 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		AADF6A28222B35DA00991DD2 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
@@ -338,6 +342,8 @@
 				41B5AAEC22DB8BB300347CC8 /* interface.cpp */,
 				AAE2C4282326D967003C381B /* interface_derived.h */,
 				AAE2C4272326D967003C381B /* interface_derived.cpp */,
+				AADEBAF423E1D40B00A34F27 /* FolderDisplay.cpp */,
+				AADEBAF523E1D40B00A34F27 /* FolderDisplay.hpp */,
 				AA897A5F23355BE8002C9756 /* folder_sizer.hpp */,
 				AA897A5E23355BE8002C9756 /* folder_sizer.cpp */,
 				AA0A148223CCBE410092E9AA /* DirectoryData.hpp */,
@@ -664,6 +670,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AAE2C40C2326D46A003C381B /* globals.h in Sources */,
+				AADEBAF623E1D40B00A34F27 /* FolderDisplay.cpp in Sources */,
 				AAE2C4292326D967003C381B /* interface_derived.cpp in Sources */,
 				AAF9D87D222B14E900437548 /* main.cpp in Sources */,
 				AA0A148323CCBE410092E9AA /* DirectoryData.cpp in Sources */,
@@ -677,6 +684,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AAE2C40D2326D46A003C381B /* globals.h in Sources */,
+				AADEBAF723E1D40B00A34F27 /* FolderDisplay.cpp in Sources */,
 				AAE2C42A2326D967003C381B /* interface_derived.cpp in Sources */,
 				AAD015C0222B2FE300E25CB7 /* main.cpp in Sources */,
 				AA0A148423CCBE410092E9AA /* DirectoryData.cpp in Sources */,

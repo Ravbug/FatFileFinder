@@ -117,34 +117,4 @@ void folderSizer::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 	}
 }
 
-/**
- Formats a raw file size to a string with a unit
- @param fileSize the size of the item in bytes
- @returns unitized string, example "12 KB"
- */
-string folderSizer::sizeToString(const fileSize& fileSize){
-	string formatted = "";
-	int size = 1000;		//MB = 1000, MiB = 1024
-	array<string,5> suffix { " bytes", " KB", " MB", " GB", " TB" };
-
-	for (int i = 0; i < suffix.size(); i++)
-	{
-		double compare = pow(size, i);
-		if (fileSize <= compare)
-		{
-			int minus = 0;
-			if (i > 0)
-			{
-				minus = 1;
-			}
-			//round to 2 decimal places, then attach unit
-			char buffer[10];
-			sprintf(buffer,"%.2f",fileSize / pow(size,i-minus));
-			formatted = string(buffer) + suffix[i - minus];
-			break;
-		}
-	}
-
-	return formatted;
-}
 
