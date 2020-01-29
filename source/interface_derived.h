@@ -11,6 +11,7 @@
 #include "globals.h"
 #include "interface.h"
 #include "folder_sizer.hpp"
+#include "FolderDisplay.hpp"
 #include <thread>
 #include <unordered_set>
 #include <unordered_map>
@@ -42,7 +43,8 @@ public:
 	void OnLog(wxCommandEvent& evt) {
 		Log(evt.GetString());
 	}
-
+	void PopulateSidebar(DirectoryData*);
+	
 private:
 	folderSizer sizer = folderSizer(this);
 	DirectoryData* folderData = nullptr;
@@ -54,7 +56,8 @@ private:
 
 	string GetPathFromDialog(const string&);
 	void SizeRootFolder(const string&);
-	void PopulateSidebar(StructurePtrData*);
+	
+	vector<FolderDisplay*> currentDisplay;
 	
 	void OnExit(wxCommandEvent&);
 	void OnAbout(wxCommandEvent&);
@@ -66,6 +69,13 @@ private:
 	void OnToggleSidebar(wxCommandEvent&);
 	void OnToggleLog(wxCommandEvent&);
 	void OnReveal(wxCommandEvent&);
+	
+	FolderDisplay* AddDisplay(DirectoryData* model){
+		FolderDisplay* f = new FolderDisplay(scrollView,this,model);
+		scrollSizer->Add((wxPanel*)f,wxALL|wxEXPAND,5);
+		currentDisplay.push_back(f);
+		return f;
+	}
 
 	void OnSourceCode(wxCommandEvent&){
 		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/");

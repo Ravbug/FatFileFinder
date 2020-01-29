@@ -12,13 +12,14 @@
 
 class FolderDisplay : FolderDisplayBase{
 public:
-	FolderDisplay(wxWindow*, const DirectoryData*);
+	DirectoryData* data;
+	
+	FolderDisplay(wxWindow*,wxWindow*, DirectoryData*);
 	
 	void display();
 	static string sizeToString(const fileSize&);
 private:
 	wxWindow* eventManager = nullptr;
-	DirectoryData* data;
 	
 	//event handlers
 	void OnSelectionChanged(wxDataViewEvent&);

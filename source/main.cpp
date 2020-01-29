@@ -40,5 +40,12 @@ int FatFileFinder::FilterEvent(wxEvent& event) {
         delete ce;
         return true;
     }
+	else if (event.GetId() == SELEVT && event.IsCommandEvent()){
+		wxCommandEvent* ce = (wxCommandEvent*)(event.Clone());
+		//extract the pointer from the client data
+		uintptr_t* ptr = (uintptr_t*)(ce->GetClientData());
+		DirectoryData* data = (DirectoryData*)*ptr;
+		frame->PopulateSidebar(data);
+	}
     return -1;
 }

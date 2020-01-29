@@ -791,7 +791,7 @@
                                                         <property name="permission">none</property>
                                                         <object class="sizeritem" expanded="1">
                                                             <property name="border">5</property>
-                                                            <property name="flag">wxEXPAND | wxALL</property>
+                                                            <property name="flag">wxALL|wxEXPAND</property>
                                                             <property name="proportion">1</property>
                                                             <object class="wxScrolledWindow" expanded="1">
                                                                 <property name="BottomDockable">1</property>
@@ -846,6 +846,15 @@
                                                                 <property name="window_extra_style"></property>
                                                                 <property name="window_name"></property>
                                                                 <property name="window_style">wxHSCROLL|wxVSCROLL</property>
+                                                                <object class="wxGridSizer" expanded="1">
+                                                                    <property name="cols">1</property>
+                                                                    <property name="hgap">0</property>
+                                                                    <property name="minimum_size"></property>
+                                                                    <property name="name">scrollSizer</property>
+                                                                    <property name="permission">protected</property>
+                                                                    <property name="rows">1</property>
+                                                                    <property name="vgap">0</property>
+                                                                </object>
                                                             </object>
                                                         </object>
                                                     </object>
@@ -1609,7 +1618,7 @@
                         <object class="dataViewListColumn" expanded="1">
                             <property name="align">wxALIGN_CENTER</property>
                             <property name="ellipsize"></property>
-                            <property name="flags">wxDATAVIEW_COL_RESIZABLE</property>
+                            <property name="flags">wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_SORTABLE</property>
                             <property name="label">Percent</property>
                             <property name="mode">wxDATAVIEW_CELL_INERT</property>
                             <property name="name">percentCol</property>
@@ -1625,7 +1634,7 @@
                             <property name="mode">wxDATAVIEW_CELL_INERT</property>
                             <property name="name">sizeCol</property>
                             <property name="permission">protected</property>
-                            <property name="type">Progress</property>
+                            <property name="type">Text</property>
                             <property name="width">-1</property>
                         </object>
                     </object>

@@ -80,10 +80,13 @@ vector<DirectoryData*> DirectoryData::getSuperFolders(){
 Return a string representing the item's % size of the superitem
 @returns size rounded to 1 decimal place e.g (5.2%)
 */
-string DirectoryData::percentOfParent(){
-	if (parent == nullptr){return "[waiting]";}
-	//round to 2 decimal places, then attach unit
-	char buffer[10];
-	sprintf(buffer,"%.1Lf",(long double)size / (long double)parent->size * 100);
-	return string(buffer) + "%";
+long double DirectoryData::percentOfParent(){
+//	if (parent == nullptr){return "[waiting]";}
+//	//round to 2 decimal places, then attach unit
+//	char buffer[10];
+//	sprintf(buffer,"%.1Lf",(long double)size / (long double)parent->size * 100);
+//	return string(buffer) + "%";
+	
+	//return (long double)size / (long double)parent->size * 100;
+	return 50;
 }

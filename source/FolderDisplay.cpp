@@ -18,14 +18,14 @@ using namespace std::filesystem;
 
 /**
  Constructs a FolderDisplay given an event parent and a model
- @param parentWindow the wxWindow to send events to
+ @param parentWindow the parent wxWindow
+ @param eventWindow the wxWindow to send events to
  @param contents the FolderData to represent in this FolderDisplay
- @note nullptr is passed to the base class constructor
  @note Must call display() to display the contents (or update them)
  */
-FolderDisplay::FolderDisplay(wxWindow* parentWindow, const DirectoryData* contents) : FolderDisplayBase(nullptr){
-	eventManager = parentWindow;
-	ItemName->SetLabel(path(contents->Path).filename().string());
+FolderDisplay::FolderDisplay(wxWindow* parentWindow, wxWindow* eventWindow, DirectoryData* contents) : FolderDisplayBase(parentWindow){
+	eventManager = eventWindow;
+	data = contents;
 }
 
 /**
@@ -34,6 +34,11 @@ Activated when the selection in the view is changed
 */
 void FolderDisplay::OnSelectionChanged(wxDataViewEvent& event){
 	//notify parent to update sidebar display
+	wxCommandEvent* evt = new wxCommandEvent(progEvt, SELEVT);
+	//pass along the address to the DirectoryData to the event
+	uintptr_t* addr = new uintptr_t((ListCtrl->GetItemData(event.GetItem())));
+	evt->SetClientData(addr);
+	eventManager->GetEventHandler()->QueueEvent(evt);
 	event.Skip();
 }
 
@@ -42,7 +47,7 @@ Activated when the selection in the view is activated (double clicked or enter p
 @param event the event raised by the dataview
 */
 void FolderDisplay::OnSelectionActivated(wxDataViewEvent& event){
-
+	
 	event.Skip();
 }
 
@@ -51,12 +56,20 @@ void FolderDisplay::OnSelectionActivated(wxDataViewEvent& event){
  @pre data must not be nullptr
  */
 void FolderDisplay::display(){
-	for (DirectoryData* folder : data->subFolders){
-		wxVector<wxVariant> items(3);
-		items[0] = path(folder->Path).filename().string();
-		items[1] = folder->percentOfParent();
-		items[2] = sizeToString(folder->size);
-	}
+	ItemName->SetLabel(path(data->Path).filename().string() + " - " + sizeToString(data->size));
+	auto addItems = [&](vector<DirectoryData*>& list){
+		for (DirectoryData* folder : list){
+			wxVector<wxVariant> items(3);
+			items[0] = path(folder->Path).filename().string();
+			items[1] = wxAny((long)(folder->percentOfParent()));
+			items[2] = sizeToString(folder->size);
+			//store the address that the pointer is referencing as the client data for the item
+			wxUIntPtr clientdata((uintptr_t)&(*folder));
+			ListCtrl->AppendItem(items,clientdata);
+		}
+	};
+	addItems(data->subFolders);
+	addItems(data->files);
 }
 
 /**

@@ -7,7 +7,6 @@
 // Place constructors and function definitons here.
 
 #include "interface_derived.h"
-#include "FolderDisplay.hpp"
 #include <wx/generic/aboutdlgg.h>
 #include <wx/aboutdlg.h>
 #include <wx/gdicmn.h>
@@ -92,6 +91,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	
 	// default unsplit
 	browserSplitter->Unsplit();
+	AddDisplay(folderData);
 }
 
 /**
@@ -172,27 +172,27 @@ void MainFrame::SizeRootFolder(const string& folder){
 //}
 /**
  Populate the sidebar with info about a particular item in the tree
- @param spd the StructurePtrData object stored in the tree cell
+ @param ptr the DirectoryData object stored to load properties for
  */
-void MainFrame::PopulateSidebar(StructurePtrData* spd){
-	if (spd == nullptr){return;}
-	
-	//make sure item still exists
-	DirectoryData* ptr;
-	path p = spd->folderData->Path;
-	if (!spd->folderData->isFolder){
-//		propertyList->SetTextValue(folderSizer::sizeToString(spd->folderData->size), 1, 1);
+void MainFrame::PopulateSidebar(DirectoryData* ptr){
+//	if (spd == nullptr){return;}
+//
+//	//make sure item still exists
+//	DirectoryData* ptr;
+	path p = folderData->Path;
+	if (ptr->isFolder){
+		propertyList->SetTextValue(FolderDisplay::sizeToString(ptr->size), 1, 1);
 		string ext = p.extension().string();
 		//special case for files with no extension
 		propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "" : ext.substr(1)) + " File", 2, 1);
 		propertyList->SetTextValue("",3,1);
 	}
 	else{
-//		propertyList->SetTextValue(folderSizer::sizeToString(spd->folderData->size), 1, 1);
+		propertyList->SetTextValue(FolderDisplay::sizeToString(ptr->size), 1, 1);
 		propertyList->SetTextValue(FolderIcon + " Folder", 2, 1);
-		propertyList->SetTextValue(to_string(spd->folderData->num_items),3,1);
+		propertyList->SetTextValue(to_string(ptr->num_items),3,1);
 	}
-	ptr = spd->folderData;
+//	ptr = spd->folderData;
 	propertyList->SetTextValue(p.filename().string(), 0, 1);
 	
 	//modified date
@@ -220,7 +220,7 @@ void MainFrame::PopulateSidebar(StructurePtrData* spd){
 	propertyList->SetTextValue(permstr_for(ptr->Path), 12, 1);
 	
 	//Size on disk
-//	propertyList->SetTextValue(!ptr->isFolder? folderSizer::sizeToString(size_on_disk(ptr->Path)) : "-", 13, 1);
+	propertyList->SetTextValue(!ptr->isFolder? FolderDisplay::sizeToString(size_on_disk(ptr->Path)) : "-", 13, 1);
 	
 # elif defined _WIN32
 
@@ -264,6 +264,9 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	//update progress
 	int prog = event.GetInt();
 	progressBar->SetValue(prog);
+	
+	currentDisplay[0]->data = fd;
+	currentDisplay[0]->display();
 	
 //	//if this is first progress update, populate the whole table
 //	if(progIndex == 0){

@@ -22,8 +22,8 @@
 #include <wx/button.h>
 #include <wx/gauge.h>
 #include <wx/gbsizer.h>
-#include <wx/scrolwin.h>
 #include <wx/sizer.h>
+#include <wx/scrolwin.h>
 #include <wx/panel.h>
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
@@ -54,6 +54,7 @@ class MainFrameBase : public wxFrame
 		wxSplitterWindow* mainSplitter;
 		wxSplitterWindow* browserSplitter;
 		wxScrolledWindow* scrollView;
+		wxGridSizer* scrollSizer;
 		wxPanel* logPanel;
 		wxTextCtrl* logCtrl;
 		wxPanel* propertyPanel;
