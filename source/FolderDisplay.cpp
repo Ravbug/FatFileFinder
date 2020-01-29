@@ -59,13 +59,17 @@ void FolderDisplay::display(){
 	ItemName->SetLabel(path(data->Path).filename().string() + " - " + sizeToString(data->size));
 	auto addItems = [&](vector<DirectoryData*>& list){
 		for (DirectoryData* folder : list){
+			//no parent set? use the current associated model as the parent
+			if (folder->parent == nullptr){
+				folder->parent = data;
+			}
 			wxVector<wxVariant> items(3);
 			items[0] = path(folder->Path).filename().string();
 			items[1] = wxAny((long)(folder->percentOfParent()));
 			items[2] = sizeToString(folder->size);
 			//store the address that the pointer is referencing as the client data for the item
-			wxUIntPtr clientdata((uintptr_t)&(*folder));
-			ListCtrl->AppendItem(items,clientdata);
+			//wxUIntPtr clientdata((uintptr_t)(folder));
+			ListCtrl->AppendItem(items,(uintptr_t)(folder));
 		}
 	};
 	addItems(data->subFolders);

@@ -87,6 +87,5 @@ long double DirectoryData::percentOfParent(){
 //	sprintf(buffer,"%.1Lf",(long double)size / (long double)parent->size * 100);
 //	return string(buffer) + "%";
 	
-	//return (long double)size / (long double)parent->size * 100;
-	return 50;
+	return (long double)size / (long double)parent->size * 100;
 }

@@ -264,9 +264,12 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	//update progress
 	int prog = event.GetInt();
 	progressBar->SetValue(prog);
+	if(prog == 100){
+		currentDisplay[0]->data = fd;
+		currentDisplay[0]->display();
+	}
 	
-	currentDisplay[0]->data = fd;
-	currentDisplay[0]->display();
+	UpdateTitlebar(prog, FolderDisplay::sizeToString(fd->size));
 	
 //	//if this is first progress update, populate the whole table
 //	if(progIndex == 0){
@@ -291,12 +294,8 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 //		}
 //	}
 //	progIndex++;
-//	//set titlebar
-//	{
-//		string sizestr = folderSizer::sizeToString(fd->size);
-//		UpdateTitlebar(prog, sizestr);
-//	}
-//
+	//set titlebar
+
 //	//set percentage on completion
 //	if(progIndex == fd->subFolders.size()){
 //		wxTreeListItem item = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
