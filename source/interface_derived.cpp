@@ -184,12 +184,12 @@ void MainFrame::PopulateSidebar(DirectoryData* ptr){
 		propertyList->SetTextValue(FolderDisplay::sizeToString(ptr->size), 1, 1);
 		string ext = p.extension().string();
 		//special case for files with no extension
-		propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "" : ext.substr(1)) + " File", 2, 1);
+		//propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "" : ext.substr(1)) + " File", 2, 1);
 		propertyList->SetTextValue("",3,1);
 	}
 	else{
 		propertyList->SetTextValue(FolderDisplay::sizeToString(ptr->size), 1, 1);
-		propertyList->SetTextValue(FolderIcon + " Folder", 2, 1);
+		//propertyList->SetTextValue(FolderIcon + " Folder", 2, 1);
 		propertyList->SetTextValue(to_string(ptr->num_items),3,1);
 	}
 //	ptr = spd->folderData;
@@ -665,4 +665,5 @@ void MainFrame::ChangeSelection(DirectoryData* sender){
 	FolderDisplay* f = AddDisplay(sender);
 	f->display();
 	scrollSizer->Layout();
+	scrollView->Update();
 }

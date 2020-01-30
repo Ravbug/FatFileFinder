@@ -846,13 +846,16 @@
                                                                 <property name="window_extra_style"></property>
                                                                 <property name="window_name"></property>
                                                                 <property name="window_style">wxHSCROLL|wxVSCROLL</property>
-                                                                <object class="wxGridSizer" expanded="1">
-                                                                    <property name="cols">1</property>
+                                                                <object class="wxGridBagSizer" expanded="1">
+                                                                    <property name="empty_cell_size"></property>
+                                                                    <property name="flexible_direction">wxBOTH</property>
+                                                                    <property name="growablecols"></property>
+                                                                    <property name="growablerows"></property>
                                                                     <property name="hgap">0</property>
                                                                     <property name="minimum_size"></property>
                                                                     <property name="name">scrollSizer</property>
+                                                                    <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_SPECIFIED</property>
                                                                     <property name="permission">protected</property>
-                                                                    <property name="rows">1</property>
                                                                     <property name="vgap">0</property>
                                                                 </object>
                                                             </object>
@@ -1497,10 +1500,10 @@
             <property name="hidden">0</property>
             <property name="id">wxID_ANY</property>
             <property name="maximum_size"></property>
-            <property name="minimum_size"></property>
+            <property name="minimum_size">-1,-1</property>
             <property name="name">FolderDisplayBase</property>
             <property name="pos"></property>
-            <property name="size">500,300</property>
+            <property name="size">400,300</property>
             <property name="subclass">; ; forward_declare</property>
             <property name="tooltip"></property>
             <property name="window_extra_style"></property>
@@ -1618,7 +1621,7 @@
                         <object class="dataViewListColumn" expanded="1">
                             <property name="align">wxALIGN_CENTER</property>
                             <property name="ellipsize"></property>
-                            <property name="flags">wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_SORTABLE</property>
+                            <property name="flags">wxDATAVIEW_COL_SORTABLE</property>
                             <property name="label">Percent</property>
                             <property name="mode">wxDATAVIEW_CELL_INERT</property>
                             <property name="name">percentCol</property>

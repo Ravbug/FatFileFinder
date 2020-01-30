@@ -22,8 +22,8 @@
 #include <wx/button.h>
 #include <wx/gauge.h>
 #include <wx/gbsizer.h>
-#include <wx/sizer.h>
 #include <wx/scrolwin.h>
+#include <wx/sizer.h>
 #include <wx/panel.h>
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
@@ -54,7 +54,7 @@ class MainFrameBase : public wxFrame
 		wxSplitterWindow* mainSplitter;
 		wxSplitterWindow* browserSplitter;
 		wxScrolledWindow* scrollView;
-		wxGridSizer* scrollSizer;
+		wxGridBagSizer* scrollSizer;
 		wxPanel* logPanel;
 		wxTextCtrl* logCtrl;
 		wxPanel* propertyPanel;
@@ -100,7 +100,7 @@ class FolderDisplayBase : public wxPanel
 
 	public:
 
-		FolderDisplayBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+		FolderDisplayBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,300 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
 		~FolderDisplayBase();
 
 };

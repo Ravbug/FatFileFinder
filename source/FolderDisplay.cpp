@@ -71,7 +71,8 @@ void FolderDisplay::display(){
 				folder->parent = data;
 			}
 			wxVector<wxVariant> items(3);
-			items[0] = path(folder->Path).filename().string();
+			path p = path(folder->Path);
+			items[0] = iconForExtension(folder) + p.filename().string();
 			items[1] = wxAny((long)(folder->percentOfParent()));
 			items[2] = sizeToString(folder->size);
 			//store the address that the pointer is referencing as the client data for the item
