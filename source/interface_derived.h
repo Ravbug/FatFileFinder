@@ -45,6 +45,15 @@ public:
 	}
 	void PopulateSidebar(DirectoryData*);
 	
+	FolderDisplay* AddDisplay(DirectoryData* model){
+		FolderDisplay* f = new FolderDisplay(scrollView,this,model);
+		scrollSizer->SetCols(scrollSizer->GetCols()+1);
+		scrollSizer->Add((wxPanel*)f,wxALL|wxEXPAND);
+		scrollSizer->Layout();
+		currentDisplay.push_back(f);
+		return f;
+	}
+	
 private:
 	folderSizer sizer = folderSizer(this);
 	DirectoryData* folderData = nullptr;
@@ -69,13 +78,7 @@ private:
 	void OnToggleSidebar(wxCommandEvent&);
 	void OnToggleLog(wxCommandEvent&);
 	void OnReveal(wxCommandEvent&);
-	
-	FolderDisplay* AddDisplay(DirectoryData* model){
-		FolderDisplay* f = new FolderDisplay(scrollView,this,model);
-		scrollSizer->Add((wxPanel*)f,wxALL|wxEXPAND,5);
-		currentDisplay.push_back(f);
-		return f;
-	}
+
 
 	void OnSourceCode(wxCommandEvent&){
 		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/");

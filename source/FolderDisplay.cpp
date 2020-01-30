@@ -47,6 +47,10 @@ Activated when the selection in the view is activated (double clicked or enter p
 @param event the event raised by the dataview
 */
 void FolderDisplay::OnSelectionActivated(wxDataViewEvent& event){
+	wxCommandEvent* evt = new wxCommandEvent(progEvt, ACTEVT);
+	uintptr_t* addr = new uintptr_t((ListCtrl->GetItemData(event.GetItem())));
+	evt->SetClientData(addr);
+	eventManager->GetEventHandler()->QueueEvent(evt);
 	
 	event.Skip();
 }
