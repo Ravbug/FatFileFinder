@@ -56,9 +56,9 @@ int FatFileFinder::FilterEvent(wxEvent& event) {
 		//extract the pointer from the client data
 		uintptr_t* ptr = (uintptr_t*)(ce->GetClientData());
 		DirectoryData* data = (DirectoryData*)*ptr;
-		
-		FolderDisplay* disp = frame->AddDisplay(data);
-		disp->display();
+		if (data->isFolder){
+			frame->ChangeSelection(data);
+		}
 		return true;
 	}
     return -1;

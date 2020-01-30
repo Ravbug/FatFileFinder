@@ -10,11 +10,14 @@
 #include "DirectoryData.hpp"
 #include <filesystem>
 
-class FolderDisplay : FolderDisplayBase{
+class FolderDisplay : public FolderDisplayBase{
 public:
 	DirectoryData* data;
 	
 	FolderDisplay(wxWindow*,wxWindow*, DirectoryData*);
+	~FolderDisplay(){
+		
+	}
 	
 	void display();
 	static string sizeToString(const fileSize&);

@@ -122,7 +122,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	scrollView->SetSizer( scrollSizer );
 	scrollView->Layout();
 	scrollSizer->Fit( scrollView );
-	browserSizerInner->Add( scrollView, 1, wxEXPAND | wxALL, 5 );
+	browserSizerInner->Add( scrollView, 1, wxALL|wxEXPAND, 5 );
 
 
 	browserPanel->SetSizer( browserSizerInner );
@@ -216,9 +216,9 @@ FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxP
 	mainSizer->Add( ItemName, 0, wxALL, 5 );
 
 	ListCtrl = new wxDataViewListCtrl( this, FDISP, wxDefaultPosition, wxDefaultSize, 0 );
-	nameCol = ListCtrl->AppendTextColumn( wxT("File Name"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_RESIZABLE );
+	nameCol = ListCtrl->AppendTextColumn( wxT("File Name"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	percentCol = ListCtrl->AppendProgressColumn( wxT("Percent"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_SORTABLE );
-	sizeCol = ListCtrl->AppendTextColumn( wxT("Size"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_RESIZABLE );
+	sizeCol = ListCtrl->AppendTextColumn( wxT("Size"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_RIGHT), wxDATAVIEW_COL_RESIZABLE );
 	mainSizer->Add( ListCtrl, 0, wxALL|wxEXPAND, 5 );
 
 

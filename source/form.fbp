@@ -1605,7 +1605,7 @@
                         <property name="window_name"></property>
                         <property name="window_style"></property>
                         <object class="dataViewListColumn" expanded="1">
-                            <property name="align">wxALIGN_CENTER</property>
+                            <property name="align">wxALIGN_LEFT</property>
                             <property name="ellipsize"></property>
                             <property name="flags">wxDATAVIEW_COL_RESIZABLE</property>
                             <property name="label">File Name</property>
@@ -1627,7 +1627,7 @@
                             <property name="width">-1</property>
                         </object>
                         <object class="dataViewListColumn" expanded="1">
-                            <property name="align">wxALIGN_CENTER</property>
+                            <property name="align">wxALIGN_RIGHT</property>
                             <property name="ellipsize"></property>
                             <property name="flags">wxDATAVIEW_COL_RESIZABLE</property>
                             <property name="label">Size</property>

@@ -179,7 +179,7 @@ void MainFrame::PopulateSidebar(DirectoryData* ptr){
 //
 //	//make sure item still exists
 //	DirectoryData* ptr;
-	path p = folderData->Path;
+	path p = ptr->Path;
 	if (ptr->isFolder){
 		propertyList->SetTextValue(FolderDisplay::sizeToString(ptr->size), 1, 1);
 		string ext = p.extension().string();
@@ -641,4 +641,28 @@ void MainFrame::OnToggleLog(wxCommandEvent& event) {
 		browserSplitter->UpdateSize();
 		menuToggleLog->SetItemLabel("Show Log\tCtrl-L");
 	}
+}
+
+void MainFrame::ChangeSelection(DirectoryData* sender){
+	//find where the sender is in the list
+	int idx;
+	for (idx = 0; idx < currentDisplay.size(); idx++){
+		if (currentDisplay[idx]->data == sender->parent){
+			break;
+		}
+	}
+	//at end? only need to add another display
+	if (idx < currentDisplay.size()-1){
+		//remove from current display by deallocating
+		for (int i = idx+1; i < currentDisplay.size(); i++){
+			currentDisplay[i]->Destroy();
+		}
+		//update vector size
+		currentDisplay.erase(currentDisplay.begin()+idx+1,currentDisplay.end());
+		//update sizer size
+		scrollSizer->SetCols(idx+1);
+	}
+	FolderDisplay* f = AddDisplay(sender);
+	f->display();
+	scrollSizer->Layout();
 }

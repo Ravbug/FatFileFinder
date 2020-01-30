@@ -45,6 +45,8 @@ public:
 	}
 	void PopulateSidebar(DirectoryData*);
 	
+	void ChangeSelection(DirectoryData*);
+	
 	FolderDisplay* AddDisplay(DirectoryData* model){
 		FolderDisplay* f = new FolderDisplay(scrollView,this,model);
 		scrollSizer->SetCols(scrollSizer->GetCols()+1);
