@@ -853,7 +853,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ravbug.FatFileFinder-Dynamic";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -869,7 +869,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ravbug.FatFileFinder-Dynamic";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -898,7 +898,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.FatFileFinder;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -927,7 +927,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ravbug.FatFileFinder;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
