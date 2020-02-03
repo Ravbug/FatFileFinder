@@ -49,7 +49,8 @@ public:
 	FolderDisplay* AddDisplay(DirectoryData* model){
 		FolderDisplay* f = new FolderDisplay(scrollView,this,model);
 		scrollSizer->SetCols(scrollSizer->GetCols()+1);
-		scrollSizer->Add((wxPanel*)f,wxALL|wxEXPAND);
+		scrollSizer->AddGrowableCol(scrollSizer->GetCols());
+		scrollSizer->Add((wxPanel*)f);
 		scrollSizer->Layout();
 		currentDisplay.push_back(f);
 		return f;

@@ -121,6 +121,9 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	scrollSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
 
+	scrollSizer->AddGrowableCol( 0 );
+	scrollSizer->AddGrowableRow( 0 );
+
 	scrollView->SetSizer( scrollSizer );
 	scrollView->Layout();
 	scrollSizer->Fit( scrollView );
