@@ -69,7 +69,7 @@ public:
 	#elif defined _WIN32
 		//on Windows, unicode is not supported (for now)
 		const wxString FolderIcon = "";
-		static wxString iconForExtension(const string& extension) {
+		static wxString iconForExtension(const DirectoryData* data) {
 			return "";
 		}
 	#endif
