@@ -803,7 +803,7 @@
                                                                 <property name="aui_position"></property>
                                                                 <property name="aui_row"></property>
                                                                 <property name="best_size"></property>
-                                                                <property name="bg">wxSYS_COLOUR_ACTIVEBORDER</property>
+                                                                <property name="bg">wxSYS_COLOUR_APPWORKSPACE</property>
                                                                 <property name="caption"></property>
                                                                 <property name="caption_visible">1</property>
                                                                 <property name="center_pane">0</property>
@@ -1490,7 +1490,7 @@
         <object class="Panel" expanded="1">
             <property name="aui_managed">0</property>
             <property name="aui_manager_style">wxAUI_MGR_DEFAULT</property>
-            <property name="bg">wxSYS_COLOUR_HIGHLIGHT</property>
+            <property name="bg">wxSYS_COLOUR_APPWORKSPACE</property>
             <property name="context_help"></property>
             <property name="context_menu">1</property>
             <property name="enabled">1</property>
@@ -1509,7 +1509,7 @@
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
             <property name="window_style">wxTAB_TRAVERSAL</property>
-            <object class="wxFlexGridSizer" expanded="0">
+            <object class="wxFlexGridSizer" expanded="1">
                 <property name="cols">1</property>
                 <property name="flexible_direction">wxBOTH</property>
                 <property name="growablecols">0</property>
@@ -1553,7 +1553,7 @@
                         <property name="gripper">0</property>
                         <property name="hidden">0</property>
                         <property name="id">wxID_ANY</property>
-                        <property name="label">Name</property>
+                        <property name="label">Open a folder to view statistics</property>
                         <property name="markup">0</property>
                         <property name="max_size"></property>
                         <property name="maximize_button">0</property>
@@ -1582,11 +1582,11 @@
                         <property name="wrap">-1</property>
                     </object>
                 </object>
-                <object class="sizeritem" expanded="0">
+                <object class="sizeritem" expanded="1">
                     <property name="border">5</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="proportion">0</property>
-                    <object class="wxDataViewListCtrl" expanded="0">
+                    <object class="wxDataViewListCtrl" expanded="1">
                         <property name="bg"></property>
                         <property name="context_help"></property>
                         <property name="context_menu">1</property>
@@ -1632,13 +1632,13 @@
                         <object class="dataViewListColumn" expanded="0">
                             <property name="align">wxALIGN_RIGHT</property>
                             <property name="ellipsize"></property>
-                            <property name="flags">wxDATAVIEW_COL_RESIZABLE</property>
+                            <property name="flags"></property>
                             <property name="label">Size</property>
                             <property name="mode">wxDATAVIEW_CELL_INERT</property>
                             <property name="name">sizeCol</property>
                             <property name="permission">protected</property>
                             <property name="type">Text</property>
-                            <property name="width">-1</property>
+                            <property name="width">100</property>
                         </object>
                     </object>
                 </object>

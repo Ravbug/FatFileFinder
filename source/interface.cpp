@@ -116,7 +116,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 
 	scrollView = new wxScrolledWindow( browserPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHSCROLL|wxVSCROLL );
 	scrollView->SetScrollRate( 5, 5 );
-	scrollView->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_ACTIVEBORDER ) );
+	scrollView->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_APPWORKSPACE ) );
 
 	scrollSizer = new wxGridBagSizer( 0, 0 );
 	scrollSizer->SetFlexibleDirection( wxBOTH );
@@ -211,7 +211,7 @@ MainFrameBase::~MainFrameBase()
 
 FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
 {
-	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_HIGHLIGHT ) );
+	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_APPWORKSPACE ) );
 	this->SetMinSize( wxSize( 400,-1 ) );
 
 	wxFlexGridSizer* mainSizer;
@@ -221,14 +221,14 @@ FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxP
 	mainSizer->SetFlexibleDirection( wxBOTH );
 	mainSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
-	ItemName = new wxStaticText( this, wxID_ANY, wxT("Name"), wxDefaultPosition, wxDefaultSize, 0 );
+	ItemName = new wxStaticText( this, wxID_ANY, wxT("Open a folder to view statistics"), wxDefaultPosition, wxDefaultSize, 0 );
 	ItemName->Wrap( -1 );
 	mainSizer->Add( ItemName, 0, wxALL, 5 );
 
 	ListCtrl = new wxDataViewListCtrl( this, FDISP, wxDefaultPosition, wxDefaultSize, 0 );
 	nameCol = ListCtrl->AppendTextColumn( wxT("File Name"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	percentCol = ListCtrl->AppendProgressColumn( wxT("Percent"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_SORTABLE );
-	sizeCol = ListCtrl->AppendTextColumn( wxT("Size"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_RIGHT), wxDATAVIEW_COL_RESIZABLE );
+	sizeCol = ListCtrl->AppendTextColumn( wxT("Size"), wxDATAVIEW_CELL_INERT, 100, static_cast<wxAlignment>(wxALIGN_RIGHT), 0 );
 	mainSizer->Add( ListCtrl, 0, wxALL|wxEXPAND, 5 );
 
 

@@ -664,6 +664,4 @@ void MainFrame::ChangeSelection(DirectoryData* sender){
 	}
 	FolderDisplay* f = AddDisplay(sender);
 	f->display();
-	scrollSizer->Layout();
-	scrollView->Update();
 }
