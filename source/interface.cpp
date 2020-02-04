@@ -116,6 +116,8 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 
 	scrollView = new wxScrolledWindow( browserPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHSCROLL|wxVSCROLL );
 	scrollView->SetScrollRate( 5, 5 );
+	scrollView->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_ACTIVEBORDER ) );
+
 	scrollSizer = new wxGridBagSizer( 0, 0 );
 	scrollSizer->SetFlexibleDirection( wxBOTH );
 	scrollSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
@@ -209,6 +211,8 @@ MainFrameBase::~MainFrameBase()
 
 FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
 {
+	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_HIGHLIGHT ) );
+
 	wxFlexGridSizer* mainSizer;
 	mainSizer = new wxFlexGridSizer( 0, 1, 0, 0 );
 	mainSizer->AddGrowableCol( 0 );
