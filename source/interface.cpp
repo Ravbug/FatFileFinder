@@ -11,7 +11,7 @@
 
 MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
 {
-	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	this->SetSizeHints( wxSize( 300,200 ), wxDefaultSize );
 
 	statusBar = this->CreateStatusBar( 1, wxSTB_DEFAULT_STYLE, wxID_ANY );
 	wxMenuBar* menuBar;
@@ -212,6 +212,7 @@ MainFrameBase::~MainFrameBase()
 FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
 {
 	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_HIGHLIGHT ) );
+	this->SetMinSize( wxSize( 400,-1 ) );
 
 	wxFlexGridSizer* mainSizer;
 	mainSizer = new wxFlexGridSizer( 0, 1, 0, 0 );
@@ -233,6 +234,7 @@ FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxP
 
 	this->SetSizer( mainSizer );
 	this->Layout();
+	mainSizer->Fit( this );
 }
 
 FolderDisplayBase::~FolderDisplayBase()

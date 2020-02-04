@@ -48,12 +48,13 @@ public:
 	
 	FolderDisplay* AddDisplay(DirectoryData* model){
 		FolderDisplay* f = new FolderDisplay(scrollView,this,model);
-		scrollSizer->SetCols(scrollSizer->GetCols());
-		scrollSizer->Add((wxPanel*)f);
+		//scrollSizer->SetCols(scrollSizer->GetCols());
+		scrollSizer->Add(f, wxGBPosition( 0, scrollSizer->GetCols()-1), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 0);
 		if (!scrollSizer->IsColGrowable(scrollSizer->GetCols()-1)){
 			scrollSizer->AddGrowableCol(scrollSizer->GetCols()-1);
 		}
 		scrollSizer->Layout();
+		scrollView->Layout();
 		currentDisplay.push_back(f);
 		return f;
 	}
