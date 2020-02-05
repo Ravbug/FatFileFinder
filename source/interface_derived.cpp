@@ -175,25 +175,23 @@ void MainFrame::SizeRootFolder(const string& folder){
  @param ptr the DirectoryData object stored to load properties for
  */
 void MainFrame::PopulateSidebar(DirectoryData* ptr){
-//	if (spd == nullptr){return;}
-//
-//	//make sure item still exists
-//	DirectoryData* ptr;
 	path p = ptr->Path;
-	if (ptr->isFolder){
-		propertyList->SetTextValue(FolderDisplay::sizeToString(ptr->size), 1, 1);
-		string ext = p.extension().string();
-		//special case for files with no extension
-		//propertyList->SetTextValue(iconForExtension(ext) + " " + (ext.size() == 0? "" : ext.substr(1)) + " File", 2, 1);
-		propertyList->SetTextValue("",3,1);
-	}
-	else{
-		propertyList->SetTextValue(FolderDisplay::sizeToString(ptr->size), 1, 1);
-		//propertyList->SetTextValue(FolderIcon + " Folder", 2, 1);
-		propertyList->SetTextValue(to_string(ptr->num_items),3,1);
-	}
-//	ptr = spd->folderData;
 	propertyList->SetTextValue(p.filename().string(), 0, 1);
+	//make sure it exists
+	if (!exists(ptr->Path)){
+		for (int i = 1; i < propertyList->GetItemCount(); i++){
+			propertyList->SetTextValue("[Deleted]", i, 1);
+		}
+		return;
+	}
+	
+	propertyList->SetTextValue(ptr->isFolder? "" : to_string(ptr->num_items),3,1);
+	propertyList->SetTextValue(FolderDisplay::sizeToString(ptr->size), 1, 1);
+
+	string ext = p.extension().string();
+	//special case for files with no extension
+	string suffix = ptr->isFolder? "Folder" : (ext.size() == 0? "" : ext.substr(1)) + " File";
+	propertyList->SetTextValue(FolderDisplay::iconForExtension(ptr) + " " + suffix, 2, 1);
 	
 	//modified date
 	propertyList->SetTextValue(timeToString(file_modify_time(ptr->Path)),4,1);
