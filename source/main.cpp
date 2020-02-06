@@ -59,6 +59,7 @@ int FatFileFinder::FilterEvent(wxEvent& event) {
 		if (data->isFolder){
 			frame->ChangeSelection(data);
 		}
+		frame->selected = data;
 		return true;
 	}
     return -1;

@@ -110,10 +110,7 @@ void MainFrame::SizeRootFolder(const string& folder){
 	}
 	progIndex = 0;
 	loaded.clear();
-	//clear old cells
-	//fileBrowser->DeleteAllItems();
-	//enable sizing 
-	sizer.abort = false;
+
 	userClosedLog = false;
 	
 	progCallback callback = [&](float progress, DirectoryData* data){
@@ -129,40 +126,6 @@ void MainFrame::SizeRootFolder(const string& folder){
 	currentDisplay[0]->Size(callback);
 }
 
-/**
- Populates a tree item's immediate sub-items
- @param item the tree item to add sub items
- @param data the FolderData pointer representing the data for the item
- */
-//void MainFrame::AddSubItems(const wxTreeListItem& item,DirectoryData* data){
-//	for(DirectoryData* d : data->subFolders){
-//		//add the item, with its client data pointer
-//		wxTreeListItem added = fileBrowser->AppendItem(item,FolderIcon + "\t" + path(d == nullptr? "[NULL]" : d->Path).filename().string(),wxTreeListCtrl::NO_IMAGE,wxTreeListCtrl::NO_IMAGE,new StructurePtrData(d));
-//		//set the other strings on the item
-//		if (d == nullptr) {
-//			fileBrowser->SetItemText(added, 2, "[not loaded]");
-//			fileBrowser->SetItemText(added, 1, "[not loaded]");
-//		}
-//		else {
-//			if (d->size > 0) {
-//				fileBrowser->SetItemText(added, 2, folderSizer::sizeToString(d->size));
-//				fileBrowser->SetItemText(added, 1, d->percentOfParent());
-//			}
-//			else {
-//				fileBrowser->SetItemText(added, 2, "[sizing]");
-//				fileBrowser->SetItemText(added, 1, "[waiting]");
-//			}
-//			//add placeholder to get disclosure triangle if there are sub items to show
-//			if (d->subFolders.size() > 0 || d->files.size() > 0) {
-//				fileBrowser->AppendItem(added, "Placeholder");
-//			}
-//			//add this item's files
-//			if (d->parent != folderData) {
-//				AddFiles(added, d);
-//			}
-//		}
-//	}
-//}
 /**
  Populate the sidebar with info about a particular item in the tree
  @param ptr the DirectoryData object stored to load properties for
@@ -231,24 +194,12 @@ void MainFrame::PopulateSidebar(DirectoryData* ptr){
 }
 
 /**
- Add the file listings for a folder in the tree view
- @param root the folder item to add the files to
- @param data the backing structure to set on each file
- */
-//void MainFrame::AddFiles(wxTreeListItem root, DirectoryData* data){
-//	//populate files
-//	for(DirectoryData* f : data->files){
-//		wxTreeListItem fileItem = fileBrowser->AppendItem(root, iconForExtension(path(f->Path).extension().string()) + "\t" + path(f->Path).filename().string(), wxTreeListCtrl::NO_IMAGE, wxTreeListCtrl::NO_IMAGE, new StructurePtrData(f));
-//		fileBrowser->SetItemText(fileItem, 2, folderSizer::sizeToString(f->size));
-//		fileBrowser->SetItemText(fileItem, 1, f->percentOfParent());
-//	}
-//}
-
-/**
  Refresh the UI on progress updates
  @param event the command event from the sender. Must have client data set on it.
  */
 void MainFrame::OnUpdateUI(wxCommandEvent& event){
+	//TODO: this only updates the main progress bar
+	
 	//update pointer
 	DirectoryData* fd = (DirectoryData*)event.GetClientData();
 	folderData = fd;
@@ -261,109 +212,17 @@ void MainFrame::OnUpdateUI(wxCommandEvent& event){
 	}
 	
 	UpdateTitlebar(prog, FolderDisplay::sizeToString(fd->size));
-	
-//	//if this is first progress update, populate the whole table
-//	if(progIndex == 0){
-//		AddSubItems(fileBrowser->GetRootItem(), fd);
-//		lastUpdateItem = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
-//
-//		AddFiles(fileBrowser->GetRootItem(),fd);
-//	}
-//	else{
-//		//update the most recent leaf
-//		if (lastUpdateItem.IsOk()){
-//			lastUpdateItem = fileBrowser->GetNextSibling(lastUpdateItem);
-//			if (fd->subFolders[progIndex] != nullptr){
-//				auto totalSize = fd->subFolders[progIndex]->size;
-//				fileBrowser->SetItemText(lastUpdateItem, 2, folderSizer::sizeToString(totalSize));
-//				fileBrowser->SetItemData(lastUpdateItem, new StructurePtrData(fd->subFolders[progIndex]));
-//				//add placeholder if one is not already there
-//				if ((fd->subFolders[progIndex]->num_items > 0) && !fileBrowser->GetFirstChild(lastUpdateItem).IsOk()){
-//					fileBrowser->AppendItem(lastUpdateItem, "[Placeholder]");
-//				}
-//			}
-//		}
-//	}
-//	progIndex++;
-	//set titlebar
-
-//	//set percentage on completion
-//	if(progIndex == fd->subFolders.size()){
-//		wxTreeListItem item = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
-//		for(DirectoryData* data : fd->subFolders){
-//			if (data->size == 0) {
-//				fileBrowser->SetItemText(item, 1, "???");
-//				fileBrowser->SetItemText(item, 2, "[read error]");
-//			}
-//			else {
-//				fileBrowser->SetItemText(item, 1, data->percentOfParent());
-//			}
-//			item = fileBrowser->GetNextSibling(item);
-//		}
-//		//sort the collumns descending
-//		fileBrowser->SetSortColumn(1,false);
-//	}
 }
 
 /**
  Called when a reload folder operation finishes
  */
 void MainFrame::OnUpdateReload(wxCommandEvent& event){
-	StructurePtrData* wrapper = (StructurePtrData*)event.GetClientData();
-	//set the item's client data
-	//fileBrowser->SetClientData(wrapper->folderData);
-	
-	DirectoryData* old = wrapper->reloadData;
-	DirectoryData* repl = wrapper->folderData;
-	
-	//hook up the new pointers
-	repl->parent = old->parent;
-	*old = *repl;
-	
-	//recalculate the items, size values
-	folderData->recalculateStats();
-	
-	//redraw the view
-	//fileBrowser->DeleteAllItems();
-	
-	//clear the cache
-	loaded.clear();
-	
-	bool sortdir = false;
-	auto col = DisableSorting(sortdir);
-//	AddSubItems(fileBrowser->GetRootItem(),folderData);
-//	AddFiles(fileBrowser->GetRootItem(),folderData);
-//
-//	//get percents
-//	wxTreeListItem item = fileBrowser->GetFirstChild(fileBrowser->GetRootItem());
-//	for(DirectoryData* data : folderData->subFolders){
-//		if (data->size == 0) {
-//			fileBrowser->SetItemText(item, 1, "???");
-//			fileBrowser->SetItemText(item, 2, "[read error]");
-//		}
-//		else {
-//			fileBrowser->SetItemText(item, 1, data->percentOfParent());
-//		}
-//		item = fileBrowser->GetNextSibling(item);
-//	}
-//
-//	//update titlebar
-//	UpdateTitlebar(100,folderSizer::sizeToString(folderData->size));
-	EnableSorting(col,sortdir);
+	//TODO: this method might not need to exist
 }
 
 void MainFrame::OnCopy(wxCommandEvent& event){
-	//Get selected item
-	//wxTreeListItem selected = fileBrowser->GetSelection();
-	
-	//error check
-//	if (!selected.IsOk()){
-//		return;
-//	}
-	
-	//StructurePtrData* ptr = (StructurePtrData*)fileBrowser->GetItemData(selected);
-	
-	//get the pointer to use
+	//TODO: get the selected item
 	DirectoryData* data = nullptr; //ptr->folderData;
 	
 	if (data == nullptr){
@@ -402,144 +261,27 @@ void MainFrame::OnReveal(wxCommandEvent& event){
  @param event (unused) command event from sender
  */
 void MainFrame::OnReloadFolder(wxCommandEvent& event){
-	//Get selected item
-//	wxTreeListItem selected = fileBrowser->GetSelection();
-//
-//	//error check
-//	if (!selected.IsOk()){
-//		return;
-//	}
+	//get the folder data that was last selected
 	
-	StructurePtrData* ptr = nullptr;//(StructurePtrData*)fileBrowser->GetItemData(selected);
-	
-	//only resize folders, if a file is selected, stop
-	if (ptr == nullptr || ptr->folderData == nullptr || !ptr->folderData->isFolder){return;}
-	
-	//check if the folder still exists
-	if (exists(ptr->folderData->Path)){
-		//enable sizing 
-		sizer.abort = false;
-		userClosedLog = false;
-
-		//Prepend item with same name, but [sizing for folder]
-//		wxTreeListItem replaced;
-//		try {
-//			replaced = fileBrowser->InsertItem(fileBrowser->GetItemParent(selected), selected, fileBrowser->GetItemText(selected));
-//		}
-//		catch (exception) {
-//			wxMessageBox("This item is not fully loaded.\nSize a folder completely before refreshing.", "Unable to size");
-//			return;
-//		}
-//		fileBrowser->SetItemText(replaced, 2, "[sizing]");
-		
-		//create a thread to size that folder, return when finished
-//		worker = thread([&](string folder,DirectoryData* oldptr){
-//			//called on progress update
-//			progCallback callback = [&](float progress, DirectoryData* data){
-//				//check that the item still exists
-//				if (int(progress*100) == 100 /*&& replaced && replaced.IsOk()*/){
-//					//get the super folders that need to check for moves
-//					vector<DirectoryData*> superItems = oldptr->getSuperFolders();
-//
-//					//update file sizes (modifying the data structure on multiple threads is a bad idea, but in this case it should be fine)
-////					for(DirectoryData* i : superItems){
-////						sizer.sizeImmediate(i,true);
-////					}
-//
-//					//set up event event
-//					wxCommandEvent event(progEvt);
-//					event.SetId(RELOADEVT);
-//					event.SetInt(progress * 100);
-//					//needs to pass both the list item and the updated client data
-//					StructurePtrData* dataWrap = new StructurePtrData(data);
-//					dataWrap->reloadData = oldptr;
-//					event.SetClientData(dataWrap);
-//
-//					//invoke event to notify needs to update UI
-//					wxPostEvent(this, event);
-//				}
-//			};
-////			DirectoryData* fin = sizer.SizeFolder(folder, callback);
-////			//ensure callback gets invoked for items with 0 subfolders
-////			if (fin->subFolders.size() == 0){
-////				callback(1,fin);
-////			}
-//		},ptr->folderData->Path,ptr->folderData);
-//		worker.detach();
-//
-//		//remove selected item (do this after creating thread to avoid thread collisions)
-////		fileBrowser->DeleteItem(selected);
-////		//select the new item
-////		fileBrowser->Select(replaced);
-//
-//	}
-//	else{
-//		//subtract from the size
-//		ptr->folderData->parent->size -= ptr->folderData->size;
-//
-//		ptr->folderData->resetStats();
-//
-//		//recalculate the items, size values
-//		ptr->folderData->recalculateStats();
-//
-//		UpdateTitlebar(100, FolderDisplay::sizeToString(folderData->size));
-//
-//
-//		//remove the item if it does not exist
-//		//fileBrowser->DeleteItem(selected);
+	FolderDisplay* toReload = nullptr;
+	for(FolderDisplay* disp : currentDisplay){
+		if (disp->data == selected){
+			toReload = disp;
+			break;
+		}
 	}
+	
+	if (toReload == nullptr){return;}
+	
+	auto reloadcallback = [&](float prog, DirectoryData* data){
+		//on completion, signal all folder displays higher in the hierarchy to re-calculate
+		//percentages. Showing files that aren't there / not showing files is ok.
+	};
+	
+	//signal it to size again
+	toReload->Size(reloadcallback);
+	
 }
-
-/**
- Called when a folder item is expanding. This will load the immediate sub items for that folder.
- @param event the wxTreeListEvent sent by the item that is expanding
- */
-//void MainFrame::OnListExpanding(wxTreeListEvent& event){
-//
-//	//set cursor
-//	wxSetCursor(wxCURSOR_WAIT);
-//
-//	wxTreeListItem item = event.GetItem();
-//	// add this item's immediate sub-items to the list
-//	StructurePtrData* spd = (StructurePtrData*)fileBrowser->GetItemData(item);
-//	DirectoryData* data = spd->folderData;
-//	string key = data->Path;
-//	//prevent trying to load already loaded items
-//	if (loaded.find(key) == loaded.end()){
-//		bool dir = false;
-//		auto col = DisableSorting(dir);
-//		//remove the placeholder item
-//		wxTreeListItem placeholder = fileBrowser->GetFirstChild(item);
-//		if (placeholder.IsOk()){
-//			fileBrowser->DeleteItem(placeholder);
-//		}
-//		AddSubItems(item,data);
-//		if (data->parent == folderData && data->subFolders.size() == 0){
-//			AddFiles(item, data);
-//		}
-//		EnableSorting(col,dir);
-//	}
-//	//mark as loaded
-//	loaded.insert(key);
-//
-//	//reset cursor
-//	wxSetCursor(wxNullCursor);
-//}
-
-/**
- Called when an item in the list is selected. Populates the sidebar.
- @param event the wxTreeListEvent sent by the selected item
- */
-//void MainFrame::OnListSelection(wxTreeListEvent& event){
-//	//get selection information
-//	wxTreeListItem item = event.GetItem();
-//	// add this item's immediate sub-items to the list
-//	StructurePtrData* spd = (StructurePtrData*)fileBrowser->GetItemData(item);
-//	//populate the sidebar
-//	PopulateSidebar(spd);
-//	
-//}
-
 /** Brings up a folder selection dialog with a prompt
  * @param message the prompt for the user
  * @return path selected, or an empty string if nothing chosen

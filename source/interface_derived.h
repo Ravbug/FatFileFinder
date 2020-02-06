@@ -68,8 +68,9 @@ public:
 		return f;
 	}
 	
+	DirectoryData* selected = nullptr;
+	
 private:
-	folderSizer sizer = folderSizer(this);
 	DirectoryData* folderData = nullptr;
 	unordered_set<string> loaded;
 	int progIndex = 0;
@@ -100,10 +101,10 @@ private:
 		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/releases/latest");
 	}
 	void OnAbort(wxCommandEvent& event) {
-		if (!sizer.abort) {
-			wxMessageBox("File percentage calculations will be incorrect.\nReload an individual item to size it, or Open this folder and resize it to calculate all items.","Stopped Sizing");
-			sizer.abort = true;
-		}
+		//TODO: find any items with size operaions in progress, and signal them to stop
+				//if any were found, then display the below message
+		
+//			wxMessageBox("File percentage calculations will be incorrect.\nReload an individual item to size it, or Open this folder and resize it to calculate all items.","Stopped Sizing");
 	}
 	void OnClearLog(wxCommandEvent& event) {
 		logCtrl->SetValue("");
@@ -121,70 +122,4 @@ private:
 	}
 	wxDECLARE_EVENT_TABLE();
 	
-	/**
-	 Disables sorting the tree view
-	 @param direction (modify) the boolean to store the direction of the sort
-	 @return the column that was set to unsort
-	 */
-	unsigned DisableSorting(bool& direction){
-		unsigned uCol = -1;
-//		if (fileBrowser->GetSortColumn(&uCol,&direction)) {
-//			wxDataViewCtrl* pView = fileBrowser->GetDataView();
-//			wxDataViewColumn* pCol = pView->GetColumn(uCol);
-//			pCol->UnsetAsSortKey();
-//		}
-		return uCol;
-	}
-	
-	/**
-	 Re-enables sorting
-	 @param col the column to use as the sort column
-	 @param direction true to sort ascending, false to sort descending
-	 */
-	void EnableSorting(const unsigned& col, const bool& direction){
-		if (col != -1){
-//			fileBrowser->SetSortColumn(col, direction);
-		}
-	}
 };
-/**
- Class for storing data within the tree.
- This class does not delete its pointers when it is deallocated. Those must be deleted manually.
- */
-class StructurePtrData : public wxTreeItemData{
-public:
-	DirectoryData* folderData = nullptr;
-	DirectoryData* reloadData = nullptr;
-	//constructors
-	StructurePtrData(DirectoryData* data):wxTreeItemData(){
-		folderData = data;
-	}
-};
-
-/**
- Class for defining custom sorting in a wxTreeListCtrl.
- Overrides the Compare method.
- */
-//class sizeComparator : public wxTreeListItemComparator{
-//public:
-//	//attribution: https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
-//	template <typename T> int sgn(T val) {
-//		return (T(0) < val) - (val < T(0));
-//	}
-//	int Compare(wxTreeListCtrl *treelist, unsigned column, wxTreeListItem first, wxTreeListItem second){
-//		//get client data
-//		StructurePtrData* item1 = nullptr;
-//		StructurePtrData* item2 = nullptr;
-//		
-//		item1 = (StructurePtrData*)treelist->GetItemData(first);
-//		item2 = (StructurePtrData*)treelist->GetItemData(second);
-//		
-//		//error checking
-//		if (!item1 || !item2){
-//			return 0;
-//		}
-//
-//		//return -1, 0, or 1 
-//		return sgn(item1->folderData->size - item2->folderData->size);
-//	}
-//};

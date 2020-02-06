@@ -25,6 +25,7 @@ public:
 	
 	void display();
 	static string sizeToString(const fileSize&);
+	bool abort = false;
 private:
 	wxWindow* eventManager = nullptr;
 	std::thread worker;

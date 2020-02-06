@@ -133,7 +133,7 @@ string FolderDisplay::sizeToString(const fileSize& fileSize){
 DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback& progress){
 	DirectoryData* fd = new DirectoryData(folder, true);
 	
-	if (/*abort ||*/ path_too_long(folder)) {
+	if (abort || path_too_long(folder)) {
 		return fd;
 	}
 	
@@ -229,6 +229,7 @@ void FolderDisplay::Size(const progCallback& callback){
 	//reset items
 	displayStartIndex = 0;
 	ListCtrl->DeleteAllItems();
+	abort = false;
 	
 	worker = thread([&](){
 		auto uicallback = [&](float prog, DirectoryData* updated){
@@ -257,6 +258,8 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 	++displayStartIndex;
 	//update progress
 	int prog = event.GetInt();
+	
+	cout << prog << endl;
 	
 	//add files once
 	if (prog == 100){
