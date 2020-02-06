@@ -22,8 +22,6 @@ using namespace std;
 #else
 #endif
 
-//callback definitions
-typedef function<void(float progress, DirectoryData* data)> progCallback;
 
 /**
  Class that calculates the sizes of folders.
@@ -35,17 +33,6 @@ public:
 
 	folderSizer(wxWindow*);
 	~folderSizer();
-	DirectoryData* SizeFolder(const string&, const progCallback&);
-	void sizeImmediate(DirectoryData*, const bool& skipFolders = false);
 
-	/**
-	Display a message in the log
-	@param msg the string to display
-	*/
-	void Log(const string& msg) {
-		wxCommandEvent* evt = new wxCommandEvent(progEvt, LOGEVT);
-		evt->SetString(msg);
-		ParentWindow->GetEventHandler()->QueueEvent(evt);
-	}
 
 };

@@ -71,7 +71,6 @@ public:
 private:
 	folderSizer sizer = folderSizer(this);
 	DirectoryData* folderData = nullptr;
-	thread worker;
 	unordered_set<string> loaded;
 	int progIndex = 0;
 	wxDataViewItem lastUpdateItem;

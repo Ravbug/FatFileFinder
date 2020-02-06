@@ -116,24 +116,17 @@ void MainFrame::SizeRootFolder(const string& folder){
 	sizer.abort = false;
 	userClosedLog = false;
 	
-	worker = thread([&](string folder){
-		//called on progress updates
-		progCallback callback = [&](float progress, DirectoryData* data){
-			wxCommandEvent event(progEvt);
-			event.SetId(PROGEVT);
-			event.SetInt(progress * 100);
-			event.SetClientData(data);
-			
-			//invoke event to notify needs to update UI
-			wxPostEvent(this, event);
-		};
-		//ensure callback gets invoked for items with 0 subfolders
-		DirectoryData* fin = sizer.SizeFolder(folder, callback);
-		if (fin->subFolders.size() == 0){
-			callback(1,fin);
-		}
-	},folder);
-	worker.detach();
+	progCallback callback = [&](float progress, DirectoryData* data){
+		wxCommandEvent event(progEvt);
+		event.SetId(PROGEVT);
+		event.SetInt(progress * 100);
+		event.SetClientData(data);
+		
+		//invoke event to notify needs to update UI
+		wxPostEvent(this, event);
+	};
+	currentDisplay[0]->data = new DirectoryData(folder, true);
+	currentDisplay[0]->Size(callback);
 }
 
 /**
@@ -440,60 +433,60 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 //		fileBrowser->SetItemText(replaced, 2, "[sizing]");
 		
 		//create a thread to size that folder, return when finished
-		worker = thread([&](string folder,DirectoryData* oldptr){
-			//called on progress update
-			progCallback callback = [&](float progress, DirectoryData* data){
-				//check that the item still exists
-				if (int(progress*100) == 100 /*&& replaced && replaced.IsOk()*/){
-					//get the super folders that need to check for moves
-					vector<DirectoryData*> superItems = oldptr->getSuperFolders();
-					
-					//update file sizes (modifying the data structure on multiple threads is a bad idea, but in this case it should be fine)
-					for(DirectoryData* i : superItems){
-						sizer.sizeImmediate(i,true);
-					}
-					
-					//set up event event
-					wxCommandEvent event(progEvt);
-					event.SetId(RELOADEVT);
-					event.SetInt(progress * 100);
-					//needs to pass both the list item and the updated client data
-					StructurePtrData* dataWrap = new StructurePtrData(data);
-					dataWrap->reloadData = oldptr;
-					event.SetClientData(dataWrap);
-					
-					//invoke event to notify needs to update UI
-					wxPostEvent(this, event);
-				}
-			};
-			DirectoryData* fin = sizer.SizeFolder(folder, callback);
-			//ensure callback gets invoked for items with 0 subfolders
-			if (fin->subFolders.size() == 0){
-				callback(1,fin);
-			}
-		},ptr->folderData->Path,ptr->folderData);
-		worker.detach();
-		
-		//remove selected item (do this after creating thread to avoid thread collisions)
-//		fileBrowser->DeleteItem(selected);
-//		//select the new item
-//		fileBrowser->Select(replaced);
-
-	}
-	else{
-		//subtract from the size
-		ptr->folderData->parent->size -= ptr->folderData->size;
-
-		ptr->folderData->resetStats();
-		
-		//recalculate the items, size values
-		ptr->folderData->recalculateStats();
-
-		UpdateTitlebar(100, FolderDisplay::sizeToString(folderData->size));
-
-
-		//remove the item if it does not exist
-		//fileBrowser->DeleteItem(selected);
+//		worker = thread([&](string folder,DirectoryData* oldptr){
+//			//called on progress update
+//			progCallback callback = [&](float progress, DirectoryData* data){
+//				//check that the item still exists
+//				if (int(progress*100) == 100 /*&& replaced && replaced.IsOk()*/){
+//					//get the super folders that need to check for moves
+//					vector<DirectoryData*> superItems = oldptr->getSuperFolders();
+//
+//					//update file sizes (modifying the data structure on multiple threads is a bad idea, but in this case it should be fine)
+////					for(DirectoryData* i : superItems){
+////						sizer.sizeImmediate(i,true);
+////					}
+//
+//					//set up event event
+//					wxCommandEvent event(progEvt);
+//					event.SetId(RELOADEVT);
+//					event.SetInt(progress * 100);
+//					//needs to pass both the list item and the updated client data
+//					StructurePtrData* dataWrap = new StructurePtrData(data);
+//					dataWrap->reloadData = oldptr;
+//					event.SetClientData(dataWrap);
+//
+//					//invoke event to notify needs to update UI
+//					wxPostEvent(this, event);
+//				}
+//			};
+////			DirectoryData* fin = sizer.SizeFolder(folder, callback);
+////			//ensure callback gets invoked for items with 0 subfolders
+////			if (fin->subFolders.size() == 0){
+////				callback(1,fin);
+////			}
+//		},ptr->folderData->Path,ptr->folderData);
+//		worker.detach();
+//
+//		//remove selected item (do this after creating thread to avoid thread collisions)
+////		fileBrowser->DeleteItem(selected);
+////		//select the new item
+////		fileBrowser->Select(replaced);
+//
+//	}
+//	else{
+//		//subtract from the size
+//		ptr->folderData->parent->size -= ptr->folderData->size;
+//
+//		ptr->folderData->resetStats();
+//
+//		//recalculate the items, size values
+//		ptr->folderData->recalculateStats();
+//
+//		UpdateTitlebar(100, FolderDisplay::sizeToString(folderData->size));
+//
+//
+//		//remove the item if it does not exist
+//		//fileBrowser->DeleteItem(selected);
 	}
 }
 

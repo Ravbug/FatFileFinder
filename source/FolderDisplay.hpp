@@ -10,24 +10,43 @@
 #include "DirectoryData.hpp"
 #include <filesystem>
 #include <unordered_map>
+#include <thread>
+
+//callback definitions
+typedef function<void(float progress, DirectoryData* data)> progCallback;
 
 class FolderDisplay : public FolderDisplayBase{
 public:
 	DirectoryData* data;
 	
 	FolderDisplay(wxWindow*,wxWindow*, DirectoryData*);
-	~FolderDisplay(){
-		
-	}
+	
+	void Size(const progCallback&);
 	
 	void display();
 	static string sizeToString(const fileSize&);
 private:
 	wxWindow* eventManager = nullptr;
+	std::thread worker;
+	int displayStartIndex = 0;
+	
+	/**
+	Display a message in the log
+	@param msg the string to display
+	*/
+	void Log(const string& msg) {
+		wxCommandEvent* evt = new wxCommandEvent(progEvt, LOGEVT);
+		evt->SetString(msg);
+		eventManager->GetEventHandler()->QueueEvent(evt);
+	}
+	DirectoryData* SizeItem(const string&, const progCallback&);
+	void sizeImmediate(DirectoryData*, const bool& skipFolders = false);
+	void AddItem(DirectoryData*);
 	
 	//event handlers
 	void OnSelectionChanged(wxDataViewEvent&);
 	void OnSelectionActivated(wxDataViewEvent&);
+	void OnUpdateUI(wxCommandEvent&);
 	wxDECLARE_EVENT_TABLE();
 	
 public:
