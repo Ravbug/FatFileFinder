@@ -231,6 +231,9 @@ void FolderDisplay::Size(const progCallback& callback){
 	ListCtrl->DeleteAllItems();
 	abort = false;
 	
+	//reset / deallocate
+	data->resetStats();
+	
 	worker = thread([&](){
 		auto uicallback = [&](float prog, DirectoryData* updated){
 			wxCommandEvent event(progEvt);
@@ -258,9 +261,7 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 	++displayStartIndex;
 	//update progress
 	int prog = event.GetInt();
-	
-	cout << prog << endl;
-	
+		
 	//add files once
 	if (prog == 100){
 		//update percents

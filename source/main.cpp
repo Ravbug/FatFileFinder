@@ -48,7 +48,9 @@ int FatFileFinder::FilterEvent(wxEvent& event) {
 		uintptr_t* ptr = (uintptr_t*)(ce->GetClientData());
 		DirectoryData* data = (DirectoryData*)*ptr;
 		frame->PopulateSidebar(data);
+		frame->selected = data;
 		delete ce;
+		delete ptr;
 		return true;
 	}
 	else if (event.GetId() == ACTEVT && event.IsCommandEvent()){
@@ -59,7 +61,8 @@ int FatFileFinder::FilterEvent(wxEvent& event) {
 		if (data->isFolder){
 			frame->ChangeSelection(data);
 		}
-		frame->selected = data;
+		delete ptr;
+		delete ce;
 		return true;
 	}
     return -1;

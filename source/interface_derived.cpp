@@ -263,15 +263,21 @@ void MainFrame::OnReveal(wxCommandEvent& event){
 void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	//get the folder data that was last selected
 	
+	if (selected == nullptr){return;}
+	
 	FolderDisplay* toReload = nullptr;
 	for(FolderDisplay* disp : currentDisplay){
-		if (disp->data == selected){
+		if (disp->data->Path == selected->Path){
 			toReload = disp;
 			break;
 		}
 	}
 	
-	if (toReload == nullptr){return;}
+	//not opened? open it first
+	if (toReload == nullptr){
+		toReload = AddDisplay(selected);
+		toReload->data = selected;
+	}
 	
 	auto reloadcallback = [&](float prog, DirectoryData* data){
 		//on completion, signal all folder displays higher in the hierarchy to re-calculate
