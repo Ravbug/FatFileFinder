@@ -10,7 +10,6 @@
 
 #include "globals.h"
 #include "interface.h"
-#include "folder_sizer.hpp"
 #include "FolderDisplay.hpp"
 #include <thread>
 #include <unordered_set>
