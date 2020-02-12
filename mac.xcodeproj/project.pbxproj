@@ -15,8 +15,6 @@
 		AA0A148423CCBE410092E9AA /* DirectoryData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA0A148123CCBE410092E9AA /* DirectoryData.cpp */; };
 		AA14A0EE222A1217002C4553 /* libwx_osx_cocoa.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = AA1D0F81222A0A1D00678304 /* libwx_osx_cocoa.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AA14A0F3222A1219002C4553 /* libwx_osx_cocoa.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1D0F81222A0A1D00678304 /* libwx_osx_cocoa.dylib */; };
-		AA897A6023355BE8002C9756 /* folder_sizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA897A5E23355BE8002C9756 /* folder_sizer.cpp */; };
-		AA897A6123355BE8002C9756 /* folder_sizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA897A5E23355BE8002C9756 /* folder_sizer.cpp */; };
 		AAAA4D7F23D2D56B003D8CCD /* libwx_osx_cocoa_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1D0F83222A0A1D00678304 /* libwx_osx_cocoa_static.a */; };
 		AAD015C0222B2FE300E25CB7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAF9D87B222B14E900437548 /* main.cpp */; };
 		AADEBAF623E1D40B00A34F27 /* FolderDisplay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AADEBAF423E1D40B00A34F27 /* FolderDisplay.cpp */; };
@@ -247,8 +245,6 @@
 		AA1D0FC9222A0A4A00678304 /* wxrelease.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxrelease.xcconfig; path = wxWidgets/build/osx/wxrelease.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA1D0FCA222A0A4B00678304 /* wxcocoa.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxcocoa.xcconfig; path = wxWidgets/build/osx/wxcocoa.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA1D0FCB222A0A4B00678304 /* wxdebug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxdebug.xcconfig; path = wxWidgets/build/osx/wxdebug.xcconfig; sourceTree = SOURCE_ROOT; };
-		AA897A5E23355BE8002C9756 /* folder_sizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = folder_sizer.cpp; sourceTree = "<group>"; };
-		AA897A5F23355BE8002C9756 /* folder_sizer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = folder_sizer.hpp; sourceTree = "<group>"; };
 		AAD015CD222B2FE300E25CB7 /* FatFileFinder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FatFileFinder.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADEBAF423E1D40B00A34F27 /* FolderDisplay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FolderDisplay.cpp; sourceTree = "<group>"; };
 		AADEBAF523E1D40B00A34F27 /* FolderDisplay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FolderDisplay.hpp; sourceTree = "<group>"; };
@@ -344,8 +340,6 @@
 				AAE2C4272326D967003C381B /* interface_derived.cpp */,
 				AADEBAF423E1D40B00A34F27 /* FolderDisplay.cpp */,
 				AADEBAF523E1D40B00A34F27 /* FolderDisplay.hpp */,
-				AA897A5F23355BE8002C9756 /* folder_sizer.hpp */,
-				AA897A5E23355BE8002C9756 /* folder_sizer.cpp */,
 				AA0A148223CCBE410092E9AA /* DirectoryData.hpp */,
 				AA0A148123CCBE410092E9AA /* DirectoryData.cpp */,
 				AAE2C40B2326D46A003C381B /* globals.h */,
@@ -674,7 +668,6 @@
 				AAE2C4292326D967003C381B /* interface_derived.cpp in Sources */,
 				AAF9D87D222B14E900437548 /* main.cpp in Sources */,
 				AA0A148323CCBE410092E9AA /* DirectoryData.cpp in Sources */,
-				AA897A6023355BE8002C9756 /* folder_sizer.cpp in Sources */,
 				41B5AAEE22DB8BB400347CC8 /* interface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -688,7 +681,6 @@
 				AAE2C42A2326D967003C381B /* interface_derived.cpp in Sources */,
 				AAD015C0222B2FE300E25CB7 /* main.cpp in Sources */,
 				AA0A148423CCBE410092E9AA /* DirectoryData.cpp in Sources */,
-				AA897A6123355BE8002C9756 /* folder_sizer.cpp in Sources */,
 				41B5AAEF22DB8BB400347CC8 /* interface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
