@@ -19,8 +19,6 @@
 
 using namespace std;
 
-class StructurePtrData;
-
 /**
  Defines the main window and all of its behaviors and members.
  */
@@ -77,9 +75,6 @@ public:
 	
 private:
 	DirectoryData* folderData = nullptr;
-	unordered_set<string> loaded;
-	int progIndex = 0;
-	wxDataViewItem lastUpdateItem;
 	bool userClosedLog = false;
 
 	string GetPathFromDialog(const string&);
@@ -91,8 +86,6 @@ private:
 	void OnAbout(wxCommandEvent&);
 	void OnOpenFolder(wxCommandEvent&);
 	void OnReloadFolder(wxCommandEvent&);
-	void OnUpdateUI(wxCommandEvent&);
-	void OnUpdateReload(wxCommandEvent&);
 	void OnCopy(wxCommandEvent&);
 	void OnToggleSidebar(wxCommandEvent&);
 	void OnToggleLog(wxCommandEvent&);
@@ -106,10 +99,16 @@ private:
 		wxLaunchDefaultBrowser("https://github.com/ravbug/FatFileFinderCPP/releases/latest");
 	}
 	void OnAbort(wxCommandEvent& event) {
-		//TODO: find any items with size operaions in progress, and signal them to stop
-				//if any were found, then display the below message
-		
-//			wxMessageBox("File percentage calculations will be incorrect.\nReload an individual item to size it, or Open this folder and resize it to calculate all items.","Stopped Sizing");
+		bool stopped = false;
+		for (FolderDisplay* disp : currentDisplay){
+			if (!disp->abort){
+				stopped = true;
+				disp->abort = true;
+			}
+		}
+		if (stopped){
+			wxMessageBox("File percentage calculations will be incorrect.\nReload an individual item to size it, or Open this folder and resize it to calculate all items.","Stopped Sizing");
+		}
 	}
 	void OnClearLog(wxCommandEvent& event) {
 		logCtrl->SetValue("");

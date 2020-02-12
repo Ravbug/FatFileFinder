@@ -39,10 +39,16 @@ public:
 	void SetItemData(const wxDataViewItem& item, DirectoryData* data){
 		ListCtrl->SetItemData(item, (uintptr_t)data);
 	}
+	void SetItemText(const wxString& str, unsigned int row, unsigned int col){
+		ListCtrl->SetTextValue(str, row, col);
+	}
+	int ItemToRow(const wxDataViewItem& item){
+		return ListCtrl->ItemToRow(item);
+	}
 	
 	void display();
 	static string sizeToString(const fileSize&);
-	bool abort = false;
+	bool abort = true;
 private:
 	wxWindow* eventManager = nullptr;
 	std::thread worker;

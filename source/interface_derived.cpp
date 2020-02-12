@@ -27,8 +27,6 @@ EVT_MENU(wxID_INDENT, MainFrame::OnSourceCode)
 EVT_MENU(wxID_UP, MainFrame::OnUpdates)
 EVT_MENU(wxID_PROPERTIES, MainFrame::OnToggleSidebar)
 EVT_MENU(wxID_JUSTIFY_FILL, MainFrame::OnToggleLog)
-EVT_COMMAND(PROGEVT, progEvt, MainFrame::OnUpdateUI)
-EVT_COMMAND(RELOADEVT, progEvt, MainFrame::OnUpdateReload)
 EVT_COMMAND(LOGEVT, progEvt, MainFrame::OnLog)
 EVT_BUTTON(wxID_OPEN, MainFrame::OnOpenFolder)
 EVT_BUTTON(COPYPATH, MainFrame::OnCopy)
@@ -108,8 +106,6 @@ void MainFrame::SizeRootFolder(const string& folder){
 		wxCommandEvent e;
 		OnToggleLog(e);
 	}
-	progIndex = 0;
-	loaded.clear();
 
 	userClosedLog = false;
 	
@@ -195,45 +191,14 @@ void MainFrame::PopulateSidebar(DirectoryData* ptr){
 	statusBar->SetStatusText(p.string());
 }
 
-/**
- Refresh the UI on progress updates
- @param event the command event from the sender. Must have client data set on it.
- */
-void MainFrame::OnUpdateUI(wxCommandEvent& event){
-	//TODO: this only updates the main progress bar
-	
-	//update pointer
-	DirectoryData* fd = (DirectoryData*)event.GetClientData();
-	folderData = fd;
-	//update progress
-	int prog = event.GetInt();
-	progressBar->SetValue(prog);
-	if(prog == 100){
-		currentDisplay[0]->data = fd;
-		currentDisplay[0]->display();
-	}
-	
-	UpdateTitlebar(prog, FolderDisplay::sizeToString(fd->size));
-}
-
-/**
- Called when a reload folder operation finishes
- */
-void MainFrame::OnUpdateReload(wxCommandEvent& event){
-	//TODO: this method might not need to exist
-}
-
 void MainFrame::OnCopy(wxCommandEvent& event){
-	//TODO: get the selected item
-	DirectoryData* data = nullptr; //ptr->folderData;
-	
-	if (data == nullptr){
+	if (selected == nullptr){
 		//if no pointer, don't try to copy
 		return;
 	}
 	//copy values to the clipboard
 	if(wxTheClipboard->Open()){
-		 wxTheClipboard->SetData( new wxTextDataObject(data->Path) );
+		wxTheClipboard->SetData( new wxTextDataObject(selected->Path) );
 		wxTheClipboard->Flush();
 		wxTheClipboard->Close();
 	}
@@ -241,22 +206,13 @@ void MainFrame::OnCopy(wxCommandEvent& event){
 
 void MainFrame::OnReveal(wxCommandEvent& event){
 	//Get selected item
-	//wxTreeListItem selected = fileBrowser->GetSelection();
-	
-	//error check
-//	if (!selected.IsOk()){
-//		return;
-//	}
-//
-//	StructurePtrData* ptr = (StructurePtrData*)fileBrowser->GetItemData(selected);
-//
-//	//get the pointer to use
-//	DirectoryData* data = ptr->folderData;
-//	if (ptr == nullptr){
-//		//if no pointer, don't try to open
-//		return;
-//	}
-//	reveal(data->Path);
+
+	//get the pointer to use
+	if (selected == nullptr){
+		//if no pointer, don't try to open
+		return;
+	}
+	reveal(selected->Path);
 }
 /**
  Called when the reload button or reload menu is selected
