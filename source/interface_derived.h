@@ -46,6 +46,11 @@ public:
 	
 	void ChangeSelection(DirectoryData*);
 	
+	void ProgressUpdate(int progress){
+		progressBar->SetValue(progress);
+		UpdateTitlebar(progress, FolderDisplay::sizeToString(currentDisplay[0]->data->size));
+	}
+	
 	FolderDisplay* AddDisplay(DirectoryData* model){
 		FolderDisplay* f = new FolderDisplay(scrollView,this,model);
 		int count = (int)scrollSizer->GetItemCount();
@@ -118,7 +123,7 @@ private:
 		}
 	}
 	void UpdateTitlebar(int prog, const string& size) {
-		SetTitle(AppName + " v" + AppVersion + " - Sizing " + to_string(prog) + "% " + folderData->Path + " [" + size + "]");
+		SetTitle(AppName + " v" + AppVersion + " - Sizing " + to_string(prog) + "% " + currentDisplay[0]->data->Path + " [" + size + "]");
 	}
 	wxDECLARE_EVENT_TABLE();
 	

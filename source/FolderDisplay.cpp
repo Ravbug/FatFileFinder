@@ -38,10 +38,13 @@ void FolderDisplay::OnSelectionChanged(wxDataViewEvent& event){
 	//notify parent to update sidebar display
 	wxCommandEvent* evt = new wxCommandEvent(progEvt, SELEVT);
 	//pass along the address to the DirectoryData to the event
-	uintptr_t* addr = new uintptr_t((ListCtrl->GetItemData(event.GetItem())));
-	evt->SetClientData(addr);
-	eventManager->GetEventHandler()->QueueEvent(evt);
-	event.Skip();
+	auto a = event.GetItem();
+	if (a.IsOk()){
+		uintptr_t* addr = new uintptr_t((ListCtrl->GetItemData(a)));
+		evt->SetClientData(addr);
+		eventManager->GetEventHandler()->QueueEvent(evt);
+		event.Skip();
+	}
 }
 
 /**
@@ -252,14 +255,13 @@ void FolderDisplay::Size(FolderDisplay* parent, wxDataViewItem updateItem){
 			
 			//invoke main UI event
 			//notify parent to connect new pointer to display
-			if (parent != nullptr && prog * 100 >= 100 ){
-				
-//				wxCommandEvent* evt = new wxCommandEvent(progEvt, RESEVT);
-//				//pass along the address to the DirectoryData to the event
-//				uintptr_t* addr = new uintptr_t(reinterpret_cast<uintptr_t>(updated));
-//				evt->SetClientData(addr);
-//				eventManager->GetEventHandler()->QueueEvent(evt);
-			}
+			
+			wxCommandEvent* evt = new wxCommandEvent(progEvt, RESEVT);
+			//pass along the address to the DirectoryData to the event
+			uintptr_t* addr = new uintptr_t(prog * 100);
+			evt->SetClientData(addr);
+			eventManager->GetEventHandler()->QueueEvent(evt);
+			
 		};
 		//called on progress updates
 		SizeItem(data->Path, uicallback);
@@ -298,6 +300,4 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 			reloadParent = nullptr;
 		}
 	}
-	
-	//progressBar->SetValue(prog);
 }

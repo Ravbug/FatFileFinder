@@ -69,10 +69,10 @@ int FatFileFinder::FilterEvent(wxEvent& event) {
 		wxCommandEvent* ce = (wxCommandEvent*)(event.Clone());
 		//extract the pointer from the client data
 		uintptr_t* ptr = (uintptr_t*)(ce->GetClientData());
-		DirectoryData* data = (DirectoryData*)*ptr;
-		if (data->isFolder){
-			//frame->ChangeSelection(data);
-		}
+		
+		//update progress bar and header
+		frame->ProgressUpdate((int)*ptr);
+		
 		delete ptr;
 		delete ce;
 		return true;

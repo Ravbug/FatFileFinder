@@ -286,12 +286,6 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	FolderDisplay* fdisp = currentDisplay[index-1];
 	auto item = fdisp->GetCurrentItem();
 	
-	auto reloadcallback = [&](float prog, DirectoryData* data){
-		//on completion, signal all folder displays higher in the hierarchy to re-calculate
-		//percentages. Showing files that aren't there / not showing files is ok.
-		fdisp->SetItemData(item,data);
-	};
-	
 	//signal it to size again
 	toReload->Size(fdisp, item);
 	
