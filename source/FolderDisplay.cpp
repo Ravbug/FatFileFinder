@@ -65,7 +65,7 @@ void FolderDisplay::OnSelectionActivated(wxDataViewEvent& event){
  @pre data must not be nullptr
  */
 void FolderDisplay::display(){
-	ItemName->SetLabel(path(data->Path).filename().string() + " - " + sizeToString(data->size));
+	UpdateTitle();
 	auto addItems = [&](vector<DirectoryData*>& list){
 		for (DirectoryData* folder : list){
 			AddItem(folder);
@@ -252,6 +252,7 @@ void FolderDisplay::Size(const progCallback& callback){
 
 void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 	//update pointer
+	UpdateTitle(true);
 	DirectoryData* fd = (DirectoryData*)event.GetClientData();
 	data = fd;
 	//add the current folder
@@ -264,6 +265,7 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 		
 	//add files once
 	if (prog == 100){
+		UpdateTitle(false);
 		//update percents
 		auto count = data->subFolders.size();
 		for (int i = 0; i < count; i++){
