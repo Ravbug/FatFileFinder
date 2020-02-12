@@ -142,7 +142,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	logSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
 	logCtrl = new wxTextCtrl( logPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_BESTWRAP|wxTE_MULTILINE|wxTE_READONLY );
-	logSizer->Add( logCtrl, wxGBPosition( 1, 0 ), wxGBSpan( 1, 3 ), wxEXPAND|wxTOP|wxRIGHT, 5 );
+	logSizer->Add( logCtrl, wxGBPosition( 1, 0 ), wxGBSpan( 1, 4 ), wxEXPAND|wxTOP|wxRIGHT, 5 );
 
 	wxStaticText* m_staticText1;
 	m_staticText1 = new wxStaticText( logPanel, wxID_ANY, wxT("Error Log"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -152,6 +152,9 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	wxButton* m_button6;
 	m_button6 = new wxButton( logPanel, wxID_COPY, wxT("Copy Log"), wxDefaultPosition, wxDefaultSize, 0 );
 	logSizer->Add( m_button6, wxGBPosition( 0, 1 ), wxGBSpan( 1, 1 ), wxALL, 5 );
+
+	xbtn = new wxButton( logPanel, wxID_JUSTIFY_FILL, wxT("X"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT );
+	logSizer->Add( xbtn, wxGBPosition( 0, 3 ), wxGBSpan( 1, 1 ), wxALL, 5 );
 
 	wxButton* m_button7;
 	m_button7 = new wxButton( logPanel, wxID_CLEAR, wxT("Clear Log"), wxDefaultPosition, wxDefaultSize, 0 );

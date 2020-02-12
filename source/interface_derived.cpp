@@ -36,6 +36,7 @@ EVT_BUTTON(wxID_CLEAR, MainFrame::OnClearLog)
 EVT_BUTTON(wxID_COPY, MainFrame::OnCopyLog)
 EVT_MENU(wxID_REFRESH,MainFrame::OnReloadFolder)
 EVT_BUTTON(wxID_REFRESH,MainFrame::OnReloadFolder)
+EVT_BUTTON(wxID_JUSTIFY_FILL,MainFrame::OnToggleLog)
 wxEND_EVENT_TABLE()
 
 MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
