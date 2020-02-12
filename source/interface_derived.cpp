@@ -122,6 +122,7 @@ void MainFrame::SizeRootFolder(const string& folder){
 		//invoke event to notify needs to update UI
 		wxPostEvent(this, event);
 	};
+	currentDisplay[0]->Clear();
 	currentDisplay[0]->data = new DirectoryData(folder, true);
 	currentDisplay[0]->Size(callback);
 }
@@ -382,6 +383,10 @@ void MainFrame::OnToggleLog(wxCommandEvent& event) {
 	}
 }
 
+/**
+ Call to update the selected item. This will update the display area.
+ @param sender the currently selected item.
+ */
 void MainFrame::ChangeSelection(DirectoryData* sender){
 	//find where the sender is in the list
 	int idx;

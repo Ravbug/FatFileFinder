@@ -27,6 +27,13 @@ public:
 	
 	void Size(const progCallback&);
 	
+	/**
+	 Blanks the display. Use display() to show items again.
+	 */
+	void Clear(){
+		ListCtrl->DeleteAllItems();
+	}
+	
 	void display();
 	static string sizeToString(const fileSize&);
 	bool abort = false;
@@ -54,6 +61,7 @@ private:
 	void OnSelectionChanged(wxDataViewEvent&);
 	void OnSelectionActivated(wxDataViewEvent&);
 	void OnUpdateUI(wxCommandEvent&);
+	
 	
 	/**
 	 Sets the label in this display to the size of the item
