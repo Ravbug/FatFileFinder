@@ -223,9 +223,10 @@ void FolderDisplay::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 
 /**
  Size the model representing this display on a background thread
- @param callback the function to call for progress updates
+ @param parent the item that owns this item
+ @param updateItem the item in the parent that needs to be updated
  */
-void FolderDisplay::Size(const progCallback& callback){
+void FolderDisplay::Size(FolderDisplay* parent, wxDataViewItem updateItem){
 	//reset items
 	displayStartIndex = 0;
 	ListCtrl->DeleteAllItems();
@@ -234,7 +235,12 @@ void FolderDisplay::Size(const progCallback& callback){
 	//reset / deallocate
 	data->resetStats();
 	
-	worker = thread([&](){
+	if (parent != nullptr){
+		reloadParent = parent;
+		this->updateItem = updateItem;
+	}
+	
+	worker = thread([&](FolderDisplay* parent){
 		auto uicallback = [&](float prog, DirectoryData* updated){
 			wxCommandEvent event(progEvt);
 			event.SetId(PROGEVT);
@@ -243,10 +249,21 @@ void FolderDisplay::Size(const progCallback& callback){
 			
 			//invoke event to notify needs to update UI
 			wxPostEvent(this, event);
+			
+			//invoke main UI event
+			//notify parent to connect new pointer to display
+			if (parent != nullptr && prog * 100 >= 100 ){
+				
+//				wxCommandEvent* evt = new wxCommandEvent(progEvt, RESEVT);
+//				//pass along the address to the DirectoryData to the event
+//				uintptr_t* addr = new uintptr_t(reinterpret_cast<uintptr_t>(updated));
+//				evt->SetClientData(addr);
+//				eventManager->GetEventHandler()->QueueEvent(evt);
+			}
 		};
 		//called on progress updates
 		SizeItem(data->Path, uicallback);
-	});
+	},parent);
 	worker.detach();
 }
 
@@ -254,7 +271,6 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 	//update pointer
 	UpdateTitle(true);
 	DirectoryData* fd = (DirectoryData*)event.GetClientData();
-	data = fd;
 	//add the current folder
 	AddItem(fd->subFolders[displayStartIndex]);
 	
@@ -265,6 +281,7 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 		
 	//add files once
 	if (prog == 100){
+		data = fd;
 		UpdateTitle(false);
 		//update percents
 		auto count = data->subFolders.size();
@@ -274,6 +291,11 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 		}
 		for (DirectoryData* file : fd->files){
 			AddItem(file);
+		}
+		//reconnect if applicable
+		if (reloadParent != nullptr){
+			reloadParent->SetItemData(updateItem, fd);
+			reloadParent = nullptr;
 		}
 	}
 	

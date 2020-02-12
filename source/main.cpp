@@ -65,5 +65,17 @@ int FatFileFinder::FilterEvent(wxEvent& event) {
 		delete ce;
 		return true;
 	}
+	else if (event.GetId() == RESEVT && event.IsCommandEvent()){
+		wxCommandEvent* ce = (wxCommandEvent*)(event.Clone());
+		//extract the pointer from the client data
+		uintptr_t* ptr = (uintptr_t*)(ce->GetClientData());
+		DirectoryData* data = (DirectoryData*)*ptr;
+		if (data->isFolder){
+			//frame->ChangeSelection(data);
+		}
+		delete ptr;
+		delete ce;
+		return true;
+	}
     return -1;
 }

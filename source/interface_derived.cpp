@@ -124,7 +124,8 @@ void MainFrame::SizeRootFolder(const string& folder){
 	};
 	currentDisplay[0]->Clear();
 	currentDisplay[0]->data = new DirectoryData(folder, true);
-	currentDisplay[0]->Size(callback);
+	wxDataViewItem i;
+	currentDisplay[0]->Size(nullptr,i);
 }
 
 /**
@@ -264,14 +265,16 @@ void MainFrame::OnReveal(wxCommandEvent& event){
 void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	//get the folder data that was last selected
 	
-	if (selected == nullptr){return;}
+	if (selected == nullptr || !(selected->isFolder)){return;}
 	
 	FolderDisplay* toReload = nullptr;
+	int index = 0;
 	for(FolderDisplay* disp : currentDisplay){
 		if (disp->data->Path == selected->Path){
 			toReload = disp;
 			break;
 		}
+		index++;
 	}
 	
 	//not opened? open it first
@@ -280,13 +283,17 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 		toReload->data = selected;
 	}
 	
+	FolderDisplay* fdisp = currentDisplay[index-1];
+	auto item = fdisp->GetCurrentItem();
+	
 	auto reloadcallback = [&](float prog, DirectoryData* data){
 		//on completion, signal all folder displays higher in the hierarchy to re-calculate
 		//percentages. Showing files that aren't there / not showing files is ok.
+		fdisp->SetItemData(item,data);
 	};
 	
 	//signal it to size again
-	toReload->Size(reloadcallback);
+	toReload->Size(fdisp, item);
 	
 }
 /** Brings up a folder selection dialog with a prompt

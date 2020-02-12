@@ -18,6 +18,7 @@ static inline const std::string AppVersion = "2.0-alpha";
 #define LOGEVT 2003
 #define SELEVT 2004
 #define ACTEVT 2005
+#define RESEVT 2006
 typedef int64_t fileSize;
 wxDEFINE_EVENT(progEvt, wxCommandEvent);
 

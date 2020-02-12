@@ -25,13 +25,19 @@ public:
 		//Log("Resize operation has stopped because the view was closed. This folder will need to be manually resized.");
 	}
 	
-	void Size(const progCallback&);
+	void Size(FolderDisplay*, wxDataViewItem);
 	
 	/**
 	 Blanks the display. Use display() to show items again.
 	 */
 	void Clear(){
 		ListCtrl->DeleteAllItems();
+	}
+	wxDataViewItem GetCurrentItem(){
+		return ListCtrl->GetCurrentItem();
+	}
+	void SetItemData(const wxDataViewItem& item, DirectoryData* data){
+		ListCtrl->SetItemData(item, (uintptr_t)data);
 	}
 	
 	void display();
@@ -41,6 +47,9 @@ private:
 	wxWindow* eventManager = nullptr;
 	std::thread worker;
 	int displayStartIndex = 0;
+	
+	FolderDisplay* reloadParent = nullptr;
+	wxDataViewItem updateItem;
 	
 	/**
 	Display a message in the log
