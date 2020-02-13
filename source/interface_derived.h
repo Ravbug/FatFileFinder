@@ -41,7 +41,7 @@ public:
 	}
 	void PopulateSidebar(DirectoryData*);
 	
-	void ChangeSelection(DirectoryData*);
+	FolderDisplay* ChangeSelection(DirectoryData*);
 	
 	void ProgressUpdate(int progress){
 		progressBar->SetValue(progress);

@@ -34,7 +34,7 @@ public:
 		ListCtrl->DeleteAllItems();
 	}
 	wxDataViewItem GetCurrentItem(){
-		return ListCtrl->GetCurrentItem();
+		return ListCtrl->GetSelection();
 	}
 	void SetItemData(const wxDataViewItem& item, DirectoryData* data){
 		ListCtrl->SetItemData(item, (uintptr_t)data);

@@ -283,7 +283,9 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 		
 	//add files once
 	if (prog == 100){
+		auto old_parent = data->parent;
 		data = fd;
+		data->parent = old_parent;
 		UpdateTitle(false);
 		//update percents
 		auto count = data->subFolders.size();

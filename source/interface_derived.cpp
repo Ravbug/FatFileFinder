@@ -226,7 +226,11 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	
 	FolderDisplay* toReload = nullptr;
 	int index = 0;
+	int parent_idx = 0;
 	for(FolderDisplay* disp : currentDisplay){
+		if (selected->parent != nullptr && disp->data->Path == selected->parent->Path){
+			parent_idx = index;
+		}
 		if (disp->data->Path == selected->Path){
 			toReload = disp;
 			break;
@@ -236,11 +240,11 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	
 	//not opened? open it first
 	if (toReload == nullptr){
-		toReload = AddDisplay(selected);
+		toReload = ChangeSelection(selected);
 		toReload->data = selected;
 	}
 	
-	FolderDisplay* fdisp = currentDisplay[index-1];
+	FolderDisplay* fdisp = currentDisplay[parent_idx];
 	auto item = fdisp->GetCurrentItem();
 	
 	//signal it to size again
@@ -345,11 +349,11 @@ void MainFrame::OnToggleLog(wxCommandEvent& event) {
  Call to update the selected item. This will update the display area.
  @param sender the currently selected item.
  */
-void MainFrame::ChangeSelection(DirectoryData* sender){
+FolderDisplay* MainFrame::ChangeSelection(DirectoryData* sender){
 	//find where the sender is in the list
 	int idx;
 	for (idx = 0; idx < currentDisplay.size(); idx++){
-		if (currentDisplay[idx]->data == sender->parent){
+		if (currentDisplay[idx]->data->Path == sender->parent->Path){
 			break;
 		}
 	}
@@ -366,4 +370,5 @@ void MainFrame::ChangeSelection(DirectoryData* sender){
 	}
 	FolderDisplay* f = AddDisplay(sender);
 	f->display();
+	return f;
 }
