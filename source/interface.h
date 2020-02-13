@@ -57,7 +57,7 @@ class MainFrameBase : public wxFrame
 		wxGridBagSizer* scrollSizer;
 		wxPanel* logPanel;
 		wxTextCtrl* logCtrl;
-		wxButton* xbtn;
+		wxButton* closeLogBtn;
 		wxPanel* propertyPanel;
 		wxDataViewListCtrl* propertyList;
 		wxDataViewColumn* PLPropertyCol;

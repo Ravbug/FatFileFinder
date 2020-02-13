@@ -61,6 +61,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 		openFolderBtn->SetLabel("Open");
 		reloadFolderBtn->SetLabel("Reload");
 		stopSizeBtn->SetLabel("Stop");
+		closeLogBtn->SetLabel("Close");
 
 	#elif __linux
 		SetIcon(wxIcon(wxICON(wxlin_s)));
