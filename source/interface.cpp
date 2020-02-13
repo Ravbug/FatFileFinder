@@ -180,7 +180,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	propertySizer->SetFlexibleDirection( wxBOTH );
 	propertySizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
-	propertyList = new wxDataViewListCtrl( propertyPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0 );
+	propertyList = new wxDataViewListCtrl( propertyPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES );
 	PLPropertyCol = propertyList->AppendTextColumn( wxT("Property"), wxDATAVIEW_CELL_INERT, 150, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	PLValueCol = propertyList->AppendTextColumn( wxT("Value"), wxDATAVIEW_CELL_ACTIVATABLE, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	propertySizer->Add( propertyList, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
@@ -229,7 +229,7 @@ FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxP
 	ItemName->Wrap( -1 );
 	mainSizer->Add( ItemName, 0, wxALL, 5 );
 
-	ListCtrl = new wxDataViewListCtrl( this, FDISP, wxDefaultPosition, wxDefaultSize, 0 );
+	ListCtrl = new wxDataViewListCtrl( this, FDISP, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES );
 	nameCol = ListCtrl->AppendTextColumn( wxT("File Name"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	percentCol = ListCtrl->AppendProgressColumn( wxT("Percent"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_SORTABLE );
 	sizeCol = ListCtrl->AppendTextColumn( wxT("Size"), wxDATAVIEW_CELL_INERT, 100, static_cast<wxAlignment>(wxALIGN_RIGHT), 0 );
