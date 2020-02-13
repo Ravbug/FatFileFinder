@@ -162,6 +162,7 @@ DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback&
 	fd->num_items = fd->files.size();
 	
 	//recursively size the folders in the folder
+	bool calledback = false;
 	for (int i = 0; i < fd->subFolders.size(); i++){
 		fd->subFolders[i] = SizeItem(fd->subFolders[i]->Path, nullptr);
 		
@@ -176,10 +177,15 @@ DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback&
 			}
 		}
 		if (progress != nullptr) {
+			calledback = true;
 			progress((float)(i + 1) / fd->subFolders.size(), fd);
 		}
 	}
-
+	//ensure callback is called for folders with no sub-items
+	if (progress != nullptr && !calledback){
+		progress(1, fd);
+	}
+	
 	return fd;
 }
 
@@ -274,8 +280,9 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 	UpdateTitle(true);
 	DirectoryData* fd = (DirectoryData*)event.GetClientData();
 	//add the current folder
-	AddItem(fd->subFolders[displayStartIndex]);
-	
+	if (fd->subFolders.size() > displayStartIndex){
+		AddItem(fd->subFolders[displayStartIndex]);
+	}
 	
 	++displayStartIndex;
 	//update progress
