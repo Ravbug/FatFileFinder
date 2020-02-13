@@ -76,13 +76,13 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	toolbarSizer->SetFlexibleDirection( wxBOTH );
 	toolbarSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
-	openFolderBtn = new wxButton( this, wxID_OPEN, wxT("📂"), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE|wxBU_EXACTFIT );
+	openFolderBtn = new wxButton( this, wxID_OPEN, wxT("📂"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT );
 	toolbarSizer->Add( openFolderBtn, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL|wxALIGN_BOTTOM, 5 );
 
-	reloadFolderBtn = new wxButton( this, wxID_REFRESH, wxT("🔄"), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE|wxBU_EXACTFIT );
+	reloadFolderBtn = new wxButton( this, wxID_REFRESH, wxT("🔄"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT );
 	toolbarSizer->Add( reloadFolderBtn, wxGBPosition( 0, 1 ), wxGBSpan( 1, 1 ), wxALL|wxALIGN_BOTTOM, 5 );
 
-	stopSizeBtn = new wxButton( this, wxID_STOP, wxT("🛑"), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE|wxBU_EXACTFIT );
+	stopSizeBtn = new wxButton( this, wxID_STOP, wxT("🛑"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT );
 	toolbarSizer->Add( stopSizeBtn, wxGBPosition( 0, 2 ), wxGBSpan( 1, 1 ), wxALL|wxALIGN_BOTTOM, 5 );
 
 	progressBar = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
@@ -153,7 +153,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	m_button6 = new wxButton( logPanel, wxID_COPY, wxT("Copy Log"), wxDefaultPosition, wxDefaultSize, 0 );
 	logSizer->Add( m_button6, wxGBPosition( 0, 1 ), wxGBSpan( 1, 1 ), wxALL, 5 );
 
-	xbtn = new wxButton( logPanel, wxID_JUSTIFY_FILL, wxT("X"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT );
+	xbtn = new wxButton( logPanel, wxID_JUSTIFY_FILL, wxT("❌"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT );
 	logSizer->Add( xbtn, wxGBPosition( 0, 3 ), wxGBSpan( 1, 1 ), wxALL, 5 );
 
 	wxButton* m_button7;
@@ -185,6 +185,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	PLValueCol = propertyList->AppendTextColumn( wxT("Value"), wxDATAVIEW_CELL_ACTIVATABLE, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	propertySizer->Add( propertyList, wxGBPosition( 0, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
 
+	wxButton* copyPathBtn;
 	copyPathBtn = new wxButton( propertyPanel, COPYPATH, wxT("Copy File Path"), wxDefaultPosition, wxDefaultSize, 0 );
 	propertySizer->Add( copyPathBtn, wxGBPosition( 1, 0 ), wxGBSpan( 1, 1 ), wxALL|wxEXPAND, 5 );
 
@@ -214,7 +215,7 @@ MainFrameBase::~MainFrameBase()
 
 FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
 {
-	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
+	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_APPWORKSPACE ) );
 	this->SetMinSize( wxSize( 400,-1 ) );
 
 	wxFlexGridSizer* mainSizer;

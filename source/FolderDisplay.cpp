@@ -28,6 +28,10 @@ using namespace std::filesystem;
 FolderDisplay::FolderDisplay(wxWindow* parentWindow, wxWindow* eventWindow, DirectoryData* contents) : FolderDisplayBase(parentWindow){
 	eventManager = eventWindow;
 	data = contents;
+	//fix color on Windows
+#if defined _WIN32
+	SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_APPWORKSPACE ));
+#endif
 }
 
 /**
@@ -310,5 +314,6 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 			reloadParent->SetItemText(sizeToString(fd->size), reloadParent->ItemToRow(updateItem), 2);
 			reloadParent = nullptr;
 		}
+		abort = true;
 	}
 }

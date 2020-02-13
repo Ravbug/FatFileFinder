@@ -122,6 +122,19 @@ void MainFrame::SizeRootFolder(const string& folder){
 	currentDisplay[0]->Clear();
 	currentDisplay[0]->data = new DirectoryData(folder, true);
 	wxDataViewItem i;
+	
+	//reset viewing area
+	for (int i = 1; i < currentDisplay.size(); i++){
+		currentDisplay[i]->Destroy();
+	}
+	currentDisplay.erase(currentDisplay.begin()+1,currentDisplay.end());
+	//update sizer size
+	scrollSizer->SetCols(1);
+	//force-update the scrolled window
+	wxSize size = scrollView->GetBestVirtualSize();
+	scrollView->SetVirtualSize( size );
+	
+	//start size
 	currentDisplay[0]->Size(nullptr,i);
 }
 
