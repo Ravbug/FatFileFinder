@@ -127,9 +127,9 @@ public:
 		}
 	#elif defined _WIN32
 		//on Windows, unicode is not supported (for now)
-		static const wxString FolderIcon = "";
+		static const inline wxString FolderIcon = wxString("> ");
 		static wxString iconForExtension(const DirectoryData* data) {
-			return "";
+			return (data->isFolder ? FolderIcon : wxString("  "));
 		}
 	#endif
 };

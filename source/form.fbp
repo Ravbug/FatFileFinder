@@ -914,7 +914,7 @@
                                                     <property name="tooltip"></property>
                                                     <property name="window_extra_style"></property>
                                                     <property name="window_name"></property>
-                                                    <property name="window_style">wxTAB_TRAVERSAL</property>
+                                                    <property name="window_style">wxFULL_REPAINT_ON_RESIZE|wxTAB_TRAVERSAL</property>
                                                     <object class="wxGridBagSizer" expanded="0">
                                                         <property name="empty_cell_size"></property>
                                                         <property name="flexible_direction">wxBOTH</property>
@@ -1565,7 +1565,7 @@
         <object class="Panel" expanded="1">
             <property name="aui_managed">0</property>
             <property name="aui_manager_style">wxAUI_MGR_DEFAULT</property>
-            <property name="bg">wxSYS_COLOUR_APPWORKSPACE</property>
+            <property name="bg">wxSYS_COLOUR_WINDOW</property>
             <property name="context_help"></property>
             <property name="context_menu">1</property>
             <property name="enabled">1</property>
@@ -1583,7 +1583,7 @@
             <property name="tooltip"></property>
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
-            <property name="window_style">wxTAB_TRAVERSAL</property>
+            <property name="window_style">wxFULL_REPAINT_ON_RESIZE|wxTAB_TRAVERSAL</property>
             <object class="wxFlexGridSizer" expanded="1">
                 <property name="cols">1</property>
                 <property name="flexible_direction">wxBOTH</property>

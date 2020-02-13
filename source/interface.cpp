@@ -135,7 +135,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	browserPanel->SetSizer( browserSizerInner );
 	browserPanel->Layout();
 	browserSizerInner->Fit( browserPanel );
-	logPanel = new wxPanel( browserSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	logPanel = new wxPanel( browserSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE|wxTAB_TRAVERSAL );
 	wxGridBagSizer* logSizer;
 	logSizer = new wxGridBagSizer( 0, 0 );
 	logSizer->SetFlexibleDirection( wxBOTH );
@@ -214,7 +214,7 @@ MainFrameBase::~MainFrameBase()
 
 FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
 {
-	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_APPWORKSPACE ) );
+	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
 	this->SetMinSize( wxSize( 400,-1 ) );
 
 	wxFlexGridSizer* mainSizer;

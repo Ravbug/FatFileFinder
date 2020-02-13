@@ -140,7 +140,7 @@ void MainFrame::PopulateSidebar(DirectoryData* ptr){
 		return;
 	}
 	
-	propertyList->SetTextValue(ptr->isFolder? "" : to_string(ptr->num_items),3,1);
+	propertyList->SetTextValue(ptr->isFolder? to_string(ptr->num_items) : "", 3, 1);
 	propertyList->SetTextValue(FolderDisplay::sizeToString(ptr->size), 1, 1);
 
 	string ext = p.extension().string();
