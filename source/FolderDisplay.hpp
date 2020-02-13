@@ -84,7 +84,7 @@ private:
 	 @note If the size of the current DirectoryData is 0, the item's size will display as Needs reload because the minimum size FatFileFinder reports is 1 byte.
 	 */
 	void UpdateTitle(bool isSizing = false){
-		ItemName->SetLabel((isSizing? "(Sizing) " : "") + path(data->Path).filename().string() + " - " + (data->size == 0? "Needs reload" : sizeToString(data->size)));
+		ItemName->SetLabel((isSizing? "(Sizing) " : "") + std::filesystem::path(data->Path).filename().string() + " - " + (data->size == 0? "Needs reload" : sizeToString(data->size)));
 	}
 	wxDECLARE_EVENT_TABLE();
 	
