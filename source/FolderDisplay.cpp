@@ -80,6 +80,9 @@ void FolderDisplay::display(){
 	};
 	addItems(data->subFolders);
 	addItems(data->files);
+	
+	//set sort descending
+	ListCtrl->GetColumn(1)->SetSortOrder(false);
 }
 
 /**
@@ -121,9 +124,10 @@ string FolderDisplay::sizeToString(const fileSize& fileSize){
 			{
 				minus = 1;
 			}
-			//round to 2 decimal places, then attach unit
+			//round to 2 decimal places (except for bytes), then attach unit
 			char buffer[10];
-			sprintf(buffer,"%.2f",fileSize / pow(size,i-minus));
+			const string format = (i - minus == 0) ? "%.0f" : "%.2f";
+			sprintf(buffer,format.c_str(),fileSize / pow(size,i-minus));
 			formatted = string(buffer) + suffix[i - minus];
 			break;
 		}
@@ -315,5 +319,8 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 			reloadParent = nullptr;
 		}
 		abort = true;
+		
+		//set sort descending
+		ListCtrl->GetColumn(1)->SetSortOrder(false);
 	}
 }
