@@ -94,7 +94,7 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 
 	mainSizer->Add( toolbarSizer, 1, wxEXPAND|wxALIGN_BOTTOM, 5 );
 
-	mainSplitter = new wxSplitterWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE|wxSP_NOBORDER|wxSP_PERMIT_UNSPLIT|wxSP_THIN_SASH );
+	mainSplitter = new wxSplitterWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE|wxSP_NOBORDER|wxSP_PERMIT_UNSPLIT|wxSP_THIN_SASH|wxFULL_REPAINT_ON_RESIZE );
 	mainSplitter->SetSashGravity( 1 );
 	mainSplitter->Connect( wxEVT_IDLE, wxIdleEventHandler( MainFrameBase::mainSplitterOnIdle ), NULL, this );
 	mainSplitter->SetMinimumPaneSize( 220 );
@@ -225,11 +225,11 @@ FolderDisplayBase::FolderDisplayBase( wxWindow* parent, wxWindowID id, const wxP
 	mainSizer->SetFlexibleDirection( wxBOTH );
 	mainSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
-	ItemName = new wxStaticText( this, wxID_ANY, wxT("Open a folder to view statistics"), wxDefaultPosition, wxDefaultSize, 0 );
+	ItemName = new wxStaticText( this, wxID_ANY, wxT("Open a folder to view statistics"), wxDefaultPosition, wxDefaultSize, 0|wxFULL_REPAINT_ON_RESIZE );
 	ItemName->Wrap( -1 );
 	mainSizer->Add( ItemName, 0, wxALL, 5 );
 
-	ListCtrl = new wxDataViewListCtrl( this, FDISP, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES );
+	ListCtrl = new wxDataViewListCtrl( this, FDISP, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES|wxFULL_REPAINT_ON_RESIZE );
 	nameCol = ListCtrl->AppendTextColumn( wxT("File Name"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
 	percentCol = ListCtrl->AppendProgressColumn( wxT("Percent"), wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_SORTABLE );
 	sizeCol = ListCtrl->AppendTextColumn( wxT("Size"), wxDATAVIEW_CELL_INERT, 100, static_cast<wxAlignment>(wxALIGN_RIGHT), 0 );

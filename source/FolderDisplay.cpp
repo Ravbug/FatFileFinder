@@ -30,7 +30,7 @@ FolderDisplay::FolderDisplay(wxWindow* parentWindow, wxWindow* eventWindow, Dire
 	data = contents;
 	//fix color on Windows
 #if defined _WIN32
-	SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_APPWORKSPACE ));
+	SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ));
 #endif
 }
 

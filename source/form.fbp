@@ -613,7 +613,7 @@
                         <property name="tooltip"></property>
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
-                        <property name="window_style"></property>
+                        <property name="window_style">wxFULL_REPAINT_ON_RESIZE</property>
                         <object class="splitteritem" expanded="1">
                             <object class="wxPanel" expanded="1">
                                 <property name="BottomDockable">1</property>
@@ -1653,7 +1653,7 @@
                         <property name="tooltip"></property>
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
-                        <property name="window_style"></property>
+                        <property name="window_style">wxFULL_REPAINT_ON_RESIZE</property>
                         <property name="wrap">-1</property>
                     </object>
                 </object>
@@ -1681,7 +1681,7 @@
                         <property name="tooltip"></property>
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
-                        <property name="window_style"></property>
+                        <property name="window_style">wxFULL_REPAINT_ON_RESIZE</property>
                         <object class="dataViewListColumn" expanded="0">
                             <property name="align">wxALIGN_LEFT</property>
                             <property name="ellipsize"></property>
