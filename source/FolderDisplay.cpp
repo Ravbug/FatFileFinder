@@ -321,7 +321,7 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 			AddItem(file);
 		}
 		//reconnect if applicable
-		if (reloadParent != nullptr /*&& updateItem.IsOk()*/){
+		if (reloadParent != nullptr && updateItem.IsOk()){
 			reloadParent->SetItemData(updateItem, fd);
 			data->recalculateStats();
 			reloadParent->SetItemText(sizeToString(fd->size), reloadParent->ItemToRow(updateItem), 2);

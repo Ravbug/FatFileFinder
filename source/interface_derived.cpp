@@ -111,6 +111,7 @@ void MainFrame::SizeRootFolder(const string& folder){
 	}
 
 	userClosedLog = false;
+	selected = nullptr;
 	
 	progCallback callback = [&](float progress, DirectoryData* data){
 		wxCommandEvent event(progEvt);

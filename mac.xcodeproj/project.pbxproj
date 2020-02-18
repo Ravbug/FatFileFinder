@@ -238,6 +238,8 @@
 		41B5AAEC22DB8BB300347CC8 /* interface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = interface.cpp; sourceTree = "<group>"; };
 		41B5AAED22DB8BB400347CC8 /* interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = interface.h; sourceTree = "<group>"; };
 		AA012113224C24D4000F4F82 /* wxmac.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = wxmac.icns; sourceTree = "<group>"; };
+		AA04140923FC927700EE539B /* FatFileFinder.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FatFileFinder.entitlements; sourceTree = "<group>"; };
+		AA04140A23FC92C200EE539B /* FatFileFinder Dynamic.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "FatFileFinder Dynamic.entitlements"; sourceTree = "<group>"; };
 		AA0A148123CCBE410092E9AA /* DirectoryData.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DirectoryData.cpp; sourceTree = "<group>"; };
 		AA0A148223CCBE410092E9AA /* DirectoryData.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DirectoryData.hpp; sourceTree = "<group>"; };
 		AA1D0F4E222A09A600678304 /* FatFileFinder Dynamic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FatFileFinder Dynamic.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -312,6 +314,8 @@
 		AA1D0F45222A09A600678304 = {
 			isa = PBXGroup;
 			children = (
+				AA04140A23FC92C200EE539B /* FatFileFinder Dynamic.entitlements */,
+				AA04140923FC927700EE539B /* FatFileFinder.entitlements */,
 				AA1D0F50222A09A600678304 /* source */,
 				AA1D0F4F222A09A600678304 /* Products */,
 				AA14A0F2222A1219002C4553 /* Frameworks */,
@@ -838,6 +842,7 @@
 		AA1D0F60222A09A800678304 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "FatFileFinder Dynamic.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/source/Info_cocoa.plist";
@@ -854,6 +859,7 @@
 		AA1D0F61222A09A800678304 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "FatFileFinder Dynamic.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/source/Info_cocoa.plist";
@@ -870,6 +876,7 @@
 		AAD015CB222B2FE300E25CB7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FatFileFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				HEADER_SEARCH_PATHS = (
@@ -899,6 +906,7 @@
 		AAD015CC222B2FE300E25CB7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FatFileFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				HEADER_SEARCH_PATHS = (
