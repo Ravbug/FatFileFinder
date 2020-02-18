@@ -16,8 +16,6 @@
 #include <wx/treebase.h>
 #include <wx/clipbrd.h>
 
-using namespace std;
-
 /**
  Defines the main window and all of its behaviors and members.
  */
