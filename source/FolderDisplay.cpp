@@ -267,15 +267,6 @@ void FolderDisplay::Size(FolderDisplay* parent, wxDataViewItem updateItem){
 			//invoke event to notify needs to update UI
 			wxPostEvent(this, event);
 			
-			//invoke main UI event
-			//notify parent to connect new pointer to display
-			
-			wxCommandEvent* evt = new wxCommandEvent(progEvt, RESEVT);
-			//pass along the address to the DirectoryData to the event
-			uintptr_t* addr = new uintptr_t(prog * 100);
-			evt->SetClientData(addr);
-			eventManager->GetEventHandler()->QueueEvent(evt);
-			
 		};
 		//called on progress updates
 		SizeItem(data->Path, uicallback);
@@ -299,8 +290,26 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 	//add files once
 	if (prog == 100){
 		auto old_parent = data->parent;
-		data = fd;
+		//update size in parent
+		if (old_parent != nullptr){
+			old_parent->size -= data->size;
+			data = fd;
+			old_parent->size += data->size;
+			
+			//reconnect item in SubFolders of parent
+			for(int i = 0; i < old_parent->subFolders.size(); i++){
+				DirectoryData* parentItem = old_parent->subFolders[i];
+				if (parentItem->Path == data->Path){
+					old_parent->subFolders[i] = data;
+					break;
+				}
+			}
+		}
+		else{
+			data = fd;
+		}
 		data->parent = old_parent;
+		
 		UpdateTitle(false);
 		//update percents
 		auto count = data->subFolders.size();
@@ -323,4 +332,13 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 		//set sort descending
 		ListCtrl->GetColumn(1)->SetSortOrder(false);
 	}
+	
+	//invoke main UI event
+	//notify parent to connect new pointer to display
+	
+	wxCommandEvent* evt = new wxCommandEvent(progEvt, RESEVT);
+	//pass along the address to the DirectoryData to the event
+	uintptr_t* addr = new uintptr_t(prog);
+	evt->SetClientData(addr);
+	eventManager->GetEventHandler()->QueueEvent(evt);
 }

@@ -45,6 +45,12 @@ public:
 	
 	void ProgressUpdate(int progress){
 		progressBar->SetValue(progress);
+		if (progress == 100){
+			currentDisplay[0]->data->recalculateStats();
+			for (FolderDisplay* disp : currentDisplay){
+				disp->UpdateTitle();
+			}
+		}
 		UpdateTitlebar(progress, FolderDisplay::sizeToString(currentDisplay[0]->data->size));
 	}
 	

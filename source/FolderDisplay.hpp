@@ -49,6 +49,16 @@ public:
 	void display();
 	static string sizeToString(const fileSize&);
 	bool abort = true;
+	
+	/**
+	 Sets the label in this display to the size of the item
+	 @param isSizing pass true if the size operation is in progress, false otherwise
+	 @note If the size of the current DirectoryData is 0, the item's size will display as Needs reload because the minimum size FatFileFinder reports is 1 byte.
+	 */
+	void UpdateTitle(bool isSizing = false){
+		ItemName->SetLabel((isSizing? "(Sizing) " : "") + std::filesystem::path(data->Path).filename().string() + " - " + (data->size == 0? "Needs reload" : sizeToString(data->size)));
+	}
+	
 private:
 	wxWindow* eventManager = nullptr;
 	std::thread worker;
@@ -77,15 +87,6 @@ private:
 	void OnSelectionActivated(wxDataViewEvent&);
 	void OnUpdateUI(wxCommandEvent&);
 	
-	
-	/**
-	 Sets the label in this display to the size of the item
-	 @param isSizing pass true if the size operation is in progress, false otherwise
-	 @note If the size of the current DirectoryData is 0, the item's size will display as Needs reload because the minimum size FatFileFinder reports is 1 byte.
-	 */
-	void UpdateTitle(bool isSizing = false){
-		ItemName->SetLabel((isSizing? "(Sizing) " : "") + std::filesystem::path(data->Path).filename().string() + " - " + (data->size == 0? "Needs reload" : sizeToString(data->size)));
-	}
 	wxDECLARE_EVENT_TABLE();
 	
 public:

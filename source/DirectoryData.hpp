@@ -45,5 +45,5 @@ public:
 	void resetStats();
 	void recalculateStats();
 	vector<DirectoryData*> getSuperFolders();
-	long double percentOfParent();
+	long double percentOfParent() const;
 };
