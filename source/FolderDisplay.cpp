@@ -283,6 +283,7 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 		AddItem(fd->subFolders[displayStartIndex]);
 	}
 	
+	//add files once
 	if (displayStartIndex == 0){
 		for (DirectoryData* file : fd->files){
 			AddItem(file);
@@ -315,14 +316,14 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 		data->parent = old_parent;
 		
 		UpdateTitle(false);
-	//add files once
 	if (prog == 100){
 		//update percents
-		auto count = data->subFolders.size();
-		for (int i = 0; i < count; i++){
-			wxVariant v = wxAny((long)(data->subFolders[i]->percentOfParent()));
+		for (int i = 0; i < ListCtrl->GetItemCount(); i++){
+			DirectoryData* d = (DirectoryData*)(ListCtrl->GetItemData(ListCtrl->RowToItem(i)));
+			wxVariant v = wxAny((long)(d->percentOfParent()));
 			ListCtrl->SetValue(v, i, 1);
 		}
+		
 		//reconnect if applicable
 		if (reloadParent != nullptr && updateItem.IsOk()){
 			reloadParent->SetItemData(updateItem, fd);
