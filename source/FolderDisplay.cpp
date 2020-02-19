@@ -298,6 +298,8 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 		//update size in parent
 		if (old_parent != nullptr){
 			old_parent->size -= data->size;
+			//deallocate old data
+			delete data;
 			data = fd;
 			old_parent->size += data->size;
 			
