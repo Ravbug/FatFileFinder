@@ -1,7 +1,7 @@
 # flags needed to build the target (compiler, target name, and compiler flags)
 CC = g++
 WXROOT := wxWidgets
-CFLAGS := `$(WXROOT)/build/linux/wx-config --cppflags` `$(WXROOT)/build/linux/wx-config --libs` -Wl,-rpath,$(WXROOT)/build/linux/lib/ -std=gnu++17
+CFLAGS := `$(WXROOT)/build/linux/wx-config --cxxflags --libs` -Wl,-rpath,$(WXROOT)/build/linux/lib/ -std=gnu++17
 target = FatFileFinder
 
 # location of source files
@@ -32,7 +32,7 @@ all: $(lib_build_path)/$(lib_file_detect)
 
 # link the object files together into the executable
 $(build_dir)/$(target): $(objects)
-	$(CC) $(CFLAGS) $(mode) -o $@ $^
+	$(CC) $(mode) -o $@ $^ $(CFLAGS)
 
 # compile object files from source files
 # This only looks at changes in the .cpp files, so if headers are modified, a rebuild is needed.
