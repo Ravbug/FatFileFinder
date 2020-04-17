@@ -101,7 +101,7 @@ public:
 			static const std::unordered_map<string,wxString> icons = {
 				{"exe", L"💾" },{"dll", L"💾" },{"bat", L"💾" },{"jar", "💾" },
 				{"iso", L"💿" },{"bin", L"💿"},
-				{"ai",L"🎨" },{"bmp", L"🎨" },{"gif", L"🎨" },{"ico", L"🎨" },{"jpeg", L"🎨" },{"jpg", L"🎨" },{"png",L"🎨" },{"psd",L"🎨" },{"svg",L"🎨" },{"tif",L"🎨" },
+				{"ai",L"🎨" },{"bmp", L"🎨" },{"gif", L"🎨" },{"ico", L"🎨" },{"jpeg", L"🎨" },{"jpg", L"🎨" },{"png",L"🎨" },{"psd",L"🎨" },{"svg",L"🎨" },{"tif",L"🎨" },{"icns",L"🎨"},{"exr",L"🎨"},
 				{"mp3",L"🎵" },{"aif", L"🎵" },{"ogg", L"🎵" },{"wav", L"🎵" },{"wma", L"🎵" },{"m4a", L"🎵" },
 				{ "mp4",L"🎞"},{ "avi", L"🎞"},{ "flv", L"🎞"},{ "h264", L"🎞"},{ "m4v", L"🎞"},{ "mkv", L"🎞"},{ "mov",L"🎞"},{ "mpg",L"🎞"},{ "wmv",L"🎞"},
 				{ "7z",L"📦"},{ "arj", L"📦"},{ "pkg", L"📦"},{ "rar", L"📦"},{ "rpm", L"📦"},{ "tar.gz", L"📦"},{ "z", L"📦"},{ "zip",L"📦"},
@@ -118,7 +118,7 @@ public:
 					extension = extension.substr(1,extension.size());
 					return icons.at(extension);
 				}
-				catch(exception e){
+				catch(const exception& e){
 					return L"📄";
 				}
 			}

@@ -160,7 +160,7 @@ DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback&
 	try{
 		sizeImmediate(fd);
 	}
-	catch(filesystem_error e){
+	catch(const filesystem_error& e){
 		//notify user
 		Log("Error sizing directory" + folder + "\n" + e.what());
 		return fd;
@@ -232,7 +232,7 @@ void FolderDisplay::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 				}
 			}
 		}
-		catch (filesystem_error e) {
+		catch (const filesystem_error& e) {
 			Log("Error sizing file " + p.path().string() + "\n" + e.what());
 		}
 	}
