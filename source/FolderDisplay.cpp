@@ -224,7 +224,9 @@ void FolderDisplay::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 				}
 				else {
 					//size the file, add its details to the structure
-					DirectoryData* file = new DirectoryData(p.path().string(), stat_file_size(p.path().string()));
+
+					auto stat = stat_file_size(p.path().string());
+					DirectoryData* file = new DirectoryData(p.path().string(), stat);
 					data->files_size += file->size;
 					file->parent = data;
 					data->files.push_back(file);
@@ -234,6 +236,9 @@ void FolderDisplay::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 		}
 		catch (const filesystem_error& e) {
 			Log("Error sizing file " + p.path().string() + "\n" + e.what());
+		}
+		catch (const system_error& e) {
+			Log(string("Error sizing item in directory ") + data->Path + "\n" + e.what());
 		}
 	}
 }
