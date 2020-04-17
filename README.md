@@ -37,7 +37,7 @@ Note: Clipboard is currently not available on macOS. The sidebar in the Windows 
 The Windows version currently does not support the emoji icons. 
 
 ## Screenshots
-![Main Window](https://user-images.githubusercontent.com/22283943/72393521-111f9980-3701-11ea-8885-992f2852a19f.png)
+![Main Window](https://user-images.githubusercontent.com/22283943/74867349-84c94d80-5322-11ea-8e75-9539b45d889a.png)
 
 ## Compiling it yourself
 Download a copy of the repository, then
