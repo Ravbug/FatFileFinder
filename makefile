@@ -1,7 +1,7 @@
 # flags needed to build the target (compiler, target name, and compiler flags)
-CC = g++
+CC = c++
 WXROOT := wxWidgets
-CFLAGS := `$(WXROOT)/build/linux/wx-config --cxxflags --libs` -Wl,-rpath,$(WXROOT)/build/linux/lib/ -std=gnu++17
+CFLAGS := `$(WXROOT)/build/linux/wx-config --cxxflags --libs` -Wl,-rpath,$(WXROOT)/build/linux/lib/ -std=gnu++17 -lstdc++fs
 target = FatFileFinder
 
 # location of source files
