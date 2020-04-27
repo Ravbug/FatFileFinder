@@ -313,7 +313,7 @@ void MainFrame::OnAbout(wxCommandEvent& event)
 	wxAboutDialogInfo aboutInfo;
 	aboutInfo.SetName(AppName);
 	aboutInfo.SetVersion(AppVersion);
-	aboutInfo.SetCopyright("(C) 2019 Ravbug");
+	aboutInfo.SetCopyright("(C) 2020 Ravbug");
 #if defined _WIN32
 	aboutInfo.SetIcon(wxIcon("IDI_WXWIN"));
 #elif defined __linux__
