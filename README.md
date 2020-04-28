@@ -44,7 +44,7 @@ Download a copy of the repository, then
 - **macOS**: Open `mac.xcodeproj` in Xcode and press Build.
 - **Windows**: Open `windows.sln` in Visual Studio 2019 or later, select your target, and press Build.
 - **Linux**: cd to the root folder and run `make linux-pkg` in your command line. If you are missing packages, the build system will alert you. Visit [this guide](https://github.com/Ravbug/wxWidgetsTemplate/wiki/Building-the-Projects#linux)
-  - Note: Linux users must have a C++ compiler installed that can compile C++ 17 source. For g++, this is any version 8.0 or newer. You can get your g++ version with `g++ --version`.
+  - Note: Linux users must have a C++ compiler installed that can compile C++ 17 source. For g++, this is any version 8.0 or newer. You can get your g++ version with `g++ --version`. If g++ 8 or higher is a separate package, you can run `make linux-pkg CC=g++-8`
 if problems persist. The executable will be located in `linux-build/`.
 
 The compile can take a while! On all systems, the compiler is configured to use all of your system's cores.
