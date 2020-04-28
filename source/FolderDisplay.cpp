@@ -113,17 +113,23 @@ string FolderDisplay::sizeToString(const fileSize& fileSize){
 	string formatted = "";
 	int size = 1000;		//MB = 1000, MiB = 1024
 	array<string,5> suffix { " bytes", " KB", " MB", " GB", " TB" };
+	auto max = suffix.size();
 
-	for (int i = 0; i < suffix.size(); i++)
+	for (int i = 0; i < max; i++)
 	{
 		double compare = pow(size, i);
-		if (fileSize <= compare)
+		if (fileSize <= compare || i == max - 1)
 		{
 			int minus = 0;
 			if (i > 0)
 			{
 				minus = 1;
 			}
+			
+			if (fileSize > compare){
+				minus = 0;
+			}
+			
 			//round to 2 decimal places (except for bytes), then attach unit
 			char buffer[10];
 			const string format = (i - minus == 0) ? "%.0f" : "%.2f";
@@ -133,6 +139,9 @@ string FolderDisplay::sizeToString(const fileSize& fileSize){
 		}
 	}
 
+	if (formatted == ""){
+		return "??";
+	}
 	return formatted;
 }
 
