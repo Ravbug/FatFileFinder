@@ -3,7 +3,7 @@
 ## Information
 This cross-platform app sweeps a folder or drive and displays the size of each item in the folder, to assist the user in cleaning their drive.
 This version is a rewrite of my [Windows-only version](https://github.com/Ravbug/FatFileFinder) in C++, using the [wxWidgets](https://www.wxwidgets.org) library for GUI. 
-Similar to [WinDirStat](https://windirstat.net/), but lighter and uses a background thread.
+Similar to [WinDirStat](https://windirstat.net/), but lighter, faster, and uses a background thread.
 
 Visit [here](https://github.com/Ravbug/FatFileFinder) to use the legacy Windows-only version.
 
@@ -41,11 +41,10 @@ The Windows version currently does not support the emoji icons.
 
 ## Compiling it yourself
 Download a copy of the repository, then
-- **macOS**: Open `mac.xcodeproj` in Xcode and press Build.
+- **macOS**: Open `mac.xcodeproj` in Xcode and press Build. Requires macOS 10.15 or later because of C++17 STL support.
 - **Windows**: Open `windows.sln` in Visual Studio 2019 or later, select your target, and press Build.
 - **Linux**: cd to the root folder and run `make linux-pkg` in your command line. If you are missing packages, the build system will alert you. Visit [this guide](https://github.com/Ravbug/wxWidgetsTemplate/wiki/Building-the-Projects#linux)
-  - Note: Linux users must have a C++ compiler installed that can compile C++ 17 source. For g++, this is any version 8.0 or newer. You can get your g++ version with `g++ --version`. If g++ 8 or higher is a separate package, you can run `make linux-pkg CC=g++-8`
-if problems persist. The executable will be located in `linux-build/`.
+  - Note: Linux users must have a C++ compiler installed that can compile C++ 17 source. For g++, this is any version 8.0 or newer. You can get your g++ version with `g++ --version`. If g++ 8 or higher is a separate package, you can run `make linux-pkg CC=g++-8`. The executable will be located in `linux-build/`. If problems persist, open an [Issue](https://github.com/Ravbug/FatFileFinderCPP/issues).
 
 The compile can take a while! On all systems, the compiler is configured to use all of your system's cores.
 
