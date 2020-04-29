@@ -77,7 +77,6 @@ public:
 	DirectoryData* selected = nullptr;
 	
 private:
-	DirectoryData* folderData = nullptr;
 	bool userClosedLog = false;
 
 	string GetPathFromDialog(const string&);

@@ -175,7 +175,6 @@ DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback&
 		return fd;
 	}
 	
-	fd->size = fd->files_size;
 	fd->num_items = fd->files.size();
 	
 	//recursively size the folders in the folder
@@ -213,7 +212,6 @@ DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback&
 void FolderDisplay::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 	//clear to prevent dupes
 	data->files.clear();
-	data->files_size = 1;
 	if (!skipFolders){
 		data->subFolders.clear();
 	}
@@ -223,20 +221,22 @@ void FolderDisplay::sizeImmediate(DirectoryData* data, const bool& skipFolders){
 		//check if can read the file
 		try {
 			file_status s = status(p.path());
-			if (/*!is_symlink(s) &&*/ can_access(s))
+			if (can_access(s))
 			{
 				if (is_directory(p)) {
 					if (!skipFolders) {
-						DirectoryData* sub = new DirectoryData(p.path().string(), true);
+						string str = p.path().string();
+						DirectoryData* sub = new DirectoryData(str, true);
 						data->subFolders.push_back(sub);
 					}
 				}
 				else {
 					//size the file, add its details to the structure
 
-					auto stat = stat_file_size(p.path().string());
-					DirectoryData* file = new DirectoryData(p.path().string(), stat);
-					data->files_size += file->size;
+					string str = p.path().string();
+					auto stat = stat_file_size(str);
+					DirectoryData* file = new DirectoryData(str, stat);
+					data->size += file->size;
 					file->parent = data;
 					data->files.push_back(file);
 					//cout << file->Path << ": " << file->size << endl;

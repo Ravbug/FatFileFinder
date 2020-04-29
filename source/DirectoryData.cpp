@@ -14,19 +14,20 @@ using namespace filesystem;
  Clear variables, including deallocating all sub-objects stored in vectors
  */
 void DirectoryData::resetStats(){
-	   //deallocate each of the files
-	   for (DirectoryData* file : files) {
-		   delete file;
-	   }
-	   //deallocate each of the subfolders
-	   for (DirectoryData* folder : subFolders) {
-		   delete folder;
-	   }
-	   subFolders.clear();
-	   files.clear();
-	   size = 0;
-	   files_size = 0;
-	   num_items = 0;
+		//deallocate each of the files
+		for (DirectoryData* file : files) {
+			delete file;
+			file = nullptr;
+		}
+		//deallocate each of the subfolders
+		for (DirectoryData* folder : subFolders) {
+			delete folder;
+			folder = nullptr;
+		}
+		subFolders.clear();
+		files.clear();
+		size = 0;
+		num_items = 0;
    }
 
 /**
@@ -38,11 +39,9 @@ void DirectoryData::recalculateStats(){
 	if (subFolders.size() > 0){
 		num_items = files.size();
 		//calculate file size
-		files_size = 1;
 		for (DirectoryData* file : files){
-			files_size += file->size;
+			size += file->size;
 		}
-		size = files_size;
 		
 		for(DirectoryData* sub : subFolders){
 			//error handle
@@ -50,7 +49,6 @@ void DirectoryData::recalculateStats(){
 			sub->recalculateStats();
 			num_items += sub->num_items + 1;
 			size += sub->size;
-			files_size += sub->files_size;
 		}
 	}
 }

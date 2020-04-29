@@ -92,7 +92,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 	
 	// default unsplit
 	browserSplitter->Unsplit();
-	AddDisplay(folderData);
+	AddDisplay(nullptr);
 }
 
 /**
@@ -101,7 +101,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
  */
 void MainFrame::SizeRootFolder(const string& folder){
 	//deallocate existing data
-	delete folderData;
+	delete currentDisplay[0]->data;
 	//clear the log
 	logCtrl->SetValue("");
 	//hide the log
@@ -302,7 +302,7 @@ void MainFrame::OnOpenFolder(wxCommandEvent& event){
 void MainFrame::OnExit(wxCommandEvent& event)
 {
 	//deallocate structure
-	delete folderData;
+	delete currentDisplay[0]->data;
 	Close( true );
 }
 /**

@@ -14,7 +14,6 @@ public:
 	string Path;
 	//see typedefs for platform-specific types
 	fileSize size;
-	fileSize files_size;
 	unsigned long num_items;
 	bool isFolder;
 	bool isSymlink;
@@ -27,10 +26,10 @@ public:
 	vector<DirectoryData*> files;
 	
 	DirectoryData(const string& inPath, bool folder){
+		cout << "allocating " << this << endl;
 		Path = inPath;
 		isFolder = folder;
 		size = 0;
-		files_size = 1;
 		num_items = 0;
 		isSymlink = false;
 	}
@@ -40,6 +39,7 @@ public:
 	//destructor
 	~DirectoryData(){
 		resetStats();
+		cout << "deallocating " << this << endl;
 	}
 	
 	void resetStats();
