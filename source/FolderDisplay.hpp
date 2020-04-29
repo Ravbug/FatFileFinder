@@ -79,6 +79,7 @@ private:
 		}
 	}
 	DirectoryData* SizeItem(const string&, const progCallback&);
+	void SizeItem(DirectoryData*, const progCallback&);
 	void sizeImmediate(DirectoryData*, const bool& skipFolders = false);
 	void AddItem(DirectoryData*);
 	

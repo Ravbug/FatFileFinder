@@ -37,6 +37,7 @@ void DirectoryData::resetStats(){
  */
 void DirectoryData::recalculateStats(){
 	if (subFolders.size() > 0){
+		size = 1;
 		num_items = files.size();
 		//calculate file size
 		for (DirectoryData* file : files){

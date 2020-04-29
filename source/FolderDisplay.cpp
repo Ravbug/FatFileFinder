@@ -146,23 +146,21 @@ string FolderDisplay::sizeToString(const fileSize& fileSize){
 }
 
 /**
- Calculate the size of a folder, including the size of subfolders
- @param folder the path to the folder to size
- @param progress the std::function to call with progress updates
- */
-DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback& progress){
-	DirectoryData* fd = new DirectoryData(folder, true);
-	
-	if (abort || path_too_long(folder)) {
-		return fd;
+Calculate the size of a folder, including the size of subfolders. Does not allocate a new root.
+@param fd the DirectoryData to size
+@param progress the std::function to call with progress updates
+*/
+void FolderDisplay::SizeItem(DirectoryData* fd, const progCallback& progress){
+	if (abort || path_too_long(fd->Path)) {
+		return;
 	}
 	
 	//skip symbolic links
 	std::error_code ec;
-	if (is_symlink(path(folder),ec)){
+	if (is_symlink(fd->Path,ec)){
 		fd->size = 1;
 		fd->isSymlink = true;
-		return fd;
+		return;
 	}
 	
 	//calculate the size of the immediate files in the folder
@@ -171,8 +169,8 @@ DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback&
 	}
 	catch(const filesystem_error& e){
 		//notify user
-		Log("Error sizing directory" + folder + "\n" + e.what());
-		return fd;
+		Log("Error sizing directory" + fd->Path + "\n" + e.what());
+		return;
 	}
 	
 	fd->num_items = fd->files.size();
@@ -201,6 +199,17 @@ DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback&
 	if (progress != nullptr && !calledback){
 		progress(1, fd);
 	}
+}
+
+/**
+ Calculate the size of a folder, including the size of subfolders. Allocates a new DirectoryData.
+ @param folder the path to the folder to size
+ @param progress the std::function to call with progress updates
+ */
+DirectoryData* FolderDisplay::SizeItem(const string& folder, const progCallback& progress){
+	DirectoryData* fd = new DirectoryData(folder, true);
+	
+	SizeItem(fd, progress);
 	
 	return fd;
 }
@@ -283,7 +292,7 @@ void FolderDisplay::Size(FolderDisplay* parent, wxDataViewItem updateItem){
 			
 		};
 		//called on progress updates
-		SizeItem(data->Path, uicallback);
+		SizeItem(data, uicallback);
 	},parent);
 	worker.detach();
 }
