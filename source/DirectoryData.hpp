@@ -26,7 +26,6 @@ public:
 	vector<DirectoryData*> files;
 	
 	DirectoryData(const string& inPath, bool folder){
-		cout << "allocating " << this << endl;
 		Path = inPath;
 		isFolder = folder;
 		size = 0;
@@ -39,7 +38,6 @@ public:
 	//destructor
 	~DirectoryData(){
 		resetStats();
-		cout << "deallocating " << this << endl;
 	}
 	
 	void resetStats();
