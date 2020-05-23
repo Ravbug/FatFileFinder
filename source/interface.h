@@ -94,9 +94,6 @@ class FolderDisplayBase : public wxPanel
 	protected:
 		wxStaticText* ItemName;
 		wxDataViewListCtrl* ListCtrl;
-		wxDataViewColumn* nameCol;
-		wxDataViewColumn* percentCol;
-		wxDataViewColumn* sizeCol;
 
 	public:
 

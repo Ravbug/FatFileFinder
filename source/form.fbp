@@ -1682,39 +1682,6 @@
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
                         <property name="window_style">wxFULL_REPAINT_ON_RESIZE</property>
-                        <object class="dataViewListColumn" expanded="0">
-                            <property name="align">wxALIGN_LEFT</property>
-                            <property name="ellipsize"></property>
-                            <property name="flags">wxDATAVIEW_COL_RESIZABLE</property>
-                            <property name="label">File Name</property>
-                            <property name="mode">wxDATAVIEW_CELL_INERT</property>
-                            <property name="name">nameCol</property>
-                            <property name="permission">protected</property>
-                            <property name="type">Text</property>
-                            <property name="width">-1</property>
-                        </object>
-                        <object class="dataViewListColumn" expanded="0">
-                            <property name="align">wxALIGN_CENTER</property>
-                            <property name="ellipsize"></property>
-                            <property name="flags">wxDATAVIEW_COL_SORTABLE</property>
-                            <property name="label">Percent</property>
-                            <property name="mode">wxDATAVIEW_CELL_INERT</property>
-                            <property name="name">percentCol</property>
-                            <property name="permission">protected</property>
-                            <property name="type">Progress</property>
-                            <property name="width">-1</property>
-                        </object>
-                        <object class="dataViewListColumn" expanded="0">
-                            <property name="align">wxALIGN_RIGHT</property>
-                            <property name="ellipsize"></property>
-                            <property name="flags"></property>
-                            <property name="label">Size</property>
-                            <property name="mode">wxDATAVIEW_CELL_INERT</property>
-                            <property name="name">sizeCol</property>
-                            <property name="permission">protected</property>
-                            <property name="type">Text</property>
-                            <property name="width">100</property>
-                        </object>
                     </object>
                 </object>
             </object>

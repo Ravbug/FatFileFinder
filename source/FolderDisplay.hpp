@@ -8,6 +8,7 @@
 #pragma once
 #include "interface.h"
 #include "DirectoryData.hpp"
+#include "FileSizeModel.h"
 #include <filesystem>
 #include <unordered_map>
 #include <thread>
@@ -20,10 +21,7 @@ public:
 	DirectoryData* data;
 	
 	FolderDisplay(wxWindow*,wxWindow*, DirectoryData*);
-	~FolderDisplay(){
-		abort = true;
-		//Log("Resize operation has stopped because the view was closed. This folder will need to be manually resized.");
-	}
+	~FolderDisplay();
 	
 	void Size(FolderDisplay*, wxDataViewItem);
 	
@@ -66,6 +64,8 @@ private:
 	
 	FolderDisplay* reloadParent = nullptr;
 	wxDataViewItem updateItem;
+
+	wxObjectDataPtr<FileSizeModel> model;
 	
 	/**
 	Display a message in the log

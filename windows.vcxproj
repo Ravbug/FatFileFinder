@@ -178,6 +178,7 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="source\DirectoryData.hpp" />
+    <ClInclude Include="source\FileSizeModel.h" />
     <ClInclude Include="source\FolderDisplay.hpp" />
     <ClInclude Include="source\globals.h" />
     <ClInclude Include="source\interface.h" />

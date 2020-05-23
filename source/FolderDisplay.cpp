@@ -28,10 +28,25 @@ using namespace std::filesystem;
 FolderDisplay::FolderDisplay(wxWindow* parentWindow, wxWindow* eventWindow, DirectoryData* contents) : FolderDisplayBase(parentWindow){
 	eventManager = eventWindow;
 	data = contents;
+
+	model = new FileSizeModel();
+
+	ListCtrl->AssociateModel(model.get());
+	//add rows here
+	ListCtrl->AppendTextColumn("File Name");
+	ListCtrl->AppendProgressColumn("Percent");
+	ListCtrl->AppendTextColumn("File Size");
+
 	//fix color on Windows
 #if defined _WIN32
 	SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ));
 #endif
+}
+
+FolderDisplay::~FolderDisplay()
+{
+	abort = true;
+	//Log("Resize operation has stopped because the view was closed. This folder will need to be manually resized.");
 }
 
 /**
