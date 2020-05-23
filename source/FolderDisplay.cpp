@@ -33,9 +33,9 @@ FolderDisplay::FolderDisplay(wxWindow* parentWindow, wxWindow* eventWindow, Dire
 
 	ListCtrl->AssociateModel(model.get());
 	//add rows here
-	ListCtrl->AppendTextColumn("File Name");
-	ListCtrl->AppendProgressColumn("Percent");
-	ListCtrl->AppendTextColumn("File Size");
+	ListCtrl->AppendTextColumn("File Name",wxDATAVIEW_CELL_INERT,wxCOL_WIDTH_AUTOSIZE,static_cast<wxAlignment>(wxALIGN_LEFT), wxDATAVIEW_COL_RESIZABLE );
+	ListCtrl->AppendProgressColumn("Percent",wxDATAVIEW_CELL_INERT, -1, static_cast<wxAlignment>(wxALIGN_CENTER), wxDATAVIEW_COL_SORTABLE );
+	ListCtrl->AppendTextColumn("File Size",wxDATAVIEW_CELL_INERT, 100, static_cast<wxAlignment>(wxALIGN_RIGHT), 0 );
 
 	//fix color on Windows
 #if defined _WIN32
@@ -98,6 +98,12 @@ void FolderDisplay::display(){
 	
 	//set sort descending
 	ListCtrl->GetColumn(1)->SetSortOrder(false);
+	ListCtrl->GetColumn(0)->SetWidth(wxCOL_WIDTH_AUTOSIZE);
+	ListCtrl->GetColumn(2)->SetWidth(wxCOL_WIDTH_AUTOSIZE);
+	
+	//fix size and force redraw
+	SetClientSize(ListCtrl->GetSize());
+	GetParent()->Layout();
 }
 
 /**
@@ -326,6 +332,8 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 		for (DirectoryData* file : fd->files){
 			AddItem(file);
 		}
+		//fit
+		ListCtrl->GetColumn(0)->SetWidth(wxCOL_WIDTH_AUTOSIZE);
 	}
 	
 	++displayStartIndex;
