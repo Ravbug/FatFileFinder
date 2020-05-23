@@ -247,6 +247,7 @@
 		AA1D0FC9222A0A4A00678304 /* wxrelease.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxrelease.xcconfig; path = wxWidgets/build/osx/wxrelease.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA1D0FCA222A0A4B00678304 /* wxcocoa.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxcocoa.xcconfig; path = wxWidgets/build/osx/wxcocoa.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA1D0FCB222A0A4B00678304 /* wxdebug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = wxdebug.xcconfig; path = wxWidgets/build/osx/wxdebug.xcconfig; sourceTree = SOURCE_ROOT; };
+		AAA8810F2479B1C8007CA1A1 /* FileSizeModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileSizeModel.h; sourceTree = "<group>"; };
 		AAD015CD222B2FE300E25CB7 /* FatFileFinder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FatFileFinder.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADEBAF423E1D40B00A34F27 /* FolderDisplay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FolderDisplay.cpp; sourceTree = "<group>"; };
 		AADEBAF523E1D40B00A34F27 /* FolderDisplay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FolderDisplay.hpp; sourceTree = "<group>"; };
@@ -335,6 +336,7 @@
 		AA1D0F50222A09A600678304 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				AAA8810F2479B1C8007CA1A1 /* FileSizeModel.h */,
 				AA012113224C24D4000F4F82 /* wxmac.icns */,
 				AAF9D87A222B14E900437548 /* Info_cocoa.plist */,
 				AAF9D87B222B14E900437548 /* main.cpp */,

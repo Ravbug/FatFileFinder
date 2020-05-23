@@ -20,7 +20,7 @@ public:
 		DirectoryData* data1 = (DirectoryData*)GetItemData(item1);
 		DirectoryData* data2 = (DirectoryData*)GetItemData(item2);
 
-		int answer = (data1->size < data2->size) ? -1 : 1;
+		int answer = (data1->size > data2->size) ? -1 : 1;
 
 		if (ascending) {
 			answer *= -1;
