@@ -6,8 +6,8 @@
 Defines the file-size sort method
 */
 class FileSizeModel : public wxDataViewListStore {
+#ifndef _WIN32
 public:
-
 	/**
 	 * The comparator method for the file size displays
 	 * @param item1 the first item in the list to compare
@@ -28,4 +28,5 @@ public:
 
 		return answer;
 	}
+#endif
 };
