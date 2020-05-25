@@ -415,4 +415,28 @@ wxString FolderDisplay::GetFileDescription(const string& path)
 
 	return fileInfo.szTypeName;
 }
+#elif defined __APPLE__ || defined __linux__
+/**
+ Gets the description of the file using the File command
+ @param path the path to the file
+ @returns the string returned by file command
+ */
+wxString FolderDisplay::GetFileDescription(const string& path){
+	char buffer[64];
+    string result = "";
+	auto command = string("file -b \"" + path + "\"");
+	//open the pipe
+	FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    try {
+        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+            result += buffer;
+        }
+    } catch (...) {
+		//if cannot read, return unknown type
+		result = "Unknown";
+    }
+    pclose(pipe);
+    return result;
+}
 #endif
