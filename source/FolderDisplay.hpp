@@ -91,6 +91,9 @@ private:
 	wxDECLARE_EVENT_TABLE();
 	
 public:
+
+	static wxString GetFileDescription(const string&);
+
 	#if defined __APPLE__ || defined __linux__
 		/**
 		 Return the icon for a file type

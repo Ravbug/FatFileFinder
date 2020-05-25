@@ -162,8 +162,7 @@ void MainFrame::PopulateSidebar(DirectoryData* ptr){
 
 	string ext = p.extension().string();
 	//special case for files with no extension
-	string suffix = ptr->isFolder? "Folder" : (ext.size() == 0? "" : ext.substr(1)) + " File";
-	propertyList->SetTextValue(FolderDisplay::iconForExtension(ptr) + " " + suffix, 2, 1);
+	propertyList->SetTextValue(FolderDisplay::GetFileDescription(ptr->Path), 2, 1);
 	
 	//modified date
 	propertyList->SetTextValue(timeToString(file_modify_time(ptr->Path)),4,1);

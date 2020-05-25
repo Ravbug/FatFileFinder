@@ -394,3 +394,25 @@ void FolderDisplay::OnUpdateUI(wxCommandEvent& event){
 	evt->SetClientData(addr);
 	eventManager->GetEventHandler()->QueueEvent(evt);
 }
+
+#if defined _WIN32
+wxString FolderDisplay::GetFileDescription(const string& path)
+{
+	/*auto pos = path.rfind('.');
+	string extension;
+	if (pos != string::npos) {
+		extension = path.substr(pos,path.size());
+	}
+	else {
+		extension = "";
+	}*/
+
+	SHFILEINFOW fileInfo;
+	UINT sizeFile = sizeof(fileInfo);
+	UINT Flags = SHGFI_TYPENAME | SHGFI_EXETYPE;
+
+	SHGetFileInfoW(LPCWSTR(path.c_str()), 0, &fileInfo, sizeFile, Flags);
+
+	return fileInfo.szTypeName;
+}
+#endif
