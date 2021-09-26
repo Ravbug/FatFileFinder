@@ -6,19 +6,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIGURATION>)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIGURATION>)
+# link time optimization
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE CACHE INTERNAL "")	# only enable on release
 
 if(MSVC)
   add_definitions(/MP)
   add_definitions(/Qpar)
 endif()
 
-file(GLOB source "source/*.cpp" "source/*.hpp" "source/*.h")
-if(APPLE)
-    set(macfiles "source/wxmac.icns" CACHE INERNAL "")
-elseif(WIN32)
-	set(winfiles "windows.rc" CACHE INTERNAL "")
+if (UNIX AND NOT APPLE)
+	set(LINUX ON CACHE INTERNAL "")
 endif()
-add_executable("${PROJECT_NAME}" WIN32 ${source} ${macfiles} ${winfiles})
+
+file(GLOB source "source/*.cpp" "source/*.hpp" "source/*.h")
+add_executable("${PROJECT_NAME}" WIN32 ${source} "source/wxmac.icns" "windows.rc")
 
 #wxwidgets
 set(wxBUILD_SHARED OFF CACHE INTERNAL "")
@@ -43,7 +44,30 @@ INSTALL(CODE
 	" 
 	COMPONENT Runtime
 )
+elseif(LINUX)
+	INSTALL(CODE 
+	  "include(../appimage.cmake)
+	  make_appimage(
+	        EXE \"${CMAKE_INSTALL_PREFIX}/$<CONFIGURATION>/${PROJECT_NAME}\"
+	        NAME \"FatFileFinder\"
+	        ICON \"../source/wxlin.xpm\"
+	        DIR_ICON \"../source/wxlin.xpm\"
+	        OUTPUT_NAME \"${CMAKE_INSTALL_PREFIX}/$<CONFIGURATION>/${PROJECT_NAME}.AppImage\"
+	        ASSETS \"\"
+	    )
+		" 
+		COMPONENT Runtime
+	)
 endif()
 # windows app
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DPI_AWARE "PerMonitor")
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "${PROJECT_NAME}")
+
+# Strip binary for release builds
+if (CMAKE_BUILD_TYPE STREQUAL Release)
+	if(LINUX)
+		add_custom_command(TARGET ${APPNAME} POST_BUILD COMMAND ${CMAKE_STRIP} ${CMAKE_BUILD_TYPE}/${PROJECT_NAME})
+	elseif(APPLE)
+		add_custom_command(TARGET ${APPNAME} POST_BUILD COMMAND ${CMAKE_STRIP} ${CMAKE_BUILD_TYPE}/${PROJECT_NAME}.app/Contents/MacOS/${PROJECT_NAME})
+	endif()
+endif ()
