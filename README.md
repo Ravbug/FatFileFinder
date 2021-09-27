@@ -5,20 +5,19 @@ This cross-platform app sweeps a folder or drive and displays the size of each i
 This version is a rewrite of my [Windows-only version](https://github.com/Ravbug/FatFileFinder) in C++, using the [wxWidgets](https://www.wxwidgets.org) library for GUI. 
 Similar to [WinDirStat](https://windirstat.net/), but lighter, faster, and uses a background thread.
 
-Visit [here](https://github.com/Ravbug/FatFileFinder) to use the legacy Windows-only version.
-
 ## How to Install
 1. Ensure your system meets the minimum requirements:
    - macOS 10.15 or higher (I cannot support 10.14 or lower because of unsupported STL features, sorry!)
-   - Windows 8 or higher (Windows 7 and lower are untested)
+   - Windows 10 or higher
    - 64 bit linux with GTK+ (32 bit users must compile their own copy)
-1. Download the executable from the [releases](https://github.com/Ravbug/FatFileFinderCPP/releases/latest) tab.
-2. The program is a self-contained executable. Store it anywhere on your disk. 
+2. Download the executable from the [releases](https://github.com/Ravbug/FatFileFinderCPP/releases/latest) tab
+   - To download the latest beta build, visit the [Actions](https://github.com/Ravbug/FatFileFinderCPP/actions/workflows/build.yml) tab. 
+4. The program is a self-contained executable. Store it anywhere on your disk. 
 -  Recommended locations:
    - macOS: `/Applications`
    - Windows: `\Program Files`
    - Linux: `/usr/bin`
-2. Run the program by double-clicking it.
+5. Run the program by double-clicking it.
 
 ## How to Size a Folder
 1. Click the folder button (📁) in the toolbar to choose a folder or drive.
