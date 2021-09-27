@@ -17,8 +17,28 @@
 typedef function<void(float progress, DirectoryData* data)> progCallback;
 
 class FolderDisplay : public FolderDisplayBase{
+    DirectoryData* data = nullptr;
 public:
-	DirectoryData* data;
+    void Dealloc(){
+        delete data;
+        data = nullptr;
+    }
+    
+    void Recalculate(){
+        data->recalculateStats();
+    }
+    
+    decltype(DirectoryData::size) GetSize() const{
+        return data->size;
+    }
+    
+    const decltype(DirectoryData::Path)& GetPath() const{
+        return data->Path;
+    }
+    
+    void SetData(decltype(data) newptr){
+        data = newptr;
+    }
 	
 	FolderDisplay(wxWindow*,wxWindow*, DirectoryData*);
 	~FolderDisplay();

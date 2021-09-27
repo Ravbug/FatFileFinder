@@ -101,7 +101,7 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
  */
 void MainFrame::SizeRootFolder(const string& folder){
 	//deallocate existing data
-	delete currentDisplay[0]->data;
+	currentDisplay[0]->Dealloc();
 	//clear the log
 	logCtrl->SetValue("");
 	//hide the log
@@ -123,14 +123,14 @@ void MainFrame::SizeRootFolder(const string& folder){
 		wxPostEvent(this, event);
 	};
 	currentDisplay[0]->Clear();
-	currentDisplay[0]->data = new DirectoryData(folder, true);
+	currentDisplay[0]->SetData(new DirectoryData(folder, true));
 	wxDataViewItem i;
 	
 	//reset viewing area
-//	for (int i = 1; i < currentDisplay.size(); i++){
-//		delete currentDisplay[i]->data;
-//		currentDisplay[i]->Destroy();
-//	}
+	for (int i = 1; i < currentDisplay.size(); i++){
+        currentDisplay[i]->Dealloc();
+		currentDisplay[i]->Destroy();
+	}
 	currentDisplay.erase(currentDisplay.begin()+1,currentDisplay.end());
 	//update sizer size
 	scrollSizer->SetCols(1);
@@ -244,10 +244,10 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	int index = 0;
 	int parent_idx = 0;
 	for(FolderDisplay* disp : currentDisplay){
-		if (selected->parent != nullptr && disp->data->Path == selected->parent->Path){
+		if (selected->parent != nullptr && disp->GetPath() == selected->Path){
 			parent_idx = index;
 		}
-		if (disp->data->Path == selected->Path){
+		if (disp->GetPath() == selected->Path){
 			toReload = disp;
 			break;
 		}
@@ -257,7 +257,7 @@ void MainFrame::OnReloadFolder(wxCommandEvent& event){
 	//not opened? open it first
 	if (toReload == nullptr){
 		toReload = ChangeSelection(selected);
-		toReload->data = selected;
+		toReload->SetData(selected);
 	}
 	
 	FolderDisplay* fdisp = currentDisplay[parent_idx];
@@ -302,7 +302,7 @@ void MainFrame::OnOpenFolder(wxCommandEvent& event){
 void MainFrame::OnExit(wxCommandEvent& event)
 {
 	//deallocate structure
-	delete currentDisplay[0]->data;
+    currentDisplay[0]->Dealloc();
 	Close( true );
 }
 /**
@@ -370,7 +370,7 @@ FolderDisplay* MainFrame::ChangeSelection(DirectoryData* sender){
 	//find where the sender is in the list
 	int idx;
 	for (idx = 0; idx < currentDisplay.size(); idx++){
-		if (currentDisplay[idx]->data->Path == sender->parent->Path){
+		if (currentDisplay[idx]->GetPath() == sender->parent->Path){
 			break;
 		}
 	}

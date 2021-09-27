@@ -44,12 +44,13 @@ public:
 	void ProgressUpdate(int progress){
 		progressBar->SetValue(progress);
 		if (progress == 100){
-			currentDisplay[0]->data->recalculateStats();
+			currentDisplay[0]->Recalculate();
 			for (FolderDisplay* disp : currentDisplay){
 				disp->UpdateTitle();
 			}
 		}
-		UpdateTitlebar(progress, FolderDisplay::sizeToString(currentDisplay[0]->data->size));
+        fileSize size = currentDisplay[0]->GetSize();
+		UpdateTitlebar(progress, FolderDisplay::sizeToString(size));
 	}
 	
 	FolderDisplay* AddDisplay(DirectoryData* model){
@@ -124,7 +125,7 @@ private:
 		}
 	}
 	void UpdateTitlebar(int prog, const string& size) {
-		SetTitle(AppName + " v" + AppVersion + " - Sizing " + to_string(prog) + "% " + currentDisplay[0]->data->Path + " [" + size + "]");
+		SetTitle(AppName + " v" + AppVersion + " - Sizing " + to_string(prog) + "% " + currentDisplay[0]->GetPath() + " [" + size + "]");
 	}
 	wxDECLARE_EVENT_TABLE();
 	
