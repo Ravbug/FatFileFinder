@@ -1,4 +1,4 @@
-name: Build-Samples
+name: Build-App
 on: push
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
         with:
           submodules: true
       - name: Build
-        run: mkdir -p build; cd build; cmake -G "Xcode" -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config release --target install
+        run: mkdir -p build; cd build; cmake -G "Xcode" -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config Release --target install
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
