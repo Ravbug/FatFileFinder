@@ -128,7 +128,7 @@ void MainFrame::SizeRootFolder(const string& folder){
 	
 	//reset viewing area
 	for (int i = 1; i < currentDisplay.size(); i++){
-        currentDisplay[i]->Dealloc();
+        //currentDisplay[i]->Dealloc();
 		currentDisplay[i]->Destroy();
 	}
 	currentDisplay.erase(currentDisplay.begin()+1,currentDisplay.end());
