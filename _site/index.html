@@ -1,0 +1,78 @@
+<head>
+    <title>FatFileFinder</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8">
+    <meta name="description" content="Fast, native disk sweeper for Windows, Mac, and Linux">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link id="favicon" rel="icon" href="favicon.png" type="image/x-icon">
+
+    <meta property="og:image" content="https://www.ravbug.com/FatFileFinder/favicon.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="128">
+    <meta property="og:image:height" content="128">
+</head>
+<body>
+    <h1>FatFileFinder</h1>
+    <p>
+        This cross-platform app sweeps a folder or drive and displays the size of each item in the folder, to assist the user in cleaning their drive.
+        Similar to <a href="https://windirstat.net/">WinDirStat</a> but lighter and faster.
+    </p>
+    <img class="heroimage" src="https://user-images.githubusercontent.com/22283943/74867349-84c94d80-5322-11ea-8e75-9539b45d889a.png">
+    
+    <h3>Usage</h3>
+    <p>
+        <ul>
+            <li>
+                Click the folder button (📁) in the toolbar to choose a folder or drive. The program will begin sizing the folder and updating the view.
+            </li>
+            <li>
+                To stop sizing early, press the 🛑 button at the bottom of the window. 
+            </li>
+            <li>
+                Single click rows in the table to view their properties in the sidebar. Click a disclosure triangle to open a folder.
+                You can also use the up and down arrows to move the selection. Note that expanding a folder with a lot of immediate sub-items can take a moment.
+            </li>
+            <li>
+                To refresh a folder, select it in the table and press the refresh button (🔁). The program will refresh the contents of that folder.
+            </li>
+            <li>
+                If you want to reload the root folder, you will have to re-size it using the 📁 button.
+            </li>
+            <li>
+                To view an item in your system's file browser, select it in the view and press `Reveal in Explorer/Finder` in the sidebar.
+            </li>
+            <li>
+                To copy the full path to an item, select it in the view and press `Copy Path` in the sidebar.
+            </li>
+            <li>
+                FatFileFinder does <emp>not</emp> delete files. You must delete them manually yourself. 
+            </li>
+        </ul>
+    </p>
+    Note: The Windows version currently does not support the emoji icons. 
+
+    <h3>Supported Platforms</h3>
+    <ol>
+        <li>
+            macOS 10.15 or higher
+        </li>
+        <li>
+            Windows 10 or higher
+        </li>
+        <li>
+            64 bit linux x86_64 with GTK+ (Other configurations must compile their own copy)
+        </li>
+    </ol>
+
+    <h2><a href="https://github.com/Ravbug/FatFileFinder/releases/latest">Download</a></h2>
+    <p>
+        The program is a self-contained executable. Store it anywhere on your disk. Recommended locations:
+        <ul>
+            <li>macOS: /Applications</li>
+            <li>Windows: \Program Files</li>
+            <li>Linux: /usr/bin</li>
+        </ul>
+    </p>
+
+    <h3><a href="https://github.com/Ravbug/FatFileFinder">Source code</a></h3>
+</body>

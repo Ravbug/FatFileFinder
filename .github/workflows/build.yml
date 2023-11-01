@@ -1,5 +1,10 @@
 name: Build-App
-on: push
+on: 
+  push:
+    paths-ignore: 
+    - README.md
+    - _site/*
+    - ".github/workflows/website.yml"
 
 jobs:
   build-linux:
