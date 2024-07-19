@@ -44,15 +44,19 @@ jobs:
   build-windows:
     name: Build App for Windows
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix: 
+        arch: [x64, ARM64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           submodules: true
       - name: Build
-        run: mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release .. ; cmake --build . --config release --target install
+        run: mkdir build; cd build; cmake -A${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Release .. ; cmake --build . --config release --target install
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: FatFileFinder_win64
+          name: FatFileFinder_win${{ matrix.arch }}
           path: build\release\*.exe 
