@@ -9,10 +9,10 @@ on:
 jobs:
   build-linux:
     name: Build App for Linux x64
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
       - name: Install Dependencies
@@ -20,7 +20,7 @@ jobs:
       - name: Build
         run: mkdir -p build; cd build; export CC=/usr/bin/gcc-8; export CXX=/usr/bin/g++-8; cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config release --target install 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name:  FatFileFinder_linux64
           path:  build/Release/*.AppImage
@@ -30,13 +30,13 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
       - name: Build
         run: mkdir -p build; cd build; cmake -G "Xcode" -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config Release --target install
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: FatFileFinder_macOS
           path: build/release/*.app
@@ -50,13 +50,13 @@ jobs:
         arch: [x64, ARM64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
       - name: Build
         run: mkdir build; cd build; cmake -A${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Release .. ; cmake --build . --config release --target install
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: FatFileFinder_win${{ matrix.arch }}
           path: build\release\*.exe 
