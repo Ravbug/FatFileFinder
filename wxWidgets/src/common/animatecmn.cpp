@@ -16,9 +16,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_ANIMATIONCTRL
 
@@ -32,6 +29,7 @@
 
 #include "wx/gifdecod.h"
 #include "wx/anidecod.h"
+#include "wx/webpdecoder.h"
 
 #include "wx/private/animate.h"
 
@@ -129,6 +127,31 @@ bool wxAnimation::Load(wxInputStream& stream, wxAnimationType type)
     return GetImpl()->Load(stream, type);
 }
 
+// ----------------------------------------------------------------------------
+// wxAnimationBundle
+// ----------------------------------------------------------------------------
+
+void wxAnimationBundle::Add(const wxAnimation& anim)
+{
+    // It's ok to have empty animation bundle, but any animations added to
+    // it should be valid.
+    wxCHECK_RET( anim.IsOk(), "shouldn't add invalid animations" );
+
+    if ( !m_animations.empty() )
+    {
+        // They also should be added in increasing size.
+        const wxSize thisSize = anim.GetSize();
+        const wxSize lastSize = m_animations.back().GetSize();
+
+        wxCHECK_RET( thisSize != lastSize,
+                     "shouldn't have multiple animations of the same size" );
+
+        wxCHECK_RET( thisSize.IsAtLeast(lastSize),
+                     "should be added in order of increasing size" );
+    }
+
+    m_animations.push_back(anim);
+}
 
 // ----------------------------------------------------------------------------
 // wxAnimationCtrlBase
@@ -141,16 +164,19 @@ void wxAnimationCtrlBase::UpdateStaticImage()
 
     // if given bitmap is not of the right size, recreate m_bmpStaticReal accordingly
     const wxSize &sz = GetClientSize();
-    if (sz.GetWidth() != m_bmpStaticReal.GetWidth() ||
-        sz.GetHeight() != m_bmpStaticReal.GetHeight())
+    if (sz.GetWidth() != m_bmpStaticReal.GetLogicalWidth() ||
+        sz.GetHeight() != m_bmpStaticReal.GetLogicalHeight())
     {
+        wxBitmap bmpCurrent = m_bmpStatic.GetBitmapFor(this);
+
         if (!m_bmpStaticReal.IsOk() ||
-            m_bmpStaticReal.GetWidth() != sz.GetWidth() ||
-            m_bmpStaticReal.GetHeight() != sz.GetHeight())
+            m_bmpStaticReal.GetLogicalWidth() != sz.GetWidth() ||
+            m_bmpStaticReal.GetLogicalHeight() != sz.GetHeight())
         {
             // need to (re)create m_bmpStaticReal
-            if (!m_bmpStaticReal.Create(sz.GetWidth(), sz.GetHeight(),
-                                        m_bmpStatic.GetDepth()))
+            if (!m_bmpStaticReal.CreateWithLogicalSize(sz,
+                                          bmpCurrent.GetScaleFactor(),
+                                          bmpCurrent.GetDepth()))
             {
                 wxLogDebug(wxT("Cannot create the static bitmap"));
                 m_bmpStatic = wxNullBitmap;
@@ -158,8 +184,8 @@ void wxAnimationCtrlBase::UpdateStaticImage()
             }
         }
 
-        if (m_bmpStatic.GetWidth() <= sz.GetWidth() &&
-            m_bmpStatic.GetHeight() <= sz.GetHeight())
+        if (bmpCurrent.GetLogicalWidth() <= sz.GetWidth() &&
+            bmpCurrent.GetLogicalHeight() <= sz.GetHeight())
         {
             // clear the background of m_bmpStaticReal
             wxBrush brush(GetBackgroundColour());
@@ -169,25 +195,25 @@ void wxAnimationCtrlBase::UpdateStaticImage()
             dc.Clear();
 
             // center the user-provided bitmap in m_bmpStaticReal
-            dc.DrawBitmap(m_bmpStatic,
-                        (sz.GetWidth()-m_bmpStatic.GetWidth())/2,
-                        (sz.GetHeight()-m_bmpStatic.GetHeight())/2,
+            dc.DrawBitmap(bmpCurrent,
+                        (sz.GetWidth()-bmpCurrent.GetLogicalWidth())/2,
+                        (sz.GetHeight()-bmpCurrent.GetLogicalHeight())/2,
                         true /* use mask */ );
         }
         else
         {
             // the user-provided bitmap is bigger than our control, strech it
-            wxImage temp(m_bmpStatic.ConvertToImage());
-            temp.Rescale(sz.GetWidth(), sz.GetHeight(), wxIMAGE_QUALITY_HIGH);
+            wxImage temp(bmpCurrent.ConvertToImage());
+            temp.Rescale(sz, wxIMAGE_QUALITY_HIGH);
             m_bmpStaticReal = wxBitmap(temp);
         }
     }
 }
 
-void wxAnimationCtrlBase::SetInactiveBitmap(const wxBitmap &bmp)
+void wxAnimationCtrlBase::SetInactiveBitmap(const wxBitmapBundle &bmp)
 {
     m_bmpStatic = bmp;
-    m_bmpStaticReal = bmp;
+    m_bmpStaticReal = bmp.GetBitmapFor(this);
 
     // if not playing, update the control now
     // NOTE: DisplayStaticImage() will call UpdateStaticImage automatically
@@ -202,7 +228,7 @@ void wxAnimationCtrlBase::SetInactiveBitmap(const wxBitmap &bmp)
 void wxAnimation::AddHandler( wxAnimationDecoder *handler )
 {
     // Check for an existing handler of the type being added.
-    if (FindHandler( handler->GetType() ) == 0)
+    if (FindHandler( handler->GetType() ) == nullptr)
     {
         sm_handlers.Append( handler );
     }
@@ -222,7 +248,7 @@ void wxAnimation::AddHandler( wxAnimationDecoder *handler )
 void wxAnimation::InsertHandler( wxAnimationDecoder *handler )
 {
     // Check for an existing handler of the type being added.
-    if (FindHandler( handler->GetType() ) == 0)
+    if (FindHandler( handler->GetType() ) == nullptr)
     {
         sm_handlers.Insert( handler );
     }
@@ -244,7 +270,7 @@ const wxAnimationDecoder *wxAnimation::FindHandler( wxAnimationType animType )
         if (handler->GetType() == animType) return handler;
         node = node->GetNext();
     }
-    return 0;
+    return nullptr;
 }
 
 void wxAnimation::InitStandardHandlers()
@@ -255,6 +281,9 @@ void wxAnimation::InitStandardHandlers()
 #if wxUSE_ICO_CUR
     AddHandler(new wxANIDecoder);
 #endif // wxUSE_ICO_CUR
+#if wxUSE_LIBWEBP
+    AddHandler(new wxWebPDecoder);
+#endif // wxUSE_LIBWEBP
 }
 
 void wxAnimation::CleanUpHandlers()
@@ -281,8 +310,8 @@ class wxAnimationModule: public wxModule
     wxDECLARE_DYNAMIC_CLASS(wxAnimationModule);
 public:
     wxAnimationModule() {}
-    bool OnInit() wxOVERRIDE { wxAnimation::InitStandardHandlers(); return true; }
-    void OnExit() wxOVERRIDE { wxAnimation::CleanUpHandlers(); }
+    bool OnInit() override { wxAnimation::InitStandardHandlers(); return true; }
+    void OnExit() override { wxAnimation::CleanUpHandlers(); }
 };
 
 wxIMPLEMENT_DYNAMIC_CLASS(wxAnimationModule, wxModule);

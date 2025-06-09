@@ -84,7 +84,7 @@ public:
 
         @since 2.9.0
     */
-    wxWindowDisabler(bool disable = true);
+    explicit wxWindowDisabler(bool disable = true);
 
     /**
         Disables all top level windows of the applications with the exception
@@ -97,8 +97,12 @@ public:
         from happening you may want to use wxFRAME_TOOL_WINDOW, if applicable,
         or wxFRAME_NO_TASKBAR style when creating the window that will remain
         enabled.
+
+        The argument @a winToSkip2 may be used to specify another window to
+        leave enabled, if it is non-null. This parameter is only available
+        since wxWidgets 3.1.7.
     */
-    wxWindowDisabler(wxWindow* winToSkip);
+    explicit wxWindowDisabler(wxWindow* winToSkip, wxWindow* winToSkip2 = nullptr);
 
     /**
         Reenables the windows disabled by the constructor.
@@ -106,87 +110,13 @@ public:
     ~wxWindowDisabler();
 };
 
-
-
-/**
-    @class wxBusyCursor
-
-    This class makes it easy to tell your user that the program is temporarily
-    busy. Just create a wxBusyCursor object on the stack, and within the
-    current scope, the hourglass will be shown.
-
-    For example:
-
-    @code
-    wxBusyCursor wait;
-
-    for (int i = 0; i < 100000; i++)
-        DoACalculation();
-    @endcode
-
-    It works by calling wxBeginBusyCursor() in the constructor, and
-    wxEndBusyCursor() in the destructor.
-
-    @library{wxcore}
-    @category{misc}
-
-    @see wxBeginBusyCursor(), wxEndBusyCursor(), wxWindowDisabler
-*/
-class wxBusyCursor
-{
-public:
-    /**
-        Constructs a busy cursor object, calling wxBeginBusyCursor().
-    */
-    wxBusyCursor(const wxCursor* cursor = wxHOURGLASS_CURSOR);
-
-    /**
-        Destroys the busy cursor object, calling wxEndBusyCursor().
-    */
-    ~wxBusyCursor();
-};
-
-
-
 // ============================================================================
 // Global functions/macros
 // ============================================================================
 
 
 /** @addtogroup group_funcmacro_dialog */
-//@{
-
-/**
-    Changes the cursor to the given cursor for all windows in the application.
-    Use wxEndBusyCursor() to revert the cursor back to its previous state.
-    These two calls can be nested, and a counter ensures that only the outer
-    calls take effect.
-
-    @see wxIsBusy(), wxBusyCursor
-
-    @header{wx/utils.h}
-*/
-void wxBeginBusyCursor(const wxCursor* cursor = wxHOURGLASS_CURSOR);
-
-/**
-    Changes the cursor back to the original cursor, for all windows in the
-    application. Use with wxBeginBusyCursor().
-
-    @see wxIsBusy(), wxBusyCursor
-
-    @header{wx/utils.h}
-*/
-void wxEndBusyCursor();
-
-/**
-    Returns @true if between two wxBeginBusyCursor() and wxEndBusyCursor()
-    calls.
-
-    @see wxBusyCursor.
-
-    @header{wx/utils.h}
-*/
-bool wxIsBusy();
+///@{
 
 /**
     Ring the system bell.
@@ -214,10 +144,10 @@ void wxBell();
 */
 void wxInfoMessageBox(wxWindow* parent);
 
-//@}
+///@}
 
 /** @addtogroup group_funcmacro_version */
-//@{
+///@{
 
 /**
     Get wxWidgets version information.
@@ -228,16 +158,16 @@ void wxInfoMessageBox(wxWindow* parent);
 
     @header{wx/utils.h}
 
-    @library{wxcore}
+    @library{wxbase}
 */
 wxVersionInfo wxGetLibraryVersionInfo();
 
-//@}
+///@}
 
 
 
 /** @addtogroup group_funcmacro_env */
-//@{
+///@{
 
 /**
     A map type containing environment variables names and values.
@@ -249,18 +179,22 @@ wxVersionInfo wxGetLibraryVersionInfo();
 
     @header{wx/utils.h}
 */
-typedef wxStringToStringHashMap wxEnvVariableHashMap;
+using wxEnvVariableHashMap = std::unordered_map<wxString, wxString>;
 
 /**
-    This is a macro defined as @c getenv() or its wide char version in Unicode
-    mode.
+    Wrapper of the standard @c getenv() or its wide char version.
 
-    Note that under Win32 it may not return correct value for the variables set
-    with wxSetEnv(), use wxGetEnv() function instead.
+    Note that under Win32 the overload using `char*` does not work for
+    variables using non-ASCII characters, use either the overload taking
+    `wchar_t*` or, preferably, wxGetEnv() instead.
+
+    Under other platforms, `char*` overload always uses UTF-8 encoding.
 
     @header{wx/utils.h}
 */
-wxChar* wxGetenv(const wxString& var);
+char* wxGetenv(const char* s);
+wchar_t* wxGetenv(const wchar_t* ws);
+char* wxGetenv(const wxString& s);
 
 /**
     Returns the current value of the environment variable @a var in @a value.
@@ -319,7 +253,7 @@ bool wxUnsetEnv(const wxString& var);
     values as values.
 
     @param map
-        The environment map to fill, must be non-@NULL.
+        The environment map to fill, must be non-null.
     @return
         @true if environment was successfully retrieved or @false otherwise.
 
@@ -328,19 +262,40 @@ bool wxUnsetEnv(const wxString& var);
     @since 2.9.2
 */
 bool wxGetEnvMap(wxEnvVariableHashMap *map);
-//@}
+///@}
 
 
 
 /** @addtogroup group_funcmacro_misc */
-//@{
+///@{
+
+/**
+    Fills the memory block with zeros in a way that is guaranteed
+    not to be optimized away by the compiler.
+
+    @param p Pointer to the memory block to be zeroed, must be non-null.
+    @param n The number of bytes to zero.
+
+    @note If security is vitally important in your use case, please
+    have a look at the implementations and decide whether you trust
+    them to behave as promised. Depending on the platform and available libraries,
+    this may be implemented as `RtlSecureZeroMemory` (MS Windows),
+    `explicit_bzero()` (FreeBSD), `memset_s()` (macOS),
+    or a generic method which uses `volatile` to avoid the call from
+    being optimized away.
+
+    @header{wx/utils.h}
+
+    @since 3.1.6
+*/
+void wxSecureZeroMemory(void *p, size_t n);
 
 /**
     Returns battery state as one of @c wxBATTERY_NORMAL_STATE,
     @c wxBATTERY_LOW_STATE, @c wxBATTERY_CRITICAL_STATE,
     @c wxBATTERY_SHUTDOWN_STATE or @c wxBATTERY_UNKNOWN_STATE.
-    @c wxBATTERY_UNKNOWN_STATE is also the default on platforms where this
-    feature is not implemented (currently everywhere but MS Windows).
+
+    Currently only implemented on MS Windows; returns @c wxBATTERY_UNKNOWN_STATE elsewhere.
 
     @header{wx/utils.h}
 */
@@ -348,9 +303,9 @@ wxBatteryState wxGetBatteryState();
 
 /**
     Returns the type of power source as one of @c wxPOWER_SOCKET,
-    @c wxPOWER_BATTERY or @c wxPOWER_UNKNOWN. @c wxPOWER_UNKNOWN is also the
-    default on platforms where this feature is not implemented (currently
-    everywhere but MS Windows).
+    @c wxPOWER_BATTERY or @c wxPOWER_UNKNOWN.
+
+    Currently only implemented on MS Windows; returns @c wxPOWER_UNKNOWN elsewhere.
 
     @header{wx/utils.h}
 */
@@ -382,8 +337,8 @@ wxString wxGetDisplayName();
     @header{wx/utils.h}
 */
 bool wxGetDiskSpace(const wxString& path,
-                    wxLongLong total = NULL,
-                    wxLongLong free = NULL);
+                    wxLongLong total = nullptr,
+                    wxLongLong free = nullptr);
 
 /**
     For normal keys, returns @true if the specified key is currently down.
@@ -443,28 +398,28 @@ wxWindow* wxFindWindowAtPoint(const wxPoint& pt);
 
     Find a window by its label. Depending on the type of window, the label may
     be a window title or panel item label. If @a parent is @NULL, the search
-    will start from all top-level frames and dialog boxes; if non-@NULL, the
+    will start from all top-level frames and dialog boxes; if non-null, the
     search will be limited to the given window hierarchy. The search is
     recursive in both cases.
 
     @header{wx/utils.h}
 */
 wxWindow* wxFindWindowByLabel(const wxString& label,
-                              wxWindow* parent = NULL);
+                              wxWindow* parent = nullptr);
 
 /**
     @deprecated Replaced by wxWindow::FindWindowByName().
 
     Find a window by its name (as given in a window constructor or @e Create
     function call). If @a parent is @NULL, the search will start from all
-    top-level frames and dialog boxes; if non-@NULL, the search will be limited
+    top-level frames and dialog boxes; if non-null, the search will be limited
     to the given window hierarchy. The search is recursive in both cases.
 
     If no such named window is found, wxFindWindowByLabel() is called.
 
     @header{wx/utils.h}
 */
-wxWindow* wxFindWindowByName(const wxString& name, wxWindow* parent = NULL);
+wxWindow* wxFindWindowByName(const wxString& name, wxWindow* parent = nullptr);
 
 /**
     Find a menu item identifier associated with the given frame's menu bar.
@@ -481,6 +436,8 @@ int wxFindMenuItemId(wxFrame* frame, const wxString& menuString,
                 menu items you create instead of using this function.
 
     Generates an integer identifier unique to this run of the program.
+
+    @see wxRegisterId()
 
     @header{wx/utils.h}
 */
@@ -556,9 +513,9 @@ bool wxLaunchDefaultBrowser(const wxString& url, int flags = 0);
     @endcode
     and then use it in the following way:
     @code
-        const void* data = NULL;
+        const void* data = nullptr;
         size_t size = 0;
-        if ( !wxLoadUserResource(&data, &size, "mydata", "MYDATA") ) {
+        if ( !wxLoadUserResource(&data, &size, "mydata", L"MYDATA") ) {
             ... handle error ...
         }
         else {
@@ -611,7 +568,7 @@ wxLoadUserResource(const void **outData,
         standard Windows @c MAKEINTRESOURCE() macro, including any constants
         for the standard resources types like @c RT_RCDATA.
     @param pLen Filled with the length of the returned buffer if it is
-        non-@NULL. This parameter should be used if NUL characters can occur in
+        non-null. This parameter should be used if NUL characters can occur in
         the resource data. It is new since wxWidgets 2.9.1
     @param module The @c HINSTANCE of the module to load the resources from.
         The current module is used by default. This parameter is new since
@@ -627,24 +584,12 @@ wxLoadUserResource(const void **outData,
 */
 char* wxLoadUserResource(const wxString& resourceName,
                          const wxChar* resourceType = "TEXT",
-                         int* pLen = NULL,
+                         int* pLen = nullptr,
                          WXHINSTANCE module = 0);
 
 /**
-    @deprecated Replaced by wxWindow::Close(). See the
-                @ref overview_windowdeletion "window deletion overview".
+    @deprecated Don't use this typedef nor wxQsort() itself in the new code.
 
-    Tells the system to delete the specified object when all other events have
-    been processed. In some environments, it is necessary to use this instead
-    of deleting a frame directly with the delete operator, because some GUIs
-    will still send events to a deleted window.
-
-    @header{wx/utils.h}
-*/
-void wxPostDelete(wxObject* object);
-
-
-/**
     Compare function type for use with wxQsort()
 
     @header{wx/utils.h}
@@ -652,6 +597,8 @@ void wxPostDelete(wxObject* object);
 typedef int (*wxSortCallback)(const void* pItem1, const void* pItem2, const void* user_data);
 
 /**
+    @deprecated Use `std::sort()` in the new code.
+
     Function implementing quick sort algorithm.
 
     This function sorts @a total_elems objects of size @a size located at @a
@@ -748,12 +695,12 @@ enum
 */
 wxString wxStripMenuCodes(const wxString& str, int flags = wxStrip_All);
 
-//@}
+///@}
 
 
 
 /** @addtogroup group_funcmacro_networkuseros */
-//@{
+///@{
 
 /**
     Copies the user's email address into the supplied buffer, by concatenating
@@ -843,9 +790,8 @@ wxString wxGetUserHome(const wxString& user = wxEmptyString);
 /**
     This function returns the "user id" also known as "login name" under Unix
     (i.e. something like "jsmith"). It uniquely identifies the current user (on
-    this system).  Under Windows or NT, this function first looks in the
-    environment variables USER and LOGNAME; if neither of these is found, the
-    entry @b UserId in the @b wxWidgets section of the WIN.INI file is tried.
+    this system).  Under Windows, this function looks in the
+    environment variable USERNAME.
 
     @return The login name if successful or an empty string otherwise.
 
@@ -868,11 +814,11 @@ wxString wxGetUserId();
 bool wxGetUserId(char* buf, int sz);
 
 /**
-    This function returns the full user name (something like "Mr. John Smith").
+    This function returns the full user name (something like "John Smith").
 
-    Under Windows or NT, this function looks for the entry UserName in the
-    wxWidgets section of the WIN.INI file. If PenWindows is running, the entry
-    Current in the section User of the PENWIN.INI file is used.
+    Under Windows, this function will attempt to get the user's full name
+    from the domain controller (or local computer); if that fails, it will
+    return the login name (or empty string if that cannot be resolved).
 
     @return The full user name if successful or an empty string otherwise.
 
@@ -915,7 +861,7 @@ wxString wxGetOsDescription();
     numbers will have a value of -1.
 
     On systems where only the micro version can't be detected or doesn't make
-    sense such as Windows, it will have a value of 0.
+    sense, it will have a value of 0.
 
     For Unix-like systems (@c wxOS_UNIX) the major, minor, and micro version
     integers will contain the kernel's major, minor, and micro version
@@ -926,32 +872,126 @@ wxString wxGetOsDescription();
     natural version numbers associated with the OS; e.g. "10", "11" and "2" if
     the machine is using macOS El Capitan 10.11.2.
 
-    For Windows-like systems (@c wxOS_WINDOWS) the major and minor version integers will
-    contain the following values:
-    @beginTable
-    @row3col{<b>Windows OS name</b>, <b>Major version</b>, <b>Minor version</b>}
-    @row3col{Windows 10,               10, 0}
-    @row3col{Windows Server 2016,      10, 0}
-    @row3col{Windows 8.1,               6, 3}
-    @row3col{Windows Server 2012 R2,    6, 3}
-    @row3col{Windows 8,                 6, 2}
-    @row3col{Windows Server 2012,       6, 2}
-    @row3col{Windows 7,                 6, 1}
-    @row3col{Windows Server 2008 R2,    6, 1}
-    @row3col{Windows Server 2008,       6, 0}
-    @row3col{Windows Vista,             6, 0}
-    @row3col{Windows Server 2003 R2,    5, 2}
-    @row3col{Windows Server 2003,       5, 2}
-    @row3col{Windows XP,                5, 1}
-    @endDefList
-    See the <a href="http://msdn.microsoft.com/en-us/library/ms724832(VS.85).aspx">MSDN</a>
+    For Windows-like systems (@c wxOS_WINDOWS) the major, minor and micro
+    (equal to the build number) version integers will contain the following values:
+    <table>
+        <tr>
+            <th>Windows OS name</th>
+            <th>Major version</th>
+            <th>Minor version</th>
+            <th>Build number</th>
+        </tr>
+        <tr>
+            <td>Windows Server 2025</td>
+            <td>10</td>
+            <td>0</td>
+            <td>26100</td>
+        </tr>
+        <tr>
+            <td>Windows 11</td>
+            <td>10</td>
+            <td>0</td>
+            <td>&ge; 22000</td>
+        </tr>
+        <tr>
+            <td>Windows Server 2022</td>
+            <td>10</td>
+            <td>0</td>
+            <td>20348</td>
+        </tr>
+        <tr>
+            <td>Windows 10</td>
+            <td>10</td>
+            <td>0</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows Server 2019</td>
+            <td>10</td>
+            <td>0</td>
+            <td>17763</td>
+        </tr>
+        <tr>
+            <td>Windows Server 2016</td>
+            <td>10</td>
+            <td>0</td>
+            <td>14393</td>
+        </tr>
+        <tr>
+            <td>Windows 8.1</td>
+            <td>6</td>
+            <td>3</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows Server 2012 R2</td>
+            <td>6</td>
+            <td>3</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows 8</td>
+            <td>6</td>
+            <td>2</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows Server 2012</td>
+            <td>6</td>
+            <td>2</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows 7</td>
+            <td>6</td>
+            <td>1</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows 2008 R2</td>
+            <td>6</td>
+            <td>1</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows Vista</td>
+            <td>6</td>
+            <td>0</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows Server 2008</td>
+            <td>6</td>
+            <td>0</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows Server 2003 R2</td>
+            <td>5</td>
+            <td>2</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows Server 2003</td>
+            <td>5</td>
+            <td>2</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Windows XP</td>
+            <td>5</td>
+            <td>1</td>
+            <td></td>
+        </tr>
+    </table>
+    See the <a href="https://learn.microsoft.com/en-us/windows/win32/sysinfo/operating-system-version">Microsoft documentation</a>
     for more info about the values above.
 
     @see wxGetOsDescription(), wxPlatformInfo
 
     @header{wx/utils.h}
 */
-wxOperatingSystemId wxGetOsVersion(int* major = NULL, int* minor = NULL, int* micro = NULL);
+wxOperatingSystemId wxGetOsVersion(int* major = nullptr, int* minor = nullptr, int* micro = nullptr);
 
 /**
     Returns @true if the version of the operating system on which the program
@@ -970,12 +1010,11 @@ bool wxCheckOsVersion(int majorVsn, int minorVsn = 0, int microVsn = 0);
     bit. The check is performed at run-time and may differ from the value
     available at compile-time (at compile-time you can just check if
     <tt>sizeof(void*) == 8</tt>) since the program could be running in
-    emulation mode or in a mixed 32/64 bit system (bi-architecture operating
-    system).
+    emulation mode or in a mixed 32/64 bit system.
 
     @note This function is not 100% reliable on some systems given the fact
           that there isn't always a standard way to do a reliable check on the
-          OS architecture.
+          OS bitness.
 
     @header{wx/utils.h}
 */
@@ -992,6 +1031,39 @@ bool wxIsPlatform64Bit();
 bool wxIsPlatformLittleEndian();
 
 /**
+    Returns the CPU architecture name. This can be, for example, "x86_64",
+    "arm64", or "i86pc". The name for the same CPU running on the same
+    hardware can vary across operating systems.
+
+    The returned string may be empty if the CPU architecture couldn't be
+    recognized.
+
+    @see wxGetNativeCpuArchitectureName()
+
+    @since 3.1.5
+*/
+wxString wxGetCpuArchitectureName();
+
+/**
+    In some situations the current process and native CPU architecture may be
+    different. This returns the native CPU architecture regardless of the
+    current process CPU architecture.
+
+    Common examples for CPU architecture differences are the following:
+        - Win32 process in x64 Windows (WoW)
+        - Win32 or x64 process on ARM64 Windows (WoW64)
+        - x86_64 process on ARM64 macOS (Rosetta 2)
+
+    The returned string may be empty if the CPU architecture couldn't be
+    recognized.
+
+    @see wxGetCpuArchitectureName()
+
+    @since 3.1.6
+*/
+wxString wxGetNativeCpuArchitectureName();
+
+/**
     Returns a structure containing information about the currently running
     Linux distribution.
 
@@ -1003,17 +1075,17 @@ bool wxIsPlatformLittleEndian();
     case it's not available, then this function will return a ::wxLinuxDistributionInfo
     structure containing empty strings.
 
-    This function is Linux-specific and is only available when the @c __LINUX__
+    This function is Linux-specific and is only available when the @c \__LINUX__
     symbol is defined.
 */
 wxLinuxDistributionInfo wxGetLinuxDistributionInfo();
 
-//@}
+///@}
 
 
 
 /** @addtogroup group_funcmacro_procctrl */
-//@{
+///@{
 
 /**
     @struct wxExecuteEnv
@@ -1209,12 +1281,12 @@ enum
     @endWxPerlOnly
 */
 long wxExecute(const wxString& command, int flags = wxEXEC_ASYNC,
-                wxProcess* callback = NULL,
-                const wxExecuteEnv* env = NULL);
-//@}
+                wxProcess* callback = nullptr,
+                const wxExecuteEnv* env = nullptr);
+///@}
 
 /** @addtogroup group_funcmacro_procctrl */
-//@{
+///@{
 /**
     This is an overloaded version of wxExecute(const wxString&,int,wxProcess*),
     please see its documentation for general information.
@@ -1245,15 +1317,15 @@ long wxExecute(const wxString& command, int flags = wxEXEC_ASYNC,
     @endWxPerlOnly
 */
 long wxExecute(const char* const* argv, int flags = wxEXEC_ASYNC,
-                wxProcess* callback = NULL,
-                const wxExecuteEnv *env = NULL);
+                wxProcess* callback = nullptr,
+                const wxExecuteEnv *env = nullptr);
 long wxExecute(const wchar_t* const* argv, int flags = wxEXEC_ASYNC,
-                wxProcess* callback = NULL,
-                const wxExecuteEnv *env = NULL);
-//@}
+                wxProcess* callback = nullptr,
+                const wxExecuteEnv *env = nullptr);
+///@}
 
 /** @addtogroup group_funcmacro_procctrl */
-//@{
+///@{
 
 /**
     This is an overloaded version of wxExecute(const wxString&,int,wxProcess*),
@@ -1287,7 +1359,7 @@ long wxExecute(const wchar_t* const* argv, int flags = wxEXEC_ASYNC,
     @endWxPerlOnly
 */
 long wxExecute(const wxString& command, wxArrayString& output, int flags = 0,
-                const wxExecuteEnv *env = NULL);
+                const wxExecuteEnv *env = nullptr);
 
 /**
     This is an overloaded version of wxExecute(const wxString&,int,wxProcess*),
@@ -1324,7 +1396,7 @@ long wxExecute(const wxString& command, wxArrayString& output, int flags = 0,
 */
 long wxExecute(const wxString& command, wxArrayString& output,
                 wxArrayString& errors, int flags = 0,
-                const wxExecuteEnv *env = NULL);
+                const wxExecuteEnv *env = nullptr);
 
 /**
     Returns the number uniquely identifying the current process in the system.
@@ -1396,7 +1468,7 @@ unsigned long wxGetProcessId();
     @header{wx/utils.h}
 */
 int wxKill(long pid, wxSignal sig = wxSIGTERM,
-            wxKillError* rc = NULL, int flags = wxKILL_NOCHILDREN);
+            wxKillError* rc = nullptr, int flags = wxKILL_NOCHILDREN);
 
 /**
     Executes a command in an interactive shell window. If no command is
@@ -1429,12 +1501,12 @@ bool wxShell(const wxString& command = wxEmptyString);
 */
 bool wxShutdown(int flags = wxSHUTDOWN_POWEROFF);
 
-//@}
+///@}
 
 
 
 /** @addtogroup group_funcmacro_time */
-//@{
+///@{
 
 /**
     Sleeps for the specified number of microseconds. The microsecond resolution
@@ -1481,11 +1553,11 @@ void wxSleep(int secs);
 */
 void wxUsleep(unsigned long milliseconds);
 
-//@}
+///@}
 
 
 /** @addtogroup group_funcmacro_misc */
-//@{
+///@{
 /**
     Convert decimal integer to 2-character hexadecimal string.
 
@@ -1497,7 +1569,7 @@ void wxUsleep(unsigned long milliseconds);
         3 characters: 2 hexadecimal digits and the terminating null character.
 
     @remarks
-        Returned string is composed of uppercase hexdecimal characters.
+        Returned string is composed of uppercase hexadecimal characters.
 
     @header{wx/utils.h}
 */
@@ -1555,4 +1627,25 @@ int wxHexToDec(const wxString& buf);
     @overload
 */
 int wxHexToDec(const char* buf);
-//@}
+///@}
+
+
+/**
+    Check if the current desktop is the secure desktop.
+
+    Secure desktop is the desktop that is used for UAC prompts and sign-in
+    screens and runs at system level i.e. as administrator. Using this
+    function can be helpful to ensure that privileged operations are not
+    allowed when running on this desktop.
+
+    @note This function is only available under MSW.
+
+    @return
+        @true if the current desktop is the secure desktop.
+
+    @library{wxcore}
+    @header{wx/utils.h}
+
+    @since 3.3.0
+*/
+bool wxMSWIsOnSecureScreen();

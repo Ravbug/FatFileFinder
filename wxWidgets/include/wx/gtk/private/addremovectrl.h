@@ -56,14 +56,14 @@ public:
     }
 
     virtual void SetButtonsToolTips(const wxString& addtip,
-                                    const wxString& removetip) wxOVERRIDE
+                                    const wxString& removetip) override
     {
         m_tbar->SetToolShortHelp(wxID_ADD, addtip);
         m_tbar->SetToolShortHelp(wxID_REMOVE, removetip);
     }
 
 private:
-    static wxBitmap GetNamedBitmap(const wxString& name)
+    static wxBitmapBundle GetNamedBitmap(const wxString& name)
     {
         // GTK UI guidelines recommend using "symbolic" versions of the icons
         // for these buttons, so try them first but fall back to the normal

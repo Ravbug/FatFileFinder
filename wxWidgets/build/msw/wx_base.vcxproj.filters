@@ -123,6 +123,9 @@
     <ClCompile Include="..\..\src\common\fs_arc.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\common\fs_data.cpp">
+      <Filter>Common Sources</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\common\fs_filter.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
@@ -162,9 +165,6 @@
     <ClCompile Include="..\..\src\common\lzmastream.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\memory.cpp">
-      <Filter>Common Sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\common\mimecmn.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
@@ -184,9 +184,6 @@
       <Filter>Common Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\common\platinfo.cpp">
-      <Filter>Common Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\common\powercmn.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\common\process.cpp">
@@ -219,9 +216,6 @@
     <ClCompile Include="..\..\src\common\string.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\stringimpl.cpp">
-      <Filter>Common Sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\common\stringops.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
@@ -240,9 +234,6 @@
     <ClCompile Include="..\..\src\common\textfile.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\threadinfo.cpp">
-      <Filter>Common Sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\common\time.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
@@ -259,6 +250,9 @@
       <Filter>Common Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\common\txtstrm.cpp">
+      <Filter>Common Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\common\uilocale.cpp">
       <Filter>Common Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\common\unichar.cpp">
@@ -333,9 +327,6 @@
     <ClCompile Include="..\..\src\msw\mimetype.cpp">
       <Filter>MSW Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\msw\power.cpp">
-      <Filter>MSW Sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\msw\regconf.cpp">
       <Filter>MSW Sources</Filter>
     </ClCompile>
@@ -358,6 +349,9 @@
       <Filter>MSW Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\msw\timer.cpp">
+      <Filter>MSW Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\msw\uilocale.cpp">
       <Filter>MSW Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\msw\utils.cpp">
@@ -538,6 +532,9 @@
     <ClInclude Include="..\..\include\wx\fs_arc.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\wx\fs_data.h">
+      <Filter>Common Headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\include\wx\fs_filter.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
@@ -596,6 +593,9 @@
       <Filter>Common Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\wx\listimpl.cpp">
+      <Filter>Common Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\wx\localedefs.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\wx\log.h">
@@ -736,9 +736,6 @@
     <ClInclude Include="..\..\include\wx\platinfo.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\wx\power.h">
-      <Filter>Common Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\wx\process.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
@@ -805,9 +802,6 @@
     <ClInclude Include="..\..\include\wx\string.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\wx\stringimpl.h">
-      <Filter>Common Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\wx\stringops.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
@@ -857,6 +851,9 @@
       <Filter>Common Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\wx\types.h">
+      <Filter>Common Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\wx\uilocale.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\wx\unichar.h">

@@ -2,17 +2,12 @@
 // Name:        src/common/svg.cpp
 // Purpose:     SVG sample
 // Author:      Chris Elliott
-// Modified by:
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
 
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
 
 #if wxUSE_SVG
 
@@ -30,6 +25,8 @@
 #include "wx/filename.h"
 #include "wx/mstream.h"
 #include "wx/scopedarray.h"
+#include "wx/display.h"
+#include "wx/private/rescale.h"
 
 #if wxUSE_MARKUP
     #include "wx/private/markupparser.h"
@@ -41,6 +38,8 @@
 
 namespace
 {
+
+static const wxSize SVG_DPI(96, 96);
 
 // This function returns a string representation of a floating point number in
 // C locale (i.e. always using "." for the decimal separator) and with the
@@ -57,9 +56,14 @@ inline wxString NumStr(double f)
     return wxString::FromCDouble(f, 2);
 }
 
+inline wxString NumStr(float f)
+{
+    return NumStr(double(f));
+}
+
 // Return the colour representation as HTML-like "#rrggbb" string and also
 // returns its alpha as opacity number in 0..1 range.
-wxString Col2SVG(wxColour c, float* opacity = NULL)
+wxString Col2SVG(wxColour c, float* opacity = nullptr)
 {
     if ( c.Alpha() != wxALPHA_OPAQUE )
     {
@@ -165,7 +169,7 @@ wxString GetPenPattern(const wxPen& pen)
             s = wxS("stroke-dasharray=\"");
             wxDash* dashes;
             int count = pen.GetDashes(&dashes);
-            if ((dashes != NULL) && (count > 0))
+            if ((dashes != nullptr) && (count > 0))
             {
                 for (int i = 0; i < count; ++i)
                 {
@@ -358,18 +362,17 @@ wxString CreateBrushFill(const wxBrush& brush, wxSVGShapeRenderingMode mode)
 
 void SetScaledScreenDCFont(wxScreenDC& sDC, const wxFont& font)
 {
-    // When using DPI-independent pixels, the results of GetTextExtent() and
-    // similar don't depend on DPI anyhow.
-#ifndef wxHAVE_DPI_INDEPENDENT_PIXELS
-    static const int SVG_DPI = 96;
-
     const double screenDPI = sDC.GetPPI().y;
-    const double scale = screenDPI / SVG_DPI;
-    if ( scale > 1 )
+    const double scale = screenDPI / SVG_DPI.y;
+    if ( scale != 1 )
     {
         // wxScreenDC uses the DPI of the main screen to determine the text
         // extent and character width/height. Because the SVG should be
         // DPI-independent we want the text extent of the default (96) DPI.
+        //
+        // Even when using DPI Independent pixels (like macOS), we still need to
+        // scale because macOS DPI (72) is different than SVG DPI (96).
+        // (wxScreenDC returns the standard DPI also on Retina screens.)
         //
         // We can't just divide the returned sizes by the scale factor, because
         // text does not scale linear (at least on Windows). Therefore, we scale
@@ -379,7 +382,6 @@ void SetScaledScreenDCFont(wxScreenDC& sDC, const wxFont& font)
         sDC.SetFont(scaledFont);
     }
     else
-#endif // !wxHAVE_DPI_INDEPENDENT_PIXELS
     {
         sDC.SetFont(font);
     }
@@ -396,9 +398,10 @@ wxSVGBitmapEmbedHandler::ProcessBitmap(const wxBitmap& bmp,
                                        wxCoord x, wxCoord y,
                                        wxOutputStream& stream) const
 {
+#if wxUSE_BASE64
     static int sub_images = 0;
 
-    if ( wxImage::FindHandler(wxBITMAP_TYPE_PNG) == NULL )
+    if ( wxImage::FindHandler(wxBITMAP_TYPE_PNG) == nullptr )
         wxImage::AddHandler(new wxPNGHandler);
 
     // write the bitmap as a PNG to a memory stream and Base64 encode
@@ -430,6 +433,20 @@ wxSVGBitmapEmbedHandler::ProcessBitmap(const wxBitmap& bmp,
     stream.Write(buf, strlen((const char*)buf));
 
     return stream.IsOk();
+#else
+    // to avoid compiler warnings about unused variables
+    wxUnusedVar(bmp);
+    wxUnusedVar(x); wxUnusedVar(y);
+    wxUnusedVar(stream);
+
+    wxFAIL_MSG
+    (
+        "Embedding bitmaps in SVG is not available because "
+        "wxWidgets was built with wxUSE_BASE64 set to 0."
+    );
+
+    return false;
+#endif // wxUSE_BASE64
 }
 
 // ----------------------------------------------------------
@@ -443,7 +460,7 @@ wxSVGBitmapFileHandler::ProcessBitmap(const wxBitmap& bmp,
 {
     static int sub_images = 0;
 
-    if ( wxImage::FindHandler(wxBITMAP_TYPE_PNG) == NULL )
+    if ( wxImage::FindHandler(wxBITMAP_TYPE_PNG) == nullptr )
         wxImage::AddHandler(new wxPNGHandler);
 
     // find a suitable file name
@@ -542,11 +559,14 @@ void wxSVGFileDCImpl::Init(const wxString& filename, int width, int height,
     else
         m_outfile.reset(new wxFileOutputStream(m_filename));
 
+    const wxSize dpiSize = FromDIP(wxSize(m_width, m_height));
+
     wxString s;
     s += wxS("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
     s += wxS("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n\n");
     s += wxS("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"");
-    s += wxString::Format(wxS(" width=\"%scm\" height=\"%scm\" viewBox=\"0 0 %d %d\">\n"), NumStr(float(m_width) / dpi * 2.54), NumStr(float(m_height) / dpi * 2.54), m_width, m_height);
+    s += wxString::Format(wxS(" width=\"%scm\" height=\"%scm\" viewBox=\"0 0 %d %d\">\n"),
+                          NumStr(m_width / dpi * 2.54), NumStr(m_height / dpi * 2.54), dpiSize.GetWidth(), dpiSize.GetHeight());
     s += wxString::Format(wxS("<title>%s</title>\n"), title);
     s += wxString(wxS("<desc>Picture generated by wxSVG ")) + wxSVGVersion + wxS("</desc>\n\n");
     s += wxS("<g style=\"fill:black; stroke:black; stroke-width:1\">\n");
@@ -579,12 +599,25 @@ wxSize wxSVGFileDCImpl::GetPPI() const
     return wxSize(wxRound(m_dpi), wxRound(m_dpi));
 }
 
+wxSize wxSVGFileDCImpl::FromDIP(const wxSize& sz) const
+{
+    const wxSize baseline = wxDisplay::GetStdPPI();
+    return wxRescaleCoord(sz).From(baseline).To(SVG_DPI);
+}
+
+wxSize wxSVGFileDCImpl::ToDIP(const wxSize& sz) const
+{
+    const wxSize baseline = wxDisplay::GetStdPPI();
+    return wxRescaleCoord(sz).From(SVG_DPI).To(baseline);
+}
+
 void wxSVGFileDCImpl::Clear()
 {
     {
         wxDCBrushChanger setBackground(*GetOwner(), m_backgroundBrush);
         wxDCPenChanger setTransp(*GetOwner(), *wxTRANSPARENT_PEN);
-        DoDrawRectangle(0, 0, m_width, m_height);
+        const wxSize dpiSize = FromDIP(wxSize(m_width, m_height));
+        DoDrawRectangle(0, 0, dpiSize.GetWidth(), dpiSize.GetHeight());
     }
 
     NewGraphicsIfNeeded();
@@ -600,8 +633,7 @@ void wxSVGFileDCImpl::DoDrawLine(wxCoord x1, wxCoord y1, wxCoord x2, wxCoord y2)
 
     write(s);
 
-    CalcBoundingBox(x1, y1);
-    CalcBoundingBox(x2, y2);
+    CalcBoundingBox(x1, y1, x2, y2);
 }
 
 void wxSVGFileDCImpl::DoDrawLines(int n, const wxPoint points[], wxCoord xoffset, wxCoord yoffset)
@@ -628,6 +660,57 @@ void wxSVGFileDCImpl::DoDrawLines(int n, const wxPoint points[], wxCoord xoffset
         write(s);
     }
 }
+
+#if wxUSE_SPLINES
+void wxSVGFileDCImpl::DoDrawSpline(const wxPointList* points)
+{
+    wxCHECK_RET(points, "null pointer to spline points");
+    wxCHECK_RET(points->size() >= 2, "incomplete list of spline points");
+
+    NewGraphicsIfNeeded();
+
+    wxPointList::const_iterator itPt = points->begin();
+    const wxPoint* pt = *itPt; ++itPt;
+    wxPoint2DDouble p1(*pt);
+
+    pt = *itPt; ++itPt;
+    wxPoint2DDouble p2(*pt);
+    wxPoint2DDouble p3 = (p1 + p2) / 2.0;
+
+    wxString s = "  <path d=\"";
+
+    s += wxString::Format("M %s %s L %s %s",
+                          NumStr(p1.m_x), NumStr(p1.m_y), NumStr(p3.m_x), NumStr(p3.m_y));
+    CalcBoundingBox(wxRound(p1.m_x), wxRound(p1.m_y));
+    CalcBoundingBox(wxRound(p3.m_x), wxRound(p3.m_y));
+
+    while ( itPt != points->end() )
+    {
+        pt = *itPt; ++itPt;
+
+        wxPoint2DDouble p0 = p3;
+        p1 = p2;
+        p2 = *pt;
+        p3 = (p1 + p2) / 2.0;
+
+        // Calculate using degree elevation to a cubic bezier
+        wxPoint2DDouble c1 = (p0 + (p1 * 2.0)) / 3.0;
+        wxPoint2DDouble c2 = ((p1 * 2.0) + p3) / 3.0;
+
+        s += wxString::Format(" C %s %s, %s %s, %s %s",
+             NumStr(c1.m_x), NumStr(c1.m_y), NumStr(c2.m_x), NumStr(c2.m_y), NumStr(p3.m_x), NumStr(p3.m_y));
+
+        CalcBoundingBox(wxRound(p0.m_x), wxRound(p0.m_y));
+        CalcBoundingBox(wxRound(p3.m_x), wxRound(p3.m_y));
+    }
+    s += wxString::Format(" L %s %s", NumStr(p2.m_x), NumStr(p2.m_y));
+    CalcBoundingBox(wxRound(p2.m_x), wxRound(p2.m_y));
+
+    s += wxString::Format("\" style=\"fill:none\" %s %s/>\n",
+                          GetRenderMode(m_renderingMode), GetPenPattern(m_pen));
+    write(s);
+}
+#endif // wxUSE_SPLINES
 
 void wxSVGFileDCImpl::DoDrawPoint(wxCoord x, wxCoord y)
 {
@@ -780,8 +863,7 @@ void wxSVGFileDCImpl::DoDrawRoundedRectangle(wxCoord x, wxCoord y, wxCoord width
 
     write(s);
 
-    CalcBoundingBox(x, y);
-    CalcBoundingBox(x + width, y + height);
+    CalcBoundingBox(wxPoint(x, y), wxSize(width, height));
 }
 
 void wxSVGFileDCImpl::DoDrawPolygon(int n, const wxPoint points[],
@@ -864,8 +946,7 @@ void wxSVGFileDCImpl::DoDrawEllipse(wxCoord x, wxCoord y, wxCoord width, wxCoord
 
     write(s);
 
-    CalcBoundingBox(x, y);
-    CalcBoundingBox(x + width, y + height);
+    CalcBoundingBox(wxPoint(x, y), wxSize(width, height));
 }
 
 void wxSVGFileDCImpl::DoDrawArc(wxCoord x1, wxCoord y1, wxCoord x2, wxCoord y2, wxCoord xc, wxCoord yc)
@@ -911,10 +992,10 @@ void wxSVGFileDCImpl::DoDrawArc(wxCoord x1, wxCoord y1, wxCoord x2, wxCoord y2, 
     if (x1 == x2 && y1 == y2)
     {
         // drawing full circle fails with default arc. Draw two half arcs instead.
-        s = wxString::Format(wxS("  <path d=\"M%d %d a%s %s 0 %d %d %s %s a%s %s 0 %d %d %s %s"),
+        s = wxString::Format(wxS("  <path d=\"M%d %d a%s %s 0 %d %d %s 0 a%s %s 0 %d %d %s 0"),
             x1, y1,
-            NumStr(r1), NumStr(r2), fArc, fSweep, NumStr( r1 * 2), NumStr(0),
-            NumStr(r1), NumStr(r2), fArc, fSweep, NumStr(-r1 * 2), NumStr(0));
+            NumStr(r1), NumStr(r2), fArc, fSweep, NumStr( r1 * 2),
+            NumStr(r1), NumStr(r2), fArc, fSweep, NumStr(-r1 * 2));
     }
     else
     {
@@ -991,10 +1072,10 @@ void wxSVGFileDCImpl::DoDrawEllipticArc(wxCoord x, wxCoord y, wxCoord w, wxCoord
     {
         // Drawing full circle fails with default arc. Draw two half arcs instead.
         fArc = 1;
-        arcPath = wxString::Format(wxS("  <path d=\"M%s %s a%s %s 0 %d %d %s %s a%s %s 0 %d %d %s %s"),
-            NumStr(x), NumStr(y + ry),
-            NumStr(rx), NumStr(ry), fArc, fSweep, NumStr( rx * 2), NumStr(0),
-            NumStr(rx), NumStr(ry), fArc, fSweep, NumStr(-rx * 2), NumStr(0));
+        arcPath = wxString::Format(wxS("  <path d=\"M%d %s a%s %s 0 %d %d %s 0 a%s %s 0 %d %d %s 0"),
+            x, NumStr(y + ry),
+            NumStr(rx), NumStr(ry), fArc, fSweep, NumStr( rx * 2),
+            NumStr(rx), NumStr(ry), fArc, fSweep, NumStr(-rx * 2));
     }
     else
     {
@@ -1063,8 +1144,7 @@ void wxSVGFileDCImpl::DoGradientFillLinear(const wxRect& rect,
 
     write(s);
 
-    CalcBoundingBox(rect.x, rect.y);
-    CalcBoundingBox(rect.x + rect.width, rect.y + rect.height);
+    CalcBoundingBox(rect);
 }
 
 void wxSVGFileDCImpl::DoGradientFillConcentric(const wxRect& rect,
@@ -1103,12 +1183,35 @@ void wxSVGFileDCImpl::DoGradientFillConcentric(const wxRect& rect,
 
     write(s);
 
-    CalcBoundingBox(rect.x, rect.y);
-    CalcBoundingBox(rect.x + rect.width, rect.y + rect.height);
+    CalcBoundingBox(rect);
+}
+
+void wxSVGFileDCImpl::DoSetDeviceClippingRegion(const wxRegion& region)
+{
+    wxRect clipBox = region.GetBox();
+    wxPoint logPos = DeviceToLogical(clipBox.x, clipBox.y);
+    wxSize logDim = DeviceToLogicalRel(clipBox.width, clipBox.height);
+    DoSetClippingRegion(logPos.x, logPos.y, logDim.x, logDim.y);
 }
 
 void wxSVGFileDCImpl::DoSetClippingRegion(wxCoord x, wxCoord y, wxCoord width, wxCoord height)
 {
+    // We need to have box definition in the standard form with (x,y)
+    // pointing to the top-left corner of the box and with non-negative
+    // width and height because SVG doesn't accept negative values
+    // of width/height and we need this standard form in the internal
+    // calculations in wxDCImpl.
+    if ( width < 0 )
+    {
+        width = -width;
+        x -= (width - 1);
+    }
+    if ( height < 0 )
+    {
+        height = -height;
+        y -= (height - 1);
+    }
+
     wxString svg;
 
     // End current graphics group to ensure proper xml nesting (e.g. so that
@@ -1195,6 +1298,11 @@ wxCoord wxSVGFileDCImpl::GetCharWidth() const
     return sDC.GetCharWidth();
 }
 
+void wxSVGFileDCImpl::ComputeScaleAndOrigin()
+{
+    wxDCImpl::ComputeScaleAndOrigin();
+    m_graphics_changed = true;
+}
 
 // ----------------------------------------------------------
 // wxSVGFileDCImpl - set functions
@@ -1258,12 +1366,12 @@ void wxSVGFileDCImpl::DoStartNewGraphics()
 {
     wxString s;
 
-    s = wxString::Format(wxS("<g style=\"%s %s %s\" transform=\"translate(%s %s) scale(%s %s)\">\n"),
+    s = wxString::Format(wxS("<g style=\"%s %s %s\" transform=\"translate(%d %d) scale(%s %s)\">\n"),
         GetPenStyle(m_pen),
         GetBrushFill(m_brush.GetColour(), m_brush.GetStyle()),
         GetPenStroke(m_pen.GetColour(), m_pen.GetStyle()),
-        NumStr((m_deviceOriginX - m_logicalOriginX) * m_signX),
-        NumStr((m_deviceOriginY - m_logicalOriginY) * m_signY),
+        (m_deviceOriginX - m_logicalOriginX) * m_signX,
+        (m_deviceOriginY - m_logicalOriginY) * m_signY,
         NumStr(m_scaleX * m_signX),
         NumStr(m_scaleY * m_signY));
 

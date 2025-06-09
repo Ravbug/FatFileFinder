@@ -2,7 +2,6 @@
 // Name:        src/aui/dockart.cpp
 // Purpose:     wxaui: wx advanced user interface - docking window manager
 // Author:      Benjamin I. Williams
-// Modified by:
 // Created:     2005-05-17
 // Copyright:   (C) Copyright 2005-2006, Kirix Corporation, All Rights Reserved
 // Licence:     wxWindows Library Licence, Version 3.1
@@ -18,9 +17,6 @@
 
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_AUI
 
@@ -30,6 +26,7 @@
 #include "wx/aui/tabart.h"
 
 #ifndef WX_PRECOMP
+    #include "wx/app.h"
     #include "wx/settings.h"
     #include "wx/dcclient.h"
     #include "wx/image.h"
@@ -43,17 +40,14 @@
 
 #ifdef __WXGTK__
 #include "wx/renderer.h"
-#ifdef __WXGTK20__
-    #include "wx/gtk/private/wrapgtk.h"
-#else
-    #include <gtk/gtk.h>
-    #define gtk_widget_is_drawable GTK_WIDGET_DRAWABLE
-#endif
+#include "wx/gtk/private/wrapgtk.h"
 #ifdef __WXGTK3__
     #include "wx/graphics.h"
     #include "wx/gtk/private.h"
 #endif
 #endif
+
+#include "wx/private/aui.h"
 
 #include <math.h>
 
@@ -70,15 +64,16 @@ wxColor wxAuiLightContrastColour(const wxColour& c)
 }
 
 inline float wxAuiGetSRGB(float r) {
-    return r <= 0.03928 ? r/12.92 : pow((r+0.055)/1.055, 2.4);
+    return r <= 0.03928f ? r / 12.92f : std::pow((r + 0.055f) / 1.055f, 2.4f);
 }
 
 float wxAuiGetRelativeLuminance(const wxColour& c)
 {
     // based on https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
-    return 0.2126 * wxAuiGetSRGB(c.Red()/255.0)
-        + 0.7152 * wxAuiGetSRGB(c.Green()/255.0)
-        + 0.0722 * wxAuiGetSRGB(c.Blue()/255.0);
+    return
+        0.2126f * wxAuiGetSRGB(c.Red()   / 255.0f) +
+        0.7152f * wxAuiGetSRGB(c.Green() / 255.0f) +
+        0.0722f * wxAuiGetSRGB(c.Blue()  / 255.0f);
 }
 
 float wxAuiGetColourContrast(const wxColour& c1, const wxColour& c2)
@@ -86,69 +81,51 @@ float wxAuiGetColourContrast(const wxColour& c1, const wxColour& c2)
     // based on https://www.w3.org/TR/UNDERSTANDING-WCAG20/visual-audio-contrast7.html
     float L1 = wxAuiGetRelativeLuminance(c1);
     float L2 = wxAuiGetRelativeLuminance(c2);
-    return L1 > L2 ? (L1 + 0.05) / (L2 + 0.05) : (L2 + 0.05) / (L1 + 0.05);
+    return L1 > L2 ? (L1 + 0.05f) / (L2 + 0.05f) : (L2 + 0.05f) / (L1 + 0.05f);
 }
 
-// wxAuiBitmapFromBits() is a utility function that creates a
-// masked bitmap from raw bits (XBM format)
-wxBitmap wxAuiBitmapFromBits(const unsigned char bits[], int w, int h,
-                             const wxColour& color)
+#ifdef wxHAS_SVG
+wxBitmapBundle wxAuiCreateBitmap(const char* svgData, int w, int h,
+                                   const wxColour& color)
+{
+    // All data starts with a new line, use +1 to skip it.
+    wxString s = wxString::FromAscii(svgData + 1);
+
+    s.Replace("currentColor", color.GetAsString(wxC2S_HTML_SYNTAX));
+
+    return wxBitmapBundle::FromSVG(s.ToAscii(), wxSize(w, h));
+}
+#else // !wxHAS_SVG
+wxBitmap wxAuiCreateBitmap(const unsigned char bits[], int w, int h,
+                           const wxColour& color)
 {
     wxImage img = wxBitmap((const char*)bits, w, h).ConvertToImage();
-    if (color.Alpha() == wxALPHA_OPAQUE)
+    img.InitAlpha();
+    const int newr = color.Red();
+    const int newg = color.Green();
+    const int newb = color.Blue();
+    const int newa = color.Alpha();
+    for (int x = 0; x < w; x++)
     {
-        img.Replace(0,0,0,123,123,123);
-        img.Replace(255,255,255,color.Red(),color.Green(),color.Blue());
-        img.SetMaskColour(123,123,123);
-    }
-    else
-    {
-        img.InitAlpha();
-        const int newr = color.Red();
-        const int newg = color.Green();
-        const int newb = color.Blue();
-        const int newa = color.Alpha();
-        for (int x = 0; x < w; x++)
+        for (int y = 0; y < h; y++)
         {
-            for (int y = 0; y < h; y++)
+            int r = img.GetRed(x, y);
+            int g = img.GetGreen(x, y);
+            int b = img.GetBlue(x, y);
+            if (r == 0 && g == 0 && b == 0)
             {
-                int r = img.GetRed(x, y);
-                int g = img.GetGreen(x, y);
-                int b = img.GetBlue(x, y);
-                if (r == 0 && g == 0 && b == 0)
-                {
-                    img.SetAlpha(x, y, wxALPHA_TRANSPARENT);
-                }
-                else
-                {
-                    img.SetRGB(x, y, newr, newg, newb);
-                    img.SetAlpha(x, y, newa);
-                }
+                img.SetAlpha(x, y, wxALPHA_TRANSPARENT);
+            }
+            else
+            {
+                img.SetRGB(x, y, newr, newg, newb);
+                img.SetAlpha(x, y, newa);
             }
         }
     }
     return wxBitmap(img);
 }
-
-// A utility function to scales a bitmap in place for use at the given scale
-// factor.
-void wxAuiScaleBitmap(wxBitmap& bmp, double scale)
-{
-#if wxUSE_IMAGE && !defined(__WXGTK3__) && !defined(__WXMAC__)
-    // scale to a close round number to improve quality
-    scale = floor(scale + 0.25);
-    if (scale > 1.0 && !(bmp.GetScaleFactor() > 1.0))
-    {
-        wxImage img = bmp.ConvertToImage();
-        img.Rescale(bmp.GetWidth()*scale, bmp.GetHeight()*scale,
-            wxIMAGE_QUALITY_BOX_AVERAGE);
-        bmp = wxBitmap(img);
-    }
-#else
-    wxUnusedVar(bmp);
-    wxUnusedVar(scale);
-#endif // wxUSE_IMAGE
-}
+#endif // wxHAS_SVG/!wxHAS_SVG
 
 static void DrawGradientRectangle(wxDC& dc,
                                   const wxRect& rect,
@@ -196,7 +173,7 @@ wxString wxAuiChopText(wxDC& dc, const wxString& text, int max_size)
     if (x <= max_size)
         return text;
 
-    size_t i, len = text.Length();
+    size_t i, len = text.length();
     size_t last_good_length = 0;
     for (i = 0; i < len; ++i)
     {
@@ -213,6 +190,40 @@ wxString wxAuiChopText(wxDC& dc, const wxString& text, int max_size)
     wxString ret = text.Left(last_good_length);
     ret += wxT("...");
     return ret;
+}
+
+// ----------------------------------------------------------------------------
+// wxAuiDockArt
+// ----------------------------------------------------------------------------
+
+int wxAuiDockArt::GetMetricForWindow(int id, wxWindow* window)
+{
+    // Most, but not all, metrics are adjusted to the window DPI.
+    bool scale = false;
+    switch (id)
+    {
+        case wxAUI_DOCKART_SASH_SIZE:
+        case wxAUI_DOCKART_PANE_BORDER_SIZE:
+            // These sizes are typically small values and we don't scale them
+            // by default to allow setting them to 1 pixel even in high DPI.
+            break;
+
+        case wxAUI_DOCKART_CAPTION_SIZE:
+        case wxAUI_DOCKART_GRIPPER_SIZE:
+        case wxAUI_DOCKART_PANE_BUTTON_SIZE:
+            scale = true;
+            break;
+
+        case wxAUI_DOCKART_GRADIENT_TYPE:
+            // This value is not in pixels at all and is never scaled.
+            break;
+    }
+
+    int value = GetMetric(id);
+    if ( scale )
+        value = wxWindow::FromDIP(value, window);
+
+    return value;
 }
 
 // -- wxAuiDefaultDockArt class implementation --
@@ -239,36 +250,46 @@ wxAuiDefaultDockArt::wxAuiDefaultDockArt()
     GetThemeMetric( kThemeMetricSmallPaneSplitterHeight , &height );
     m_sashSize     = height;
 #elif defined(__WXGTK__)
-    m_sashSize     = wxRendererNative::Get().GetSplitterParams(NULL).widthSash;
+    m_sashSize     = wxRendererNative::Get().GetSplitterParams(nullptr).widthSash;
 #else
-    m_sashSize     = wxWindow::FromDIP( 4, NULL);
+    m_sashSize     = 4;
 #endif
-    m_captionSize  = wxWindow::FromDIP(17, NULL);
+    m_captionSize  = 17;
     m_borderSize   = 1;
-    m_buttonSize   = wxWindow::FromDIP(14, NULL);
-    m_gripperSize  = wxWindow::FromDIP( 9, NULL);
+    m_buttonSize   = 14;
+    m_gripperSize  = 9;
     m_gradientType = wxAUI_GRADIENT_VERTICAL;
 
     InitBitmaps();
 }
 
-void
-wxAuiDefaultDockArt::InitBitmaps ()
+wxAuiDockArt* wxAuiDefaultDockArt::Clone()
 {
-    // some built in bitmaps
-    // TODO: Provide x1.5 and x2.0 versions or migrate to SVG.
+    return new wxAuiDefaultDockArt(*this);
+}
+
+wxBitmapBundle wxAuiCreateCloseButtonBitmap(const wxColour& color)
+{
+#ifdef wxHAS_SVG
+    static const char* const close_bitmap_data = R"svg(
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+    <line x1="4" y1="4" x2="11" y2="11" stroke="currentColor" fill="none" stroke-linecap="round" stroke-width="1.5"/>
+    <line x1="4" y1="11" x2="11" y2="4" stroke="currentColor" fill="none" stroke-linecap="round" stroke-width="1.5"/>
+</svg>
+)svg";
+#else // !wxHAS_SVG
 #if defined( __WXMAC__ )
-     static const unsigned char close_bits[]={
+     static const unsigned char close_bitmap_data[]={
          0xFF, 0xFF, 0xFF, 0xFF, 0x0F, 0xFE, 0x03, 0xF8, 0x01, 0xF0, 0x19, 0xF3,
          0xB8, 0xE3, 0xF0, 0xE1, 0xE0, 0xE0, 0xF0, 0xE1, 0xB8, 0xE3, 0x19, 0xF3,
          0x01, 0xF0, 0x03, 0xF8, 0x0F, 0xFE, 0xFF, 0xFF };
 #elif defined(__WXGTK__)
-     static const unsigned char close_bits[]={
+     static const unsigned char close_bitmap_data[]={
          0xff, 0xff, 0xff, 0xff, 0x07, 0xf0, 0xfb, 0xef, 0xdb, 0xed, 0x8b, 0xe8,
          0x1b, 0xec, 0x3b, 0xee, 0x1b, 0xec, 0x8b, 0xe8, 0xdb, 0xed, 0xfb, 0xef,
          0x07, 0xf0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 #else
-    static const unsigned char close_bits[]={
+    static const unsigned char close_bitmap_data[]={
          // reduced height, symmetric
          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xcf, 0xf3, 0x9f, 0xf9,
          0x3f, 0xfc, 0x7f, 0xfe, 0x3f, 0xfc, 0x9f, 0xf9, 0xcf, 0xf3, 0xff, 0xff,
@@ -280,21 +301,57 @@ wxAuiDefaultDockArt::InitBitmaps ()
          0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
       */
 #endif
+#endif // wxHAS_SVG/!wxHAS_SVG
 
-    static const unsigned char maximize_bits[] = {
+    return wxAuiCreateBitmap(close_bitmap_data, 16, 16, color);
+}
+
+wxBitmapBundle wxAuiCreatePinButtonBitmap(const wxColour& color)
+{
+#ifdef wxHAS_SVG
+    static const char* const pin_bitmap_data = R"svg(
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+    <path d="M 5 9 h 6 h -1 v -6 h -1 v 6 v -6 h -3 v 6 h 2 v 4" stroke="currentColor" fill="none" stroke-width="1"/>
+</svg>
+)svg";
+#else // !wxHAS_SVG
+    static const unsigned char pin_bitmap_data[]={
+        0xff,0xff,0xff,0xff,0xff,0xff,0x1f,0xfc,0xdf,0xfc,0xdf,0xfc,
+        0xdf,0xfc,0xdf,0xfc,0xdf,0xfc,0x0f,0xf8,0x7f,0xff,0x7f,0xff,
+        0x7f,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+#endif // wxHAS_SVG/!wxHAS_SVG
+
+    return wxAuiCreateBitmap(pin_bitmap_data, 16, 16, color);
+}
+
+void
+wxAuiDefaultDockArt::InitBitmaps ()
+{
+    // Initialize built in bitmaps, from SVG, if supported, or XBM otherwise.
+#ifdef wxHAS_SVG
+    static const char* const maximize_bitmap_data = R"svg(
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+    <rect x="3" y="3" width="9" height="9" stroke="currentColor" fill="none" stroke-width="1"/>
+    <line x1="3" y1="5.5" x2="12" y2="5.5" stroke="currentColor" stroke-width="1"/>
+</svg>
+)svg";
+
+    static const char* const restore_bitmap_data = R"svg(
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+    <path d="M 3 5 v 8 h 8 v -8 Z m 2 0 v -2 h 8 v 8 h -2" stroke="currentColor" fill="none" stroke-width="1"/>
+</svg>
+)svg";
+#else // !wxHAS_SVG
+    static const unsigned char maximize_bitmap_data[] = {
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x07, 0xf0, 0xf7, 0xf7, 0x07, 0xf0,
         0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0x07, 0xf0,
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
-    static const unsigned char restore_bits[]={
+    static const unsigned char restore_bitmap_data[]={
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x1f, 0xf0, 0x1f, 0xf0, 0xdf, 0xf7,
         0x07, 0xf4, 0x07, 0xf4, 0xf7, 0xf5, 0xf7, 0xf1, 0xf7, 0xfd, 0xf7, 0xfd,
         0x07, 0xfc, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-    static const unsigned char pin_bits[]={
-        0xff,0xff,0xff,0xff,0xff,0xff,0x1f,0xfc,0xdf,0xfc,0xdf,0xfc,
-        0xdf,0xfc,0xdf,0xfc,0xdf,0xfc,0x0f,0xf8,0x7f,0xff,0x7f,0xff,
-        0x7f,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+#endif // wxHAS_SVG/!wxHAS_SVG
 
 #ifdef __WXMAC__
     const wxColour inactive = wxSystemSettings::GetColour(wxSYS_COLOUR_INACTIVECAPTION);
@@ -304,17 +361,17 @@ wxAuiDefaultDockArt::InitBitmaps ()
     const wxColor active = m_activeCaptionTextColour;
 #endif
 
-    m_inactiveCloseBitmap = wxAuiBitmapFromBits(close_bits, 16, 16, inactive);
-    m_activeCloseBitmap = wxAuiBitmapFromBits(close_bits, 16, 16, active);
+    m_inactiveCloseBitmap = wxAuiCreateCloseButtonBitmap(inactive);
+    m_activeCloseBitmap = wxAuiCreateCloseButtonBitmap(active);
 
-    m_inactiveMaximizeBitmap = wxAuiBitmapFromBits(maximize_bits, 16, 16, inactive);
-    m_activeMaximizeBitmap = wxAuiBitmapFromBits(maximize_bits, 16, 16, active);
+    m_inactiveMaximizeBitmap = wxAuiCreateBitmap(maximize_bitmap_data, 16, 16, inactive);
+    m_activeMaximizeBitmap = wxAuiCreateBitmap(maximize_bitmap_data, 16, 16, active);
 
-    m_inactiveRestoreBitmap = wxAuiBitmapFromBits(restore_bits, 16, 16, inactive);
-    m_activeRestoreBitmap = wxAuiBitmapFromBits(restore_bits, 16, 16, active);
+    m_inactiveRestoreBitmap = wxAuiCreateBitmap(restore_bitmap_data, 16, 16, inactive);
+    m_activeRestoreBitmap = wxAuiCreateBitmap(restore_bitmap_data, 16, 16, active);
 
-    m_inactivePinBitmap = wxAuiBitmapFromBits(pin_bits, 16, 16, inactive);
-    m_activePinBitmap = wxAuiBitmapFromBits(pin_bits, 16, 16, active);
+    m_inactivePinBitmap = wxAuiCreatePinButtonBitmap(inactive);
+    m_activePinBitmap = wxAuiCreatePinButtonBitmap(active);
 }
 
 void wxAuiDefaultDockArt::UpdateColoursFromSystem()
@@ -349,7 +406,7 @@ void wxAuiDefaultDockArt::UpdateColoursFromSystem()
     m_gripperBrush = wxBrush(baseColour);
 
     m_borderPen = wxPen(darker2Colour);
-    int pen_width = wxWindow::FromDIP(1, NULL);
+    int pen_width = wxWindow::FromDIP(1, nullptr);
     m_gripperPen1 = wxPen(darker5Colour, pen_width);
     m_gripperPen2 = wxPen(darker3Colour, pen_width);
     m_gripperPen3 = wxPen(*wxStockGDI::GetColour(wxStockGDI::COLOUR_WHITE), pen_width);
@@ -449,25 +506,16 @@ void wxAuiDefaultDockArt::DrawSash(wxDC& dc, wxWindow *window, int orientation, 
     wxUnusedVar(window);
     wxUnusedVar(orientation);
 
-    if ( wxPlatformInfo::Get().CheckOSVersion(10, 14) && wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW).Red() < 128 )
-    {
-        dc.SetPen(*wxTRANSPARENT_PEN);
-        dc.SetBrush(m_sashBrush);
-        dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height);
-    }
-    else
-    {
-        HIRect splitterRect = CGRectMake( rect.x , rect.y , rect.width , rect.height );
-        CGContextRef cgContext ;
-        wxGCDCImpl *impl = (wxGCDCImpl*) dc.GetImpl();
-        cgContext = (CGContextRef) impl->GetGraphicsContext()->GetNativeContext() ;
+    HIRect splitterRect = CGRectMake( rect.x , rect.y , rect.width , rect.height );
+    CGContextRef cgContext ;
+    wxGCDCImpl *impl = (wxGCDCImpl*) dc.GetImpl();
+    cgContext = (CGContextRef) impl->GetGraphicsContext()->GetNativeContext() ;
 
-        HIThemeSplitterDrawInfo drawInfo ;
-        drawInfo.version = 0 ;
-        drawInfo.state = kThemeStateActive ;
-        drawInfo.adornment = kHIThemeSplitterAdornmentNone ;
-        HIThemeDrawPaneSplitter( &splitterRect , &drawInfo , cgContext , kHIThemeOrientationNormal ) ;
-    }
+    HIThemeSplitterDrawInfo drawInfo ;
+    drawInfo.version = 0 ;
+    drawInfo.state = kThemeStateActive ;
+    drawInfo.adornment = kHIThemeSplitterAdornmentMetal ;
+    HIThemeDrawPaneSplitter( &splitterRect , &drawInfo , cgContext , kHIThemeOrientationNormal ) ;
 
 #elif defined(__WXGTK__)
     // clear out the rectangle first
@@ -517,7 +565,7 @@ void wxAuiDefaultDockArt::DrawSash(wxDC& dc, wxWindow *window, int orientation, 
         // flags & wxCONTROL_CURRENT ? GTK_STATE_PRELIGHT : GTK_STATE_NORMAL,
         GTK_STATE_NORMAL,
         GTK_SHADOW_NONE,
-        NULL /* no clipping */,
+        nullptr /* no clipping */,
         window->m_wxwindow,
         "paned",
         rect.x,
@@ -558,11 +606,11 @@ void wxAuiDefaultDockArt::DrawBorder(wxDC& dc, wxWindow* window, const wxRect& _
     dc.SetBrush(*wxTRANSPARENT_BRUSH);
 
     wxRect rect = _rect;
-    int i, border_width = GetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE);
+    const int border_width = GetMetricForWindow(wxAUI_DOCKART_PANE_BORDER_SIZE, window);
 
     if (pane.IsToolbar())
     {
-        for (i = 0; i < border_width; ++i)
+        for (int i = 0; i < border_width; ++i)
         {
             dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
             dc.DrawLine(rect.x, rect.y, rect.x+rect.width, rect.y);
@@ -578,7 +626,7 @@ void wxAuiDefaultDockArt::DrawBorder(wxDC& dc, wxWindow* window, const wxRect& _
     else
     {
         // notebooks draw the border themselves, so they can use native rendering (e.g. tabartgtk)
-        wxAuiTabArt* art = 0;
+        wxAuiTabArt* art = nullptr;
         wxAuiNotebook* nb = wxDynamicCast(window, wxAuiNotebook);
         if (nb)
             art = nb->GetArtProvider();
@@ -587,7 +635,7 @@ void wxAuiDefaultDockArt::DrawBorder(wxDC& dc, wxWindow* window, const wxRect& _
             art->DrawBorder(dc, window, rect);
         else
         {
-            for (i = 0; i < border_width; ++i)
+            for (int i = 0; i < border_width; ++i)
             {
                 dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height);
                 rect.Deflate(1);
@@ -663,7 +711,8 @@ void wxAuiDefaultDockArt::DrawCaption(wxDC& dc,
     {
         DrawIcon(dc, window, rect, pane);
 
-        caption_offset += pane.icon.GetScaledWidth() + window->FromDIP(3);
+        const wxBitmap& icon = pane.icon.GetBitmapFor(window);
+        caption_offset += icon.GetLogicalWidth() + window->FromDIP(3);
     }
 
     if (pane.state & wxAuiPaneInfo::optionActive)
@@ -678,34 +727,50 @@ void wxAuiDefaultDockArt::DrawCaption(wxDC& dc,
     wxRect clip_rect = rect;
     clip_rect.width -= window->FromDIP(3); // text offset
     clip_rect.width -= window->FromDIP(2); // button padding
+
+    const int buttonSize = GetMetricForWindow(wxAUI_DOCKART_PANE_BUTTON_SIZE, window);
     if (pane.HasCloseButton())
-        clip_rect.width -= m_buttonSize;
+        clip_rect.width -= buttonSize;
     if (pane.HasPinButton())
-        clip_rect.width -= m_buttonSize;
+        clip_rect.width -= buttonSize;
     if (pane.HasMaximizeButton())
-        clip_rect.width -= m_buttonSize;
+        clip_rect.width -= buttonSize;
 
     wxString draw_text = wxAuiChopText(dc, text, clip_rect.width);
 
-    dc.SetClippingRegion(clip_rect);
+    wxDCClipper clipper(dc, clip_rect);
+
     dc.DrawText(draw_text, rect.x+window->FromDIP(3) + caption_offset, rect.y+(rect.height/2)-(h/2)-1);
-    dc.DestroyClippingRegion();
 }
 
 #if WXWIN_COMPATIBILITY_3_0
 void wxAuiDefaultDockArt::DrawIcon(wxDC& dc, const wxRect& rect, wxAuiPaneInfo& pane)
 {
-    DrawIcon(dc, NULL, rect, pane);
+    DrawIcon(dc, nullptr, rect, pane);
 }
 #endif
 
 void
 wxAuiDefaultDockArt::DrawIcon(wxDC& dc, wxWindow *window, const wxRect& rect, wxAuiPaneInfo& pane)
 {
+    if (!window)
+    {
+        window = wxTheApp->GetTopWindow();
+        wxCHECK_RET( window, "must have some window" );
+    }
+
+    // Ensure the icon fits into the title bar.
+    wxSize iconSize = pane.icon.GetPreferredLogicalSizeFor(window);
+    if (iconSize.y > rect.height)
+    {
+        iconSize *= static_cast<double>(rect.height) / iconSize.y;
+    }
+
     // Draw the icon centered vertically
-    int xOffset = window ? window->FromDIP(2) : 2;
-    dc.DrawBitmap(pane.icon,
-                  rect.x+xOffset, rect.y+(rect.height-pane.icon.GetScaledHeight())/2,
+    int xOffset = window->FromDIP(2);
+    const wxBitmap& icon = pane.icon.GetBitmap(window->ToPhys(iconSize));
+    dc.DrawBitmap(icon,
+                  rect.x+xOffset, rect.y+(rect.height-icon.GetLogicalHeight())/2,
                   true);
 }
 
@@ -768,45 +833,45 @@ void wxAuiDefaultDockArt::DrawPaneButton(wxDC& dc,
                                       const wxRect& _rect,
                                       wxAuiPaneInfo& pane)
 {
-    wxBitmap bmp;
+    wxBitmapBundle bb;
     switch (button)
     {
         default:
         case wxAUI_BUTTON_CLOSE:
             if (pane.state & wxAuiPaneInfo::optionActive)
-                bmp = m_activeCloseBitmap;
+                bb = m_activeCloseBitmap;
             else
-                bmp = m_inactiveCloseBitmap;
+                bb = m_inactiveCloseBitmap;
             break;
         case wxAUI_BUTTON_PIN:
             if (pane.state & wxAuiPaneInfo::optionActive)
-                bmp = m_activePinBitmap;
+                bb = m_activePinBitmap;
             else
-                bmp = m_inactivePinBitmap;
+                bb = m_inactivePinBitmap;
             break;
         case wxAUI_BUTTON_MAXIMIZE_RESTORE:
             if (pane.IsMaximized())
             {
                 if (pane.state & wxAuiPaneInfo::optionActive)
-                    bmp = m_activeRestoreBitmap;
+                    bb = m_activeRestoreBitmap;
                 else
-                    bmp = m_inactiveRestoreBitmap;
+                    bb = m_inactiveRestoreBitmap;
             }
             else
             {
                 if (pane.state & wxAuiPaneInfo::optionActive)
-                    bmp = m_activeMaximizeBitmap;
+                    bb = m_activeMaximizeBitmap;
                 else
-                    bmp = m_inactiveMaximizeBitmap;
+                    bb = m_inactiveMaximizeBitmap;
             }
             break;
     }
 
-    wxAuiScaleBitmap(bmp, window->GetDPIScaleFactor());
+    const wxBitmap& bmp = bb.GetBitmapFor(window);
 
     wxRect rect = _rect;
 
-    rect.y = rect.y + (rect.height/2) - (bmp.GetScaledHeight()/2);
+    rect.y = rect.y + (rect.height/2) - (bmp.GetLogicalHeight()/2);
 
     if (button_state == wxAUI_BUTTON_STATE_PRESSED)
     {
@@ -830,9 +895,11 @@ void wxAuiDefaultDockArt::DrawPaneButton(wxDC& dc,
 
         // draw the background behind the button
         dc.DrawRectangle(rect.x, rect.y,
-            bmp.GetScaledWidth() - window->FromDIP(1),
-            bmp.GetScaledHeight() - window->FromDIP(1));
+            bmp.GetLogicalWidth() - window->FromDIP(1),
+            bmp.GetLogicalHeight() - window->FromDIP(1));
     }
+
+    wxDCClipper clip(dc, rect);
 
     // draw the button itself
     dc.DrawBitmap(bmp, rect.x, rect.y, true);

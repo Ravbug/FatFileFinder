@@ -18,9 +18,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #include "wx/filehistory.h"
 
@@ -44,10 +41,36 @@ namespace
 // return the string used for the MRU list items in the menu
 //
 // NB: the index n is 0-based, as usual, but the strings start from 1
-wxString GetMRUEntryLabel(int n, const wxString& path)
+wxString
+GetMRUEntryLabel(int n,
+                 const wxString& path,
+                 wxFileHistoryMenuPathStyle style,
+                 const wxString& firstPath)
 {
+    const wxFileName currFn(path);
+
+    wxString pathInMenu;
+    switch ( style )
+    {
+        case wxFH_PATH_SHOW_IF_DIFFERENT:
+            if ( currFn.HasName() && currFn.GetPath() == firstPath )
+                pathInMenu = currFn.GetFullName();
+            else
+                pathInMenu = currFn.GetFullPath();
+            break;
+
+        case wxFH_PATH_SHOW_NEVER:
+            // Only show the filename + extension and not the path.
+            pathInMenu = currFn.GetFullName();
+            break;
+
+        case wxFH_PATH_SHOW_ALWAYS:
+            // Always show full path.
+            pathInMenu = currFn.GetFullPath();
+            break;
+    }
+
     // we need to quote '&' characters which are used for mnemonics
-    wxString pathInMenu(path);
     pathInMenu.Replace("&", "&&");
 
 #ifdef __WXMSW__
@@ -73,6 +96,7 @@ wxFileHistoryBase::wxFileHistoryBase(size_t maxFiles, wxWindowID idBase)
 {
     m_fileMaxFiles = maxFiles;
     m_idBase = idBase;
+    m_menuPathStyle = wxFH_PATH_SHOW_IF_DIFFERENT;
 }
 
 /* static */
@@ -138,31 +162,42 @@ void wxFileHistoryBase::AddFileToHistory(const wxString& file)
     m_fileHistory.insert(m_fileHistory.begin(), file);
     numFiles++;
 
-    // update the labels in all menus
-    for ( i = 0; i < numFiles; i++ )
+    DoRefreshLabels();
+}
+
+void wxFileHistoryBase::DoRefreshLabels()
+{
+    const size_t numFiles = m_fileHistory.size();
+
+    // If no files, then no need to refresh the menu
+    if ( numFiles == 0 )
+        return;
+
+    // Remember the path in case we need to compare with it below.
+    const wxString firstPath(wxFileName(m_fileHistory[0]).GetPath());
+
+    // Update the labels in all menus
+    for ( size_t i = 0; i < numFiles; i++ )
     {
-        // if in same directory just show the filename; otherwise the full path
-        const wxFileName fnOld(m_fileHistory[i]);
-
-        wxString pathInMenu;
-        if ( (fnOld.GetPath() == fnNew.GetPath()) && fnOld.HasName() )
-        {
-            pathInMenu = fnOld.GetFullName();
-        }
-        else // file in different directory or it's not a file but a directory
-        {
-            // absolute path; could also set relative path
-            pathInMenu = m_fileHistory[i];
-        }
-
         for ( wxList::compatibility_iterator node = m_fileMenus.GetFirst();
               node;
               node = node->GetNext() )
         {
             wxMenu * const menu = (wxMenu *)node->GetData();
 
-            menu->SetLabel(m_idBase + i, GetMRUEntryLabel(i, pathInMenu));
+            menu->SetLabel(m_idBase + i, GetMRUEntryLabel(i, m_fileHistory[i],
+                                                          m_menuPathStyle,
+                                                          firstPath));
         }
+    }
+}
+
+void wxFileHistoryBase::SetMenuPathStyle(wxFileHistoryMenuPathStyle style)
+{
+    if ( style != m_menuPathStyle )
+    {
+        m_menuPathStyle = style;
+        DoRefreshLabels();
     }
 }
 
@@ -176,6 +211,11 @@ void wxFileHistoryBase::RemoveFileFromHistory(size_t i)
     m_fileHistory.RemoveAt(i);
     numFiles--;
 
+    // Remember the path in case we need to compare with it below.
+    const wxString firstPath = !m_fileHistory.empty()
+                                ? wxFileName(m_fileHistory[0]).GetPath()
+                                : wxString();
+
     for ( wxList::compatibility_iterator node = m_fileMenus.GetFirst();
           node;
           node = node->GetNext() )
@@ -185,7 +225,9 @@ void wxFileHistoryBase::RemoveFileFromHistory(size_t i)
         // shift filenames up
         for ( size_t j = i; j < numFiles; j++ )
         {
-            menu->SetLabel(m_idBase + j, GetMRUEntryLabel(j, m_fileHistory[j]));
+            menu->SetLabel(m_idBase + j, GetMRUEntryLabel(j, m_fileHistory[j],
+                                                          m_menuPathStyle,
+                                                          firstPath));
         }
 
         // delete the last menu item which is unused now
@@ -241,6 +283,7 @@ void wxFileHistoryBase::Load(const wxConfigBase& config)
     }
 
     AddFilesToMenu();
+    DoRefreshLabels();
 }
 
 void wxFileHistoryBase::Save(wxConfigBase& config)
@@ -279,9 +322,14 @@ void wxFileHistoryBase::AddFilesToMenu(wxMenu* menu)
     if ( menu->GetMenuItemCount() )
         menu->AppendSeparator();
 
+    // Remember the path in case we need to compare with it below.
+    const wxString firstPath(wxFileName(m_fileHistory[0]).GetPath());
+
     for ( size_t i = 0; i < m_fileHistory.GetCount(); i++ )
     {
-        menu->Append(m_idBase + i, GetMRUEntryLabel(i, m_fileHistory[i]));
+        menu->Append(m_idBase + i, GetMRUEntryLabel(i, m_fileHistory[i],
+                                                    m_menuPathStyle,
+                                                    firstPath));
     }
 }
 

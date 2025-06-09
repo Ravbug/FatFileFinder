@@ -17,16 +17,6 @@
     // it calls wxApp::OnFatalException() if wxTheApp object exists
     WXDLLIMPEXP_BASE unsigned long wxGlobalSEHandler(EXCEPTION_POINTERS *pExcPtrs);
 
-    // helper macro for wxSEH_HANDLE
-#if defined(__BORLANDC__)
-    // some compilers don't understand that this code is unreachable and warn
-    // about no value being returned from the function without it, so calm them
-    // down
-    #define wxSEH_DUMMY_RETURN(rc) return rc;
-#else
-    #define wxSEH_DUMMY_RETURN(rc)
-#endif
-
     // macros which allow to avoid many #if wxUSE_ON_FATAL_EXCEPTION in the code
     // which uses them
     #define wxSEH_TRY __try
@@ -34,10 +24,7 @@
     #define wxSEH_HANDLE(rc)                                                  \
         __except ( wxGlobalSEHandler(GetExceptionInformation()) )             \
         {                                                                     \
-            /* use the same exit code as abort() */                           \
-            ::ExitProcess(3);                                                 \
-                                                                              \
-            wxSEH_DUMMY_RETURN(rc)                                            \
+            ::ExitProcess(rc);                                                \
         }
 
 #else // wxUSE_ON_FATAL_EXCEPTION

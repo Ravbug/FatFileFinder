@@ -20,21 +20,23 @@ wxDataViewColumn::wxDataViewColumn( const wxString &title, wxDataViewRenderer *r
                   int flags )
     : wxDataViewColumnBase( renderer, model_column )
 {
+    m_renderer->SetOwner( this );
 }
 
-wxDataViewColumn::wxDataViewColumn( const wxBitmap &bitmap, wxDataViewRenderer *renderer,
+wxDataViewColumn::wxDataViewColumn( const wxBitmapBundle &bitmap, wxDataViewRenderer *renderer,
                   unsigned int model_column, int width,
                   wxAlignment align,
                   int flags )
     : wxDataViewColumnBase( bitmap, renderer, model_column )
 {
+    m_renderer->SetOwner( this );
 }
 
 void wxDataViewColumn::SetTitle( const wxString &title )
 {
 }
 
-void wxDataViewColumn::SetBitmap( const wxBitmap &bitmap )
+void wxDataViewColumn::SetBitmap( const wxBitmapBundle &bitmap )
 {
 }
 
@@ -140,10 +142,6 @@ int wxDataViewColumn::GetFlags() const
 //##############################################################################
 
 
-wxDataViewCtrl::wxDataViewCtrl()
-{
-}
-
 wxDataViewCtrl::wxDataViewCtrl( wxWindow *parent, wxWindowID id,
        const wxPoint& pos,
        const wxSize& size, long style,
@@ -192,7 +190,7 @@ unsigned wxDataViewCtrl::GetColumnCount() const
 
 wxDataViewColumn* wxDataViewCtrl::GetColumn( unsigned int pos ) const
 {
-    return NULL;
+    return nullptr;
 }
 
 bool wxDataViewCtrl::DeleteColumn( wxDataViewColumn *column )
@@ -212,7 +210,7 @@ int wxDataViewCtrl::GetColumnPosition( const wxDataViewColumn *column ) const
 
 wxDataViewColumn *wxDataViewCtrl::GetSortingColumn() const
 {
-    return NULL;
+    return nullptr;
 }
 
 wxDataViewItem wxDataViewCtrl::GetSelection() const
@@ -267,7 +265,7 @@ wxRect wxDataViewCtrl::GetItemRect( const wxDataViewItem &item,
     return wxRect();
 }
 
-void wxDataViewCtrl::Expand( const wxDataViewItem & item )
+void wxDataViewCtrl::DoExpand( const wxDataViewItem & item, bool expandChildren )
 {
 }
 
@@ -285,7 +283,7 @@ bool wxDataViewCtrl::EnableDragSource( const wxDataFormat &format )
     return false;
 }
 
-bool wxDataViewCtrl::EnableDropTarget( const wxDataFormat &format )
+bool wxDataViewCtrl::DoEnableDropTarget( const wxVector<wxDataFormat> &formats )
 {
     return false;
 }

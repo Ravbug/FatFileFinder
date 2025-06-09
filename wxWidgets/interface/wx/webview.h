@@ -108,6 +108,19 @@ enum wxWebViewNavigationActionFlags
 };
 
 /**
+    Specifies at which place of documents an user script will be inserted.
+
+    @since 3.1.5
+*/
+enum wxWebViewUserScriptInjectionTime
+{
+    /** Insert the code of the user script at the beginning of loaded documents. */
+    wxWEBVIEW_INJECT_AT_DOCUMENT_START,
+    /** Insert the code of the user script at the end of the loaded documents. */
+    wxWEBVIEW_INJECT_AT_DOCUMENT_END
+};
+
+/**
     Internet Explorer emulation modes for wxWebViewIE.
 
     Elements of this enum can be used with wxWebView::MSWSetEmulationLevel().
@@ -146,6 +159,394 @@ enum wxWebViewIE_EmulationLevel
     wxWEBVIEWIE_EMU_IE11 =       11000,
     /** Force IE11 edge mode, ignore !DOCTYPE directives. */
     wxWEBVIEWIE_EMU_IE11_FORCE = 11001
+};
+
+/**
+    Types of browsing data that can be cleared.
+
+    Note that different constants can be combined using the bitwise OR
+    operator and that @c wxWEBVIEW_BROWSING_DATA_ALL is a shorthand for
+    specifying all of them.
+
+    @since 3.3.0
+*/
+enum wxWebViewBrowsingDataTypes
+{
+    /** All stored and session cookies */
+    wxWEBVIEW_BROWSING_DATA_COOKIES = 0x01,
+    /** Cached data from disk and memory */
+    wxWEBVIEW_BROWSING_DATA_CACHE = 0x02,
+    /** All DOM Storage: File Systems, Indexed DB, Local Storage, Web SQL, Cache Storage */
+    wxWEBVIEW_BROWSING_DATA_DOM_STORAGE = 0x04,
+    /** Other browsing data like history, settings, auto fill, passwords, etc. */
+    wxWEBVIEW_BROWSING_DATA_OTHER = 0x08,
+    /** All browsing data, including data corresponding to all the other constants. */
+    wxWEBVIEW_BROWSING_DATA_ALL = 0x0f
+};
+
+/**
+    A class describing the window information for a new child window.
+
+    An object of this class can be obtained using wxWebViewEvent::GetTargetWindowFeatures()
+    while handling @c wxEVT_WEBVIEW_NEWWINDOW_FEATURES.
+
+    If a @c wxEVT_WEBVIEW_NEWWINDOW is not vetoed, a @c wxEVT_WEBVIEW_NEWWINDOW_FEATURES
+    event will be sent to the application. The application can then create a new
+    window and call wxWebViewEvent::GetTargetWindowInfo() to get this class providing
+    information about the new window. A new child web view will be available
+    via GetChildWebView(). The application can then place the child web view into
+    the new window by calling wxWebView::Create() on the child web view.
+
+    Sample JavaScript opening a new window:
+    @code
+        window.open("https://www.wxwidgets.org", "newWindow", "width=400,height=400");
+    @endcode
+
+    Sample C++ code handling a new window request:
+    @code
+        // Bind new window handler
+        m_webView->Bind(wxEVT_WEBVIEW_NEWWINDOW, [](wxWebViewEvent& evt) {
+            if (evt.GetURL() == "http://badwebsite.com")
+                evt.Veto(); // Disallow new window for badwebsite.com
+            else
+                evt.Skip(); // Allow new window for all other websites
+        });
+
+        // Bind new window features handler
+        m_webView->Bind(wxEVT_WEBVIEW_NEWWINDOW_FEATURES, [](wxWebViewEvent& evt) {
+            // Get target window features
+            wxWebViewWindowFeatures* features = evt.GetTargetWindowFeatures();
+            // Create a top level window for the child web view
+            wxWindow* win = new wxWindow(this, wxID_ANY, features->GetPosition(), features->GetSize());
+            wxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+            win->SetSizer(sizer);
+            // Get the child web view
+            wxWebView* childWebView = features->GetChildWebView();
+            // Place the child web view into the window
+            childWebView->Create(win, wxID_ANY);
+            sizer->Add(childWebView, wxSizerFlags().Proportion(1).Expand());
+        }
+    @endcode
+
+    @since 3.3.0
+*/
+class WXDLLIMPEXP_WEBVIEW wxWebViewWindowFeatures
+{
+public:
+    /**
+        Get the child web view for the target window.
+
+        This is available in the event handler for @c wxEVT_WEBVIEW_NEWWINDOW_FEATURES
+        and wxWebView::Create() @b must be called on the child web view directly.
+
+        The requested URL will be loaded automatically in the child web view.
+    */
+    wxWebView* GetChildWebView();
+
+    /**
+        Returns the position of the new window if specified by
+        a @c window.open() call.
+    */
+    virtual wxPoint GetPosition() const = 0;
+
+    /**
+        Returns the size of the new window if specified by
+        a @c window.open() call.
+    */
+    virtual wxSize GetSize() const = 0;
+
+    /**
+        Returns @true if the target window is expected to display
+        a menu bar as specified by a @c window.open() call.
+    */
+    virtual bool ShouldDisplayMenuBar() const = 0;
+
+    /**
+        Returns @true if the target window is expected to display
+        a status bar as specified by a @c window.open() call.
+    */
+    virtual bool ShouldDisplayStatusBar() const = 0;
+
+    /**
+        Returns @true if the target window is expected to display
+        a tool bar as specified by a @c window.open() call.
+    */
+    virtual bool ShouldDisplayToolBar() const = 0;
+
+    /**
+        Returns @true if the target window is expected to display
+        scroll bars as specified by a @c window.open() call.
+    */
+    virtual bool ShouldDisplayScrollBars() const = 0;
+};
+
+/**
+    @class wxWebViewConfiguration
+
+    This class allows access to web view configuration options and settings,
+    that have to be specified before placing a webview in a window with
+    wxWebView::Create().
+
+    @since 3.3.0
+    @library{wxwebview}
+    @category{webview}
+
+    @see wxWebView::NewConfiguration()
+ */
+class WXDLLIMPEXP_WEBVIEW wxWebViewConfiguration
+{
+public:
+    /**
+        Returns the pointer to the native configuration used during creation of
+        a wxWebView.
+
+        When using two-step creation this method can be used to customize
+        configuration options not available via GetNativeBackend()
+        after using Create().
+
+        Additional instances of wxWebView must be created using the same
+        wxWebViewConfiguration instance.
+
+        All settings @b must be set before creating a new web view with
+        wxWebView::New().
+
+        The return value needs to be down-casted to the appropriate type
+        depending on the backend:
+            - macOS:
+              <a href="https://developer.apple.com/documentation/webkit/wkwebviewconfiguration">WKWebViewConfiguration</a>
+              pointer,
+            - Windows with Edge:
+              <a href="https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2environmentoptions">ICoreWebView2EnvironmentOptions</a>.
+            - WebKitGTK:
+              <a href="https://webkitgtk.org/reference/webkit2gtk/stable/class.WebContext.html">WebKitWebContext</a>
+              pointer.
+            - With other backends/platforms it's not implemented.
+
+        The following pseudo code shows how to use this method with two-step
+        creation to set no user action requirement to play video in a
+        web view:
+        @code
+            #if defined(__WXMSW__)
+            #include <webview2EnvironmentOptions.h>
+            #elif defined(__WXOSX__)
+            #import "WebKit/WebKit.h"
+            #endif
+
+            wxWebViewConfiguration config = wxWebView::NewConfiguration();
+
+            #if defined(__WXMSW__)
+            ICoreWebView2EnvironmentOptions* webViewOptions =
+                (ICoreWebView2EnvironmentOptions*) config.GetNativeConfiguration();
+            webViewOptions->put_AdditionalBrowserArguments(L"--autoplay-policy=no-user-gesture-required");
+            #elif defined(__WXOSX__)
+            WKWebViewConfiguration* webViewConfiguration =
+                (WKWebViewConfiguration*) config.GetNativeConfiguration();
+            webViewConfiguration->mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone;
+            #endif
+
+            wxWebView* webView = wxWebView::New(config);
+            webView->Create(this, wxID_ANY, "https://www.wxwidgets.org");
+        @endcode
+    */
+    virtual void* GetNativeConfiguration() const;
+
+    /**
+        Returns the backend identifier for which this configuration was created.
+    */
+    wxString GetBackend() const;
+
+    /**
+        Set the data path for the webview.
+
+        This is the path where the webview stores its data, such as cookies,
+        local storage, etc.
+        @param path The path to the data directory.
+
+        @note This is used by Edge, WebKit2GTK+ and Chromium backends (the
+            latter creates "UserData" subdirectory under the given path).
+    */
+    void SetDataPath(const wxString& path);
+
+    /**
+        Returns the data path for the webview.
+
+        This is the path where the webview stores its data, such as cookies,
+        local storage, etc.
+        @return The path to the data directory.
+
+        @note This is used by Edge, WebKit2GTK+ and Chromium backends and
+            always returns empty string for the other ones.
+    */
+    wxString GetDataPath() const;
+
+    /**
+        Allows to disable persistent storage for the webview.
+
+        The default is to enable it. When the webview is created without
+        persistent storage the data is stored in memory and is lost when
+        the webview is destroyed. In browsers this is equivalent to
+        "private browsing" or "incognito mode".
+
+        @return @true if the backend supports to modify this setting. @false if
+            the setting is not supported by the backend.
+
+        @note This is only implemented on the Edge, WebKit2GTK+ and macOS backends.
+
+        @since 3.3.0
+     */
+    bool EnablePersistentStorage(bool enable);
+};
+
+
+/**
+    @class wxWebViewHandlerRequest
+
+    A class giving access to various parameters of a webview request.
+
+    @since 3.3.0
+    @library{wxwebview}
+    @category{webview}
+
+    @see wxWebViewHandler::StartRequest()
+ */
+class WXDLLIMPEXP_WEBVIEW wxWebViewHandlerRequest
+{
+public:
+    /**
+        @return The unmodified url of the request.
+    */
+    virtual wxString GetRawURI() const = 0;
+
+    /**
+        @return The url of the request. Can be modified by the backend for
+                compatibility.
+    */
+    virtual wxString GetURI() const;
+
+    /**
+        @return The body data of the request of @c null if nothing was posted.
+    */
+    virtual wxInputStream* GetData() const = 0;
+
+    /**
+        @return The body data of the request as a string. The returned string
+            is empty if the supplied @c conv doesn't match the encoding.
+    */
+    virtual wxString GetDataString(const wxMBConv& conv = wxConvUTF8) const;
+
+    /**
+        @return The requests HTTP method (e.g. POST, GET, OPTIONS).
+    */
+    virtual wxString GetMethod() const = 0;
+
+    /**
+        Returns a header from the request or an empty string if the header
+        could not be found.
+
+        @param name Name of the header field
+    */
+    virtual wxString GetHeader(const wxString& name) const = 0;
+};
+
+/**
+    @class wxWebViewHandlerResponseData
+
+    A class holding the response data. Stream must be available until
+    this object is destroyed.
+
+    @since 3.3.0
+    @library{wxwebview}
+    @category{webview}
+
+    @see wxWebViewHandlerResponse::Finish(wxSharedPtr<wxWebViewHandlerResponseData>)
+ */
+class WXDLLIMPEXP_WEBVIEW wxWebViewHandlerResponseData
+{
+public:
+    /**
+        @return A pointer to the stream.
+
+        @see wxWebViewHandlerResponse::Finish()
+    */
+    virtual wxInputStream* GetStream() = 0;
+};
+
+/**
+    @class wxWebViewHandlerResponse
+
+    A class giving access to various webview response parameters.
+
+    Usually a wxWebViewHandler() would set various parameters required
+    for the response like HTTP status, various headers and must then
+    call Finish() to complete the response or call FinishWithError() to
+    abort the request.
+
+    @since 3.3.0
+    @library{wxwebview}
+    @category{webview}
+
+    @see wxWebViewHandler::StartRequest()
+ */
+class WXDLLIMPEXP_WEBVIEW wxWebViewHandlerResponse
+{
+public:
+    /**
+        Sets the status code of the response.
+
+        @param status HTTP status code
+    */
+    virtual void SetStatus(int status) = 0;
+
+    /**
+        Sets the MIME type of the response.
+
+        @param contentType MIME type of the response content
+    */
+    virtual void SetContentType(const wxString& contentType) = 0;
+
+    /**
+        Sets a response header which will be sent to the web view.
+
+        The header will be added if it hasn't been set before or replaced
+        otherwise.
+
+        @param name
+            Name of the header
+        @param value
+            String value of the header
+    */
+    virtual void SetHeader(const wxString& name, const wxString& value) = 0;
+
+    /**
+        Finishes the request with binary data.
+
+        @param data
+            The data object will be dereferenced when the request is completed
+
+        @see Finish(const wxString&, const wxMBConv&)
+    */
+    virtual void Finish(wxSharedPtr<wxWebViewHandlerResponseData> data) = 0;
+
+    /**
+        Finishes the request with text data.
+
+        @param text
+            Text content of the response (can be empty)
+        @param conv
+            Conversion used when sending the text in the response
+
+        @see Finish(wxSharedPtr<wxWebViewHandlerResponseData>)
+    */
+    virtual void Finish(const wxString& text, const wxMBConv& conv = wxConvUTF8);
+
+    /**
+        Finishes the request as an error.
+
+        This will notify that the request could not produce any data.
+
+        @see Finish()
+    */
+    virtual void FinishWithError() = 0;
 };
 
 /**
@@ -197,9 +598,21 @@ public:
     /**
         Function to create a new wxWebView with two-step creation,
         wxWebView::Create should be called on the returned object.
-        @return the created wxWebView
+        @return The created wxWebView.
      */
     virtual wxWebView* Create() = 0;
+
+    /**
+        Function to create a new wxWebView with two-step creation
+        with a wxWebViewConfiguration, wxWebView::Create should be
+        called on the returned object.
+
+        @return The created wxWebView.
+        @since 3.3.0
+
+        @see CreateConfiguration()
+    */
+    virtual wxWebView* CreateWithConfig(const wxWebViewConfiguration& config);
 
     /**
         Function to create a new wxWebView with parameters.
@@ -210,8 +623,8 @@ public:
         @param size Size of the control
         @param style
             Window style. For generic window styles, please see wxWindow.
-        @param name Window name.
-        @return the created wxWebView
+        @param name Window name
+        @return The created wxWebView
     */
     virtual wxWebView* Create(wxWindow* parent,
                               wxWindowID id,
@@ -220,6 +633,40 @@ public:
                               const wxSize& size = wxDefaultSize,
                               long style = 0,
                               const wxString& name = wxWebViewNameStr) = 0;
+    /**
+        Function to check if the backend is available at runtime. The
+        wxWebView implementation can use this function to check all
+        runtime requirements without trying to create a wxWebView.
+
+        @return @true if the backend can be used or @false if it is
+            not available during runtime.
+
+        @since 3.1.5
+    */
+    virtual bool IsAvailable();
+
+    /**
+        Retrieve the version information about this backend implementation.
+
+        @param context
+            The context in which the version information is requested, by
+            default it is the run-time version. Currently only GTK WebKit and
+            CEF backends support returning compile-time version information,
+            all the other backends return an empty wxVersionInfo object in this
+            case.
+
+        @since 3.1.5 (@a context parameter was added in 3.3.0)
+    */
+    virtual wxVersionInfo
+    GetVersionInfo(wxVersionContext context = wxVersionContext::RunTime);
+
+    /**
+        Create a wxWebViewConfiguration object for wxWebView instances
+        created by this factory.
+
+        @since 3.3.0
+    */
+    virtual wxWebViewConfiguration CreateConfiguration();
 };
 
 /**
@@ -227,6 +674,10 @@ public:
 
     The base class for handling custom schemes in wxWebView, for example to
     allow virtual file system support.
+
+    A new handler should either implement GetFile() or if a more detailed
+    request handling is required (access to headers, post data)
+    StartRequest() has to be implemented.
 
     @since 2.9.3
     @library{wxwebview}
@@ -246,55 +697,157 @@ public:
     /**
         @return A pointer to the file represented by @c uri.
     */
-    virtual wxFSFile* GetFile(const wxString &uri) = 0;
+    virtual wxFSFile* GetFile(const wxString &uri);
 
     /**
         @return The name of the scheme, as passed to the constructor.
     */
     virtual wxString GetName() const;
+
+    /**
+        Sets a custom security URL. Only used by wxWebViewIE.
+
+        @since 3.1.5
+    */
+    virtual void SetSecurityURL(const wxString& url);
+
+    /**
+        @return The custom security URL. Only used by wxWebViewIE.
+
+        @since 3.1.5
+    */
+    virtual wxString GetSecurityURL() const;
+
+    /**
+        When using the edge backend handler urls are https urls with a
+        virtual host. As default @c name.wxsite is used as the virtual hostname.
+        If you customize this host, use a non existing site (ideally a reserved
+        subdomain of a domain you control). If @c localassests.domain.example is
+        used the handlers content will be available under
+        %https://localassets.domain.example/
+
+        This has to be set @b before registering the handler via
+        wxWebView::RegisterHandler().
+
+        @since 3.3.0
+    */
+    virtual void SetVirtualHost(const wxString& host);
+
+    /**
+        @return The virtual host of this handler
+
+        @see SetVirtualHost()
+        @since 3.3.0
+    */
+    virtual wxString GetVirtualHost() const;
+
+    /**
+        Implementing this method allows for more control over requests from
+        the backend than GetFile(). More details of the request are available
+        from the request object which allows access to URL, method, postdata
+        and headers.
+
+        A response can be send via the response object. The response does not
+        have to be finished from this method and it's possible to be finished
+        asynchronously via wxWebViewHandlerResponse::Finish().
+
+        The following pseudo code demonstrates a typical implementation:
+        @code
+        void StartRequest(const wxWebViewHandlerRequest& request,
+                              wxSharedPtr<wxWebViewHandlerResponse> response) override
+        {
+            // Set common headers allowing access from XMLHTTPRequests()
+            response->SetHeader("Access-Control-Allow-Origin", "*");
+            response->SetHeader("Access-Control-Allow-Headers", "*");
+
+            // Handle options request
+            if (request.GetMethod().IsSameAs("options", false))
+            {
+                response->Finish("");
+                return;
+            }
+
+            // Check the post data type
+            if (!request.GetHeader("Content-Type").StartsWith("application/json"))
+            {
+                response->FinishWithError();
+                return;
+            }
+
+            // Process input data
+            wxString postData = request.GetDataString();
+
+            ...
+
+            // Send result
+            response->SetContentType("application/json");
+            response->Finish("{ result: true }");
+        }
+        @endcode
+
+        @note This is only used by macOS, Chromium, and the Edge backend.
+
+        @see GetFile()
+        @since 3.3.0
+    */
+    virtual void StartRequest(const wxWebViewHandlerRequest& request,
+                              wxSharedPtr<wxWebViewHandlerResponse> response);
 };
 
 /**
     @class wxWebView
 
-    This control may be used to render web (HTML / CSS / javascript) documents.
-    It is designed to allow the creation of multiple backends for each port,
-    although currently just one is available. It differs from wxHtmlWindow in
-    that each backend is actually a full rendering engine, Trident on MSW and
-    Webkit on macOS and GTK. This allows the correct viewing of complex pages with
-    javascript and css.
+    This control may be used to render web (HTML / CSS / JavaScript) documents.
+    It is designed to allow the creation of multiple backends for each port.
+    It differs from wxHtmlWindow in that each backend is actually a full web
+    engine, provided by a 3rd party (e.g., WebView2 on MSW or WebKit on macOS and GTK).
+    This allows the correct viewing of complex pages with JavaScript and CSS.
 
-    @section descriptions Backend Descriptions
+    @section backend_descriptions Backend Descriptions
 
-    @par wxWEBVIEW_BACKEND_IE (MSW)
-    @anchor wxWEBVIEW_BACKEND_IE
+    This class supports using multiple backends, corresponding to different
+    implementations of the same functionality. wxWebViewChrome is available
+    on all three major platforms and each platform also has its own default
+    native backend. Backends are identified by their names, documented in
+    the backend descriptions below.
 
-    The IE backend uses Microsoft's Trident rendering engine, specifically the
-    version used by the locally installed copy of Internet Explorer. As such it
-    is only available for the MSW port. By default recent versions of the
+    @subsection wxWEBVIEW_BACKEND_IE wxWEBVIEW_BACKEND_IE (MSW)
+
+    The IE backend uses Microsoft's
     <a href="http://msdn.microsoft.com/en-us/library/aa752085%28v=VS.85%29.aspx">WebBrowser</a>
-    control, which this backend uses, emulate Internet Explorer 7. This can be
-    changed with a registry setting by wxWebView::MSWSetEmulationLevel() see
+    control, which depends the locally installed version of Internet Explorer.
+    By default this backend emulates Internet Explorer 7. This can be
+    changed with a registry setting by wxWebViewIE::MSWSetEmulationLevel() see
     <a href="http://msdn.microsoft.com/en-us/library/ee330730%28v=vs.85%29.aspx#browser_emulation">
-    this</a> article for more information. This backend has full support for
-    custom schemes and virtual file systems.
+    this</a> article for more information.
 
-    @par wxWEBVIEW_BACKEND_EDGE (MSW)
+    This backend has full support for custom schemes and virtual file systems.
 
-    The Edge (Chromium) backend uses Microsoft's
+    The predefined @c wxWebViewBackendIE constant contains the name of this
+    backend and can be used to explicitly select it when using wxWebView::New().
+
+    @note If you plan to display any modern web content you should consider using @ref wxWEBVIEW_BACKEND_EDGE,
+          as Internet Explorer is not supported anymore by Microsoft.
+
+    @subsection wxWEBVIEW_BACKEND_EDGE wxWEBVIEW_BACKEND_EDGE (MSW)
+
+    The Edge backend uses Microsoft's
     <a href="https://docs.microsoft.com/en-us/microsoft-edge/hosting/webview2">Edge WebView2</a>.
-    It is available for Windows 7 and newer.
-    The following features are currently unsupported with this backend:
-    virtual filesystems, custom urls, find.
+    It is available for Windows 7 (newer versions require Windows 10+) and newer.
+
+    This backend does not support custom schemes. When using handlers, see
+    wxWebViewHandler::SetVirtualHost() for more details on how to access
+    handler provided URLs.
 
     This backend is not enabled by default, to build it follow these steps:
-    - Visual Studio 2015, or newer, is required
-    - Download the <a href="https://aka.ms/webviewnuget">WebView2 SDK</a>
-      nuget package (Version 0.9.488 or newer)
-    - Extract the package (it's a zip archive) to @c wxWidgets/3rdparty/webview2
-      (you should have @c 3rdparty/webview2/build/native/include/WebView2.h
-      file after unpacking it)
-    - Enable @c wxUSE_WEBVIEW_EDGE in CMake or @c setup.h
+    - With CMake just enable @c wxUSE_WEBVIEW_EDGE
+    - When not using CMake:
+        - Download the <a href="https://aka.ms/webviewnuget">WebView2 SDK</a>
+        nuget package (Version 1.0.864.35 or newer)
+        - Extract the package (it's a zip archive) to @c wxWidgets/3rdparty/webview2
+        (you should have @c 3rdparty/webview2/build/native/include/WebView2.h
+        file after unpacking it)
+        - Enable @c wxUSE_WEBVIEW_EDGE in @c setup.h
     - Build wxWidgets webview library
     - Copy @c WebView2Loader.dll from the subdirectory corresponding to the
       architecture used (x86 or x64) of @c wxWidgets/3rdparty/webview2/build/
@@ -304,30 +857,76 @@ public:
       loaded and Edge (Chromium) is installed)
     - Make sure to add a note about using the WebView2 SDK to your application
       documentation, as required by its licence
+    - With Visual Studio 2019 or newer @c wxUSE_WEBVIEW_EDGE_STATIC can be used
+      to static link the loader and remove the dependency on @c WebView2Loader.dll
+      at runtime.
 
-    @par wxWEBVIEW_WEBKIT (GTK)
+    If enabled and available at runtime, Edge will be selected as the default
+    backend. If you require the IE backend use @c wxWebViewBackendIE when
+    using wxWebView::New().
+
+    If your application should use a
+    <a href="https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution#fixed-version-distribution-mode">
+    fixed version</a> of the WebView2 runtime you must use
+    wxWebViewEdge::MSWSetBrowserExecutableDir() to specify its usage before
+    using the Edge backend.
+
+    The predefined @c wxWebViewBackendEdge constant contains the name of this
+    backend.
+
+    @subsection wxWEBVIEW_WEBKIT wxWEBVIEW_WEBKIT (GTK)
 
     Under GTK the WebKit backend uses
     <a href="http://webkitgtk.org/">WebKitGTK+</a>. The current minimum version
     required is 1.3.1 which ships by default with Ubuntu Natty and Debian
-    Wheezy and has the package name libwebkitgtk-dev. Custom schemes and
+    Wheezy and has the package name libwebkitgtk-dev.
+
+    Custom schemes and
     virtual files systems are supported under this backend, however embedded
     resources such as images and stylesheets are currently loaded using the
     data:// scheme.
 
-    @par wxWEBVIEW_WEBKIT2 (GTK3)
+    The predefined @c wxWebViewBackendWebKit constant contains the name of this
+    backend.
+
+    @subsection wxWEBVIEW_WEBKIT2 wxWEBVIEW_WEBKIT2 (GTK3)
 
     Under GTK3 the WebKit2 version of <a href="http://webkitgtk.org/">WebKitGTK+</a>
     is used. In Ubuntu the required package name is libwebkit2gtk-4.0-dev
-    and under Fedora it is webkitgtk4-devel. All wxWEBVIEW_WEBKIT features are
+    and under Fedora it is webkitgtk4-devel.
+
+    All features are
     supported except for clearing and enabling / disabling the history.
 
-    @par wxWEBVIEW_WEBKIT (OSX)
+    The predefined @c wxWebViewBackendWebKit constant contains the name of this
+    backend.
+
+    @subsection wxWEBVIEW_WEBKIT_MACOS wxWEBVIEW_WEBKIT (macOS)
 
     The macOS WebKit backend uses Apple's
-    <a href="http://developer.apple.com/library/mac/#documentation/Cocoa/Reference/WebKit/Classes/WebView_Class/Reference/Reference.html#//apple_ref/doc/uid/20001903">WebView</a>
-    class. This backend has full support for custom schemes and virtual file
-    systems.
+    <a href="https://developer.apple.com/documentation/webkit/wkwebview">WKWebView</a>
+    class.
+
+    This backend has full support for custom schemes and virtual file
+    systems on macOS 10.13+. In order to use handlers, two-step creation has to be used
+    and RegisterHandler() has to be called before Create().
+
+    Starting with macOS 10.11 and iOS 9 an application cannot create unsecure
+    connections (this includes HTTP and unverified HTTPS). You have to include
+    additional fields in your Info.plist to enable such connections.
+    For further details see the documentation on NSAppTransportSecurity
+    <a target=_new href="https://developer.apple.com/documentation/bundleresources/information_property_list/nsapptransportsecurity">here</a>
+
+    The predefined @c wxWebViewBackendWebKit constant contains the name of this
+    backend.
+
+    @subsection wxWEBVIEW_CHROMIUM wxWEBVIEW_CHROMIUM (MSW, macOS, GTK)
+
+    The Chromium Embedded Framework backend has to be enabled when building wxWidgets,
+    see wxWebViewChromium for additional usage and build instructions.
+
+    The predefined @c wxWebViewBackendChromium constant contains the name of this
+    backend.
 
     @section async Asynchronous Notifications
 
@@ -343,8 +942,9 @@ public:
 
     wxWebView supports the registering of custom scheme handlers, for example
     @c file or @c http. To do this create a new class which inherits from
-    wxWebViewHandler, where wxWebHandler::GetFile() returns a pointer to a
-    wxFSFile which represents the given url. You can then register your handler
+    wxWebViewHandler, where wxWebViewHandler::GetFile() returns a pointer to a
+    wxFSFile which represents the given url or wxWebViewHandler::StartRequest() for
+    more complex requests. You can then register your handler
     with RegisterHandler() it will be called for all pages and resources.
 
     wxWebViewFSHandler is provided to access the virtual file system encapsulated by
@@ -353,9 +953,15 @@ public:
 
     wxWebViewArchiveHandler is provided to allow the navigation of pages inside a zip
     archive. It supports paths of the form:
-    @c scheme:///C:/example/docs.zip;protocol=zip/main.htm
+    `scheme:///C:/example/docs.zip;protocol=zip/main.htm`
 
     @beginEventEmissionTable{wxWebViewEvent}
+    @event{EVT_WEBVIEW_CREATED(id, func)}
+       Process a @c wxEVT_WEBVIEW_CREATED event, generated when the object is
+       fully initialized. For the backends using asynchronous initialization,
+       such as wxWebViewChromium, most of this class member functions can be
+       only used once this event is received.
+       Available only in wxWidgets 3.3.0 or later.
     @event{EVT_WEBVIEW_NAVIGATING(id, func)}
        Process a @c wxEVT_WEBVIEW_NAVIGATING event, generated before trying
        to get a resource. This event may be vetoed to prevent navigating to this
@@ -379,16 +985,43 @@ public:
     @event{EVT_WEBVIEW_NEWWINDOW(id, func)}
        Process a @c wxEVT_WEBVIEW_NEWWINDOW event, generated when a new
        window is created. You must handle this event if you want anything to
-       happen, for example to load the page in a new window or tab.
+       happen, for example to load the page in a new window or tab. For usage
+       details see wxWebViewWindowFeatures.
+    @event{EVT_WEBVIEW_NEWWINDOW_FEATURES(id, func)}
+       Process a @c wxEVT_WEBVIEW_NEWWINDOW_FEATURES event, generated when
+       window features are available for the new window. For usage
+       details see wxWebViewWindowFeatures.
+       Available only in wxWidgets 3.3.0 or later.
+    @event{EVT_WEBVIEW_WINDOW_CLOSE_REQUESTED(id, func)}
+       Process a @c wxEVT_WEBVIEW_WINDOW_CLOSE_REQUESTED event, generated when
+       a window is requested to be closed.
+       Available only in wxWidgets 3.3.0 or later.
     @event{EVT_WEBVIEW_TITLE_CHANGED(id, func)}
        Process a @c wxEVT_WEBVIEW_TITLE_CHANGED event, generated when
        the page title changes. Use GetString to get the title.
+    @event{EVT_WEBVIEW_FULLSCREEN_CHANGED(id, func)}
+       Process a @c wxEVT_WEBVIEW_FULLSCREEN_CHANGED event, generated when
+       the page wants to enter or leave fullscreen. Use GetInt to get the status.
+       Not implemented for the IE backend.
+       Available only in wxWidgets 3.1.5 or later.
+    @event{EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED(id, func)}
+        Process a @c wxEVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED event.
+        Available only in wxWidgets 3.1.5 or later. For usage details see
+        AddScriptMessageHandler().
+    @event{EVT_WEBVIEW_SCRIPT_RESULT(id, func)}
+        Process a @c wxEVT_WEBVIEW_SCRIPT_RESULT event.
+        Available only in wxWidgets 3.1.6 or later. For usage details see
+        RunScriptAsync().
+    @event{wxEVT_WEBVIEW_BROWSING_DATA_CLEARED(id, func)}
+        Process a @c wxEVT_WEBVIEW_BROWSING_DATA_CLEARED event
+        only available in wxWidgets 3.3.0 or later. For usage details see
+        ClearBrowsingData().
     @endEventTable
 
     @since 2.9.3
     @library{wxwebview}
     @category{ctrl,webview}
-    @see wxWebViewHandler, wxWebViewEvent
+    @see wxWebViewEvent, wxWebViewConfiguration, wxWebViewHandler
  */
 class wxWebView : public wxControl
 {
@@ -396,6 +1029,12 @@ public:
 
     /**
         Creation function for two-step creation.
+
+        Please note that the object creation may be asynchronous when using
+        some backends (e.g., wxWebViewEdge or wxWebViewChromium)
+        and the object is not really created until @c wxEVT_WEBVIEW_CREATED event
+        is received, so any non-trivial calls to its member functions should be
+        delayed until then.
     */
     virtual bool Create(wxWindow* parent,
                         wxWindowID id,
@@ -408,28 +1047,41 @@ public:
     /**
         Factory function to create a new wxWebView with two-step creation,
         wxWebView::Create should be called on the returned object.
-        @param backend The backend web rendering engine to use.
-                       @c wxWebViewBackendDefault, @c wxWebViewBackendIE and
-                       @c wxWebViewBackendWebKit are predefined where appropriate.
-        @return The created wxWebView
+        @param backend The backend to use.
+        @return The created wxWebView.
         @since 2.9.5
      */
     static wxWebView* New(const wxString& backend = wxWebViewBackendDefault);
 
     /**
+        Factory function to create a new wxWebView with two-step creation,
+        wxWebView::Create should be called on the returned object.
+
+        @param config a configuration object create with NewConfiguration().
+        @return The created wxWebView
+        @since 3.3.0
+     */
+    static wxWebView* New(const wxWebViewConfiguration& config);
+
+    /**
         Factory function to create a new wxWebView using a wxWebViewFactory.
+
+        Note that the returned object may not be immediately usable yet, see
+        Create() and wxEVT_WEBVIEW_CREATED.
+
         @param parent Parent window for the control
         @param id ID of this control
         @param url Initial URL to load
         @param pos Position of the control
         @param size Size of the control
-        @param backend The backend web rendering engine to use.
-                       @c wxWebViewBackendDefault, @c wxWebViewBackendIE and
-                       @c wxWebViewBackendWebKit are predefined where appropriate.
+        @param backend The backend web engine to use.
+                       @c wxWebViewBackendDefault and other backend names constants
+                       in format @c wxWebViewBackend<Name> (e.g., @c wxWebViewBackendWebKit)
+                       are predefined where appropriate. See @ref backend_descriptions "Backend descriptions".
         @param style
             Window style. For generic window styles, please see wxWindow.
         @param name Window name.
-        @return The created wxWebView, or @c NULL if the requested backend
+        @return The created wxWebView, or @NULL if the requested backend
                 is not available
         @since 2.9.5
     */
@@ -456,10 +1108,45 @@ public:
     /**
         Allows to check if a specific backend is currently available.
 
+        For example, to check for Edge backend availability:
+        @code
+        if ( wxWebView::IsBackendAvailable(wxWebViewBackendEdge) )
+        {
+            ... enable some extra functionality not available with the IE backend ...
+        }
+        @endcode
+
         @since 3.1.4
     */
     static bool IsBackendAvailable(const wxString& backend);
 
+    /**
+        Retrieve the version information about the backend implementation.
+
+        @param backend
+            The name of the backend to retrieve the version information for,
+            can be left unspecified to use the default backend.
+        @param context
+            The context in which the version information is requested, by
+            default it is the run-time version. Currently only GTK WebKit and
+            CEF backends support returning compile-time version information,
+            all the other backends return an empty wxVersionInfo object in this
+            case.
+
+        @since 3.1.5 (@a context parameter was added in 3.3.0)
+    */
+    static wxVersionInfo
+    GetBackendVersionInfo(
+        const wxString& backend = wxWebViewBackendDefault,
+        wxVersionContext context = wxVersionContext::RunTime
+    );
+
+    /**
+        Create a new wxWebViewConfiguration object.
+
+        @since 3.3.0
+    */
+    static wxWebViewConfiguration NewConfiguration(const wxString& backend = wxWebViewBackendDefault);
 
     /**
         Get the title of the current web page, or its URL/path if title is not
@@ -475,11 +1162,41 @@ public:
     /**
         Return the pointer to the native backend used by this control.
 
-        This method can be used to retrieve the pointer to the native rendering
+        This method can be used to retrieve the pointer to the native web
         engine used by this control. The return value needs to be down-casted
-        to the appropriate type depending on the platform: under Windows, it's
-        a pointer to IWebBrowser2 interface, under macOS it's a WebView pointer
-        and under GTK it's a WebKitWebView.
+        to the appropriate type depending on the backend:
+        <table>
+            <tr>
+                <th>Backend</th>
+                <th>Platform</th>
+                <th>Type</th>
+            </tr>
+            <tr>
+                <td>wxWEBVIEW_BACKEND_IE</td>
+                <td>MSW</td>
+                <td><a href="https://learn.microsoft.com/windows/win32/api/exdisp/nn-exdisp-iwebbrowser2">IWebBrowser2</a></td>
+            </tr>
+            <tr>
+                <td>wxWEBVIEW_BACKEND_EDGE</td>
+                <td>MSW</td>
+                <td><a href="https://learn.microsoft.com/microsoft-edge/webview2/reference/win32/icorewebview2_2">ICoreWebView2_2</a></td>
+            </tr>
+            <tr>
+                <td>wxWEBVIEW_WEBKIT2</td>
+                <td>GTK3</td>
+                <td><a href="https://webkitgtk.org/reference/webkitgtk/stable/class.WebView.html">WebKitWebView</a></td>
+            </tr>
+            <tr>
+                <td>wxWEBVIEW_WEBKIT</td>
+                <td>macOS</td>
+                <td><a href="https://developer.apple.com/documentation/webkit/wkwebview">WKWebView</a></td>
+            </tr>
+            <tr>
+                <td>wxWEBVIEW_CHROMIUM</td>
+                <td>MSW, macOS, GTK</td>
+                <td><a href="https://cef-builds.spotifycdn.com/docs/116.0/classCefBrowser.html">CefBrowser</a></td>
+            </tr>
+        </table>
 
         For example, you could set the WebKit options using this method:
         @code
@@ -492,10 +1209,11 @@ public:
                WebKitWebSettings* settings = webkit_web_view_get_settings(wv);
                g_object_set(G_OBJECT(settings),
                             "enable-frame-flattening", TRUE,
-                            NULL);
+                            nullptr);
             #endif
         @endcode
 
+        @see GetBackendVersionInfo()
         @since 2.9.5
      */
     virtual void* GetNativeBackend() const = 0;
@@ -505,12 +1223,12 @@ public:
         @return The HTML source code, or an empty string if no page is currently
                 shown.
     */
-    virtual wxString GetPageSource() const = 0;
+    virtual wxString GetPageSource() const;
 
     /**
         Get the text of the current page.
     */
-    virtual wxString GetPageText() const = 0;
+    virtual wxString GetPageText() const;
 
     /**
         Returns whether the web control is currently busy (e.g.\ loading a page).
@@ -540,18 +1258,142 @@ public:
     /**
         Registers a custom scheme handler.
         @param handler A shared pointer to a wxWebHandler.
+        @note On macOS in order to use handlers two-step creation has to be
+              used and RegisterHandler() has to be called before Create().
+              With the other backends it has to be called after Create().
+
+        @note The Edge backend does not support custom schemes, but the
+              handler is available as a virtual host under
+              `https://scheme.wxsite`. To customize this virtual host call
+              wxWebViewHandler::SetVirtualHost() before registering the
+              handler.
     */
     virtual void RegisterHandler(wxSharedPtr<wxWebViewHandler> handler) = 0;
 
     /**
         Reload the currently displayed URL.
         @param flags A bit array that may optionally contain reload options.
-        @note The flags are ignored by the edge backend.
+        @note The flags are ignored by the Edge backend.
     */
     virtual void Reload(wxWebViewReloadFlags flags = wxWEBVIEW_RELOAD_DEFAULT) = 0;
 
     /**
+        Set the editable property of the web control. Enabling allows the user
+        to edit the page even if the @c contenteditable attribute is not set.
+        The exact capabilities vary with the backend being used.
+
+        @note This is not implemented for macOS and the Edge backend.
+    */
+    virtual void SetEditable(bool enable = true) = 0;
+
+    /**
+        Set the displayed page source to the contents of the given string.
+        @param html    The string that contains the HTML data to display.
+        @param baseUrl URL assigned to the HTML data, to be used to resolve
+                    relative paths, for instance.
+        @note When using @c wxWEBVIEW_BACKEND_IE you must wait for the current
+              page to finish loading before calling SetPage(). The baseURL
+              parameter is not used in this backend and the Edge backend.
+    */
+    virtual void SetPage(const wxString& html, const wxString& baseUrl) = 0;
+
+    /**
+        Set the displayed page source to the contents of the given stream.
+        @param html    The stream to read HTML data from.
+        @param baseUrl URL assigned to the HTML data, to be used to resolve
+                    relative paths, for instance.
+    */
+    virtual void SetPage(wxInputStream& html, wxString baseUrl);
+
+    /**
+        Stop the current page loading process, if any.
+        May trigger an error event of type @c wxWEBVIEW_NAV_ERR_USER_CANCELLED.
+        TODO: make @c wxWEBVIEW_NAV_ERR_USER_CANCELLED errors uniform across ports.
+    */
+    virtual void Stop() = 0;
+
+    /**
+        Specify a custom user agent string for the web view.
+        Returns @true the user agent could be set.
+
+        If your first request should already use the custom user agent
+        please use two step creation and call SetUserAgent() before Create().
+
+        @note This is not implemented for IE.
+
+        @since 3.1.5
+    */
+    virtual bool SetUserAgent(const wxString& userAgent);
+
+    /**
+        Returns the current user agent string for the web view.
+
+        @since 3.1.5
+    */
+    virtual wxString GetUserAgent() const;
+
+    /**
+        Set the proxy to use for all requests.
+
+        The @a proxy string must be a valid proxy specification, e.g. @c
+        http://my.local.proxy.corp:8080
+
+        Currently this function is only implemented in WebKit2, Edge and
+        Chromium backends and only WebKit2 backend allows to set the proxy
+        after creating the webview, so it is recommended to call it before
+        Create():
+        @code
+            auto webview = wxWebView::New();
+            if ( !webview->SetProxy("http://127.0.0.1:8080") ) {
+                wxLogWarning("Setting proxy failed!");
+            }
+            webview->Create(parent, wxID_ANY);
+        @endcode
+
+        @return @true if proxy was set successfully or @false if it failed,
+            e.g. because this is not supported by the currently used backend.
+     */
+    virtual bool SetProxy(const wxString& proxy);
+
+    /**
+        Clears the browsing data of the web view.
+
+        This function clears the browsing data of the web view, such as cookies,
+        cache, history, etc. The exact data that is cleared depends on the
+        backend used.
+
+        This operation is asynchronous and may take some time to complete. When finished
+        @c wxEVT_WEBVIEW_BROWSING_DATA_CLEARED event is generated.
+
+        @param types The types of browsing data to clear. By default, it clears
+            all types of browsing data.
+        @param since The time since when the browsing data should be cleared.
+            By default, it clears all browsing data.
+        @return @false if backend doesn't support clearing browsing data or an
+            error occurred. Otherwise, @true is returned and the browsing data
+            will be cleared asynchronously and the application will receive a
+            @c wxEVT_WEBVIEW_BROWSING_DATA_CLEARED event when it is done (or if
+            doing it fails later).
+
+        @since 3.3.0
+
+        @note This is only implemented in the Edge, WebKit2GTK+ and macOS backends.
+
+        @see wxWebViewBrowsingDataTypes
+     */
+    virtual bool ClearBrowsingData(int types = wxWEBVIEW_BROWSING_DATA_ALL,
+                                   wxDateTime since = {});
+
+    /**
+        @name Scripting
+    */
+    /**
         Runs the given JavaScript code.
+
+        @note Because of various potential issues it's recommended to use
+            RunScriptAsync() instead of this method. This is especially true
+            if you plan to run code from a webview event and will also prevent
+            unintended side effects on the UI outside of the webview.
 
         JavaScript code is executed inside the browser control and has full
         access to DOM and other browser-provided functionality. For example,
@@ -588,14 +1430,18 @@ public:
         - When using WebKit under macOS, code execution is limited to at most
           10MiB of memory and 10 seconds of execution time.
 
+        - When using Chromium backend, retrieving the result of JavaScript
+          execution is unsupported and this function will always return false
+          if @a output is non-null to indicate this.
+
         - When using IE backend under MSW, scripts can only be executed when
           the current page is fully loaded (i.e. @c wxEVT_WEBVIEW_LOADED event
           was received). A script tag inside the page HTML is required in order
           to run JavaScript.
 
-        Also notice that under MSW converting JavaScript objects to JSON is not
-        supported in the default emulation mode. wxWebView implements its own
-        object-to-JSON conversion as a fallback for this case, however it is
+        Also notice that with the IE backend converting JavaScript objects to
+        JSON is not supported in the default emulation mode, it implements
+        its own object-to-JSON conversion as a fallback for this case, however it is
         not as full-featured, well-tested or performing as the implementation
         of this functionality in the browser control itself, so it is
         recommended to use MSWSetEmulationLevel() to change emulation
@@ -607,41 +1453,105 @@ public:
             @NULL if it is not needed. This parameter is new since wxWidgets
             version 3.1.1.
         @return @true if there is a result, @false if there is an error.
+
+        @see RunScriptAsync()
     */
-    virtual bool RunScript(const wxString& javascript, wxString* output = NULL) = 0;
+    virtual bool RunScript(const wxString& javascript, wxString* output = nullptr) const = 0;
 
     /**
-        Set the editable property of the web control. Enabling allows the user
-        to edit the page even if the @c contenteditable attribute is not set.
-        The exact capabilities vary with the backend being used.
+        Runs the given JavaScript code asynchronously and returns the result
+        via a @c wxEVT_WEBVIEW_SCRIPT_RESULT.
+
+        The script result value can be retrieved via wxWebViewEvent::GetString().
+        If the execution fails wxWebViewEvent::IsError() will return @true. In this
+        case additional script execution error information maybe available
+        via wxWebViewEvent::GetString().
+
+        @param javascript JavaScript code to execute.
+        @param clientData Arbirary pointer to data that can be retrieved from
+            the result event.
+
+        @note The IE backend does not support async script execution.
+
+        @since 3.1.6
+        @see RunScript()
     */
-    virtual void SetEditable(bool enable = true) = 0;
+    virtual void RunScriptAsync(const wxString& javascript, void* clientData = nullptr) const;
+
 
     /**
-        Set the displayed page source to the contents of the given string.
-        @param html    The string that contains the HTML data to display.
-        @param baseUrl URL assigned to the HTML data, to be used to resolve
-                    relative paths, for instance.
-        @note When using @c wxWEBVIEW_BACKEND_IE you must wait for the current
-              page to finish loading before calling SetPage(). The baseURL
-              parameter is not used in this backend and the edge backend.
+        Add a script message handler with the given name.
+
+        To use the script message handler from javascript use
+        @c `window.<name>.postMessage(<messageBody>)` where `<name>` corresponds the value
+        of the name parameter. The `<messageBody>` will be available to the application
+        via a @c wxEVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED event.
+
+        Sample C++ code receiving a script message:
+        @code
+            // Install message handler with the name wx_msg
+            m_webView->AddScriptMessageHandler("wx_msg");
+            // Bind handler
+            m_webView->Bind(wxEVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, [](wxWebViewEvent& evt) {
+                wxLogMessage("Script message received; value = %s, handler = %s", evt.GetString(), evt.GetMessageHandler());
+            });
+        @endcode
+
+        Sample JavaScript sending a script message:
+        @code
+            // Send sample message body
+            window.wx_msg.postMessage('This is a message body');
+        @endcode
+
+        @param name Name of the message handler that can be used from JavaScript
+        @return @true if the handler could be added, @false if it could not be added.
+
+        @see RemoveScriptMessageHandler()
+
+        @note The Edge backend only supports a single message handler and
+            the Chromium and IE backends do not support script message handlers.
+
+        @since 3.1.5
     */
-    virtual void SetPage(const wxString& html, const wxString& baseUrl) = 0;
+    virtual bool AddScriptMessageHandler(const wxString& name);
 
     /**
-        Set the displayed page source to the contents of the given stream.
-        @param html    The stream to read HTML data from.
-        @param baseUrl URL assigned to the HTML data, to be used to resolve
-                    relative paths, for instance.
+        Remove a script message handler with the given name that was previously added via
+        AddScriptMessageHandler().
+
+        @return @true if the handler could be removed, @false if it could not be removed.
+
+        @see AddScriptMessageHandler()
+
+        @since 3.1.5
     */
-    virtual void SetPage(wxInputStream& html, wxString baseUrl);
+    virtual bool RemoveScriptMessageHandler(const wxString& name);
 
     /**
-        Stop the current page loading process, if any.
-        May trigger an error event of type @c wxWEBVIEW_NAV_ERR_USER_CANCELLED.
-        TODO: make @c wxWEBVIEW_NAV_ERR_USER_CANCELLED errors uniform across ports.
+        Injects the specified script into the webpage's content.
+
+        @param javascript The JavaScript code to add.
+        @param injectionTime Specifies when the script will be executed.
+        @return @true if the script was added successfully.
+
+        @note Please note that this is unsupported by the IE backend and
+            the Edge backend does only support wxWEBVIEW_INJECT_AT_DOCUMENT_START.
+
+        @see RemoveAllUserScripts()
+
+        @since 3.1.5
     */
-    virtual void Stop() = 0;
+    virtual bool AddUserScript(const wxString& javascript,
+        wxWebViewUserScriptInjectionTime injectionTime = wxWEBVIEW_INJECT_AT_DOCUMENT_START);
+
+    /**
+        Removes all user scripts from the web view.
+
+        @see AddUserScript()
+
+        @since 3.1.5
+    */
+    virtual void RemoveAllUserScripts();
 
     /**
         @name Clipboard
@@ -649,42 +1559,36 @@ public:
 
     /**
         Returns @true if the current selection can be copied.
-
-        @note This always returns @c true on the macOS WebKit backend.
     */
-    virtual bool CanCopy() const = 0;
+    virtual bool CanCopy() const;
 
     /**
         Returns @true if the current selection can be cut.
-
-         @note This always returns @c true on the macOS WebKit backend.
     */
-    virtual bool CanCut() const = 0;
+    virtual bool CanCut() const;
 
     /**
         Returns @true if data can be pasted.
-
-        @note This always returns @c true on the macOS WebKit backend.
     */
-    virtual bool CanPaste() const = 0;
+    virtual bool CanPaste() const;
 
     /**
         Copies the current selection.
     */
-    virtual void Copy() = 0;
+    virtual void Copy();
 
     /**
         Cuts the current selection.
     */
-    virtual void Cut() = 0;
+    virtual void Cut();
 
     /**
         Pastes the current data.
     */
-    virtual void Paste() = 0;
+    virtual void Paste();
 
     /**
-        @name Context Menu
+        @name Settings
     */
 
     /**
@@ -705,16 +1609,15 @@ public:
     virtual bool IsContextMenuEnabled() const;
 
     /**
-        @name Dev Tools
-    */
-
-    /**
         Enable or disable access to dev tools for the user.
 
-        This is currently only implemented for the Edge (Chromium) backend
-        where the dev tools are enabled by default.
+        Dev tools are disabled by default.
+
+        @note This is not implemented for the IE backend.
 
         @since 3.1.4
+
+        @see ShowDevTools()
     */
     virtual void EnableAccessToDevTools(bool enable = true);
 
@@ -724,6 +1627,57 @@ public:
         @since 3.1.4
     */
     virtual bool IsAccessToDevToolsEnabled() const;
+
+    /**
+        Show the dev tools window.
+
+        Immediately open the dev tools window. Does nothing if this window was
+        already open.
+
+        Unlike EnableAccessToDevTools(), which allows the user to open the dev
+        tools window from the context menu, this function opens the same window
+        programmatically.
+
+        Please note that while ShowDevTools() can be used whether access to the
+        dev tools from the context menu was enabled or not, in WebKit2GTK+
+        backend calling it also enables interactive access to the dev tools
+        from the context menu as a side effect.
+
+        @return @true if the dev tools window is shown (even if it had been
+            already shown before this function was called), @false if it could
+            not be shown for some reason, most likely because the backend does
+            not provide this functionality.
+
+        @note This function is not implemented in the IE and WebKit (GTK/macOS)
+            backends (but is implemented for WebKit2 GTK backend).
+
+        @since 3.3.0
+     */
+    virtual bool ShowDevTools();
+
+    /**
+        Enable or disable if browser accelerator keys are enabled.
+
+        Browser accelerator keys are enabled by default.
+
+        The webview might implement various accelerator keys. This includes
+        allowing accelerator key access to features such as printing and
+        navigation. In many cases this might not be desired and the default
+        keys can be disabled with this setting.
+
+        @note This is only implemented for the Edge backend.
+
+        @since 3.3.0
+    */
+    virtual void EnableBrowserAcceleratorKeys(bool enable = true);
+
+    /**
+        Returns @true if browser accelerator keys are enabled.
+
+        @since 3.3.0
+    */
+    virtual bool AreBrowserAcceleratorKeysEnabled() const;
+
 
     /**
         @name History
@@ -744,14 +1698,14 @@ public:
     /**
         Clear the history, this will also remove the visible page.
 
-        @note This is not implemented on the WebKit2GTK+ backend.
+        @note This is not implemented on the WebKit2GTK+ backend and macOS.
     */
     virtual void ClearHistory() = 0;
 
     /**
         Enable or disable the history. This will also clear the history.
 
-        @note This is not implemented on the WebKit2GTK+ backend.
+        @note This is not implemented on the WebKit2GTK+ backend and macOS.
     */
     virtual void EnableHistory(bool enable = true) = 0;
 
@@ -792,34 +1746,34 @@ public:
     /**
         Clears the current selection.
     */
-    virtual void ClearSelection() = 0;
+    virtual void ClearSelection();
 
     /**
         Deletes the current selection. Note that for @c wxWEBVIEW_BACKEND_WEBKIT
         the selection must be editable, either through SetEditable or the
         correct HTML attribute.
     */
-    virtual void DeleteSelection() = 0;
+    virtual void DeleteSelection();
 
     /**
         Returns the currently selected source, if any.
     */
-    virtual wxString GetSelectedSource() const = 0;
+    virtual wxString GetSelectedSource() const;
 
     /**
         Returns the currently selected text, if any.
     */
-    virtual wxString GetSelectedText() const = 0;
+    virtual wxString GetSelectedText() const;
 
     /**
         Returns @true if there is a current selection.
     */
-    virtual bool HasSelection() const = 0;
+    virtual bool HasSelection() const;
 
     /**
         Selects the entire page.
     */
-    virtual void SelectAll() = 0;
+    virtual void SelectAll();
 
     /**
         @name Undo / Redo
@@ -863,20 +1817,19 @@ public:
               @c wxWEBVIEW_FIND_ENTIRE_WORD or @c wxWEBVIEW_FIND_MATCH_CASE
               are changed, since this will require a new search. To reset the
               search, for example resetting the highlights call the function
-              with an empty search phrase. This always returns @c wxNOT_FOUND
-              on the macOS WebKit backend.
+              with an empty search phrase.
         @since 2.9.5
     */
-    virtual long Find(const wxString& text, wxWebViewFindFlags flags = wxWEBVIEW_FIND_DEFAULT) = 0;
+    virtual long Find(const wxString& text, wxWebViewFindFlags flags = wxWEBVIEW_FIND_DEFAULT);
 
     /**
         @name Zoom
     */
 
     /**
-        Retrieve whether the current HTML engine supports a zoom type.
+        Retrieve whether a zoom type is supported.
         @param type The zoom type to test.
-        @return Whether this type of zoom is supported by this HTML engine
+        @return @true if this type of zoom is supported by this backend
                 (and thus can be set through SetZoomType()).
     */
     virtual bool CanSetZoomType(wxWebViewZoomType type) const = 0;
@@ -887,7 +1840,7 @@ public:
         as provided by @c wxWebViewZoom.
         @return The current level of zoom.
     */
-    virtual wxWebViewZoom GetZoom() const = 0;
+    virtual wxWebViewZoom GetZoom() const;
 
     /**
         Get the zoom factor of the page.
@@ -898,7 +1851,7 @@ public:
 
     /**
         Get how the zoom factor is currently interpreted.
-        @return How the zoom factor is currently interpreted by the HTML engine.
+        @return How the zoom factor is currently interpreted by the backend.
     */
     virtual wxWebViewZoomType GetZoomType() const = 0;
 
@@ -908,7 +1861,7 @@ public:
         steps provided by @c wxWebViewZoom.
         @param zoom How much to zoom (scale) the HTML document.
     */
-    virtual void SetZoom(wxWebViewZoom zoom) = 0;
+    virtual void SetZoom(wxWebViewZoom zoom);
 
     /**
         Set the zoom factor of the page.
@@ -923,8 +1876,8 @@ public:
         /**
         Set how to interpret the zoom factor.
         @param zoomType How the zoom factor should be interpreted by the
-                        HTML engine.
-        @note invoke    CanSetZoomType() first, some HTML renderers may not
+                        backend.
+        @note invoke    CanSetZoomType() first, some backends may not
                         support all zoom types.
     */
     virtual void SetZoomType(wxWebViewZoomType zoomType) = 0;
@@ -997,6 +1950,29 @@ public:
     static bool MSWSetModernEmulationLevel(bool modernLevel = true);
 };
 
+/**
+    @class wxWebViewEdge
+
+    wxWebView using Edge backend, see @ref wxWEBVIEW_BACKEND_EDGE.
+
+    @onlyfor{wxmsw}
+    @since 3.1.5
+    @library{wxwebview}
+    @category{ctrl,webview}
+    @see wxWebView
+ */
+class wxWebViewEdge : public wxWebView
+{
+public:
+    /**
+        Set path to a fixed version of the WebView2 Edge runtime.
+
+        @param path Path to an extracted fixed version of the WebView2 Edge runtime.
+
+        @since 3.1.5
+    */
+    static void MSWSetBrowserExecutableDir(const wxString& path);
+};
 
 
 /**
@@ -1006,6 +1982,11 @@ public:
     wxWebView objects.
 
     @beginEventEmissionTable{wxWebViewEvent}
+    @event{EVT_WEBVIEW_CREATED(id, func)}
+       Process a @c wxEVT_WEBVIEW_CREATED event, generated when the object is
+       fully initialized. For the backends using asynchronous initialization,
+       such as wxWebViewChromium, most of this class member functions can be
+       only used once this event is received.
     @event{EVT_WEBVIEW_NAVIGATING(id, func)}
        Process a @c wxEVT_WEBVIEW_NAVIGATING event, generated before trying
        to get a resource. This event may be vetoed to prevent navigating to this
@@ -1029,10 +2010,37 @@ public:
     @event{EVT_WEBVIEW_NEWWINDOW(id, func)}
        Process a @c wxEVT_WEBVIEW_NEWWINDOW event, generated when a new
        window is created. You must handle this event if you want anything to
-       happen, for example to load the page in a new window or tab.
+       happen, for example to load the page in a new window or tab. For usage
+       details see wxWebViewWindowFeatures.
+    @event{EVT_WEBVIEW_NEWWINDOW_FEATURES(id, func)}
+       Process a @c wxEVT_WEBVIEW_NEWWINDOW_FEATURES event, generated when
+       window features are available for the new window. For usage
+       details see wxWebViewWindowFeatures.
+       only available in wxWidgets 3.3.0 or later.
+    @event{EVT_WEBVIEW_WINDOW_CLOSE_REQUESTED(id, func)}
+       Process a @c wxEVT_WEBVIEW_WINDOW_CLOSE_REQUESTED event, generated when
+       a window is requested to be closed.
+       only available in wxWidgets 3.3.0 or later.
     @event{EVT_WEBVIEW_TITLE_CHANGED(id, func)}
        Process a @c wxEVT_WEBVIEW_TITLE_CHANGED event, generated when
        the page title changes. Use GetString to get the title.
+    @event{EVT_WEBVIEW_FULLSCREEN_CHANGED(id, func)}
+       Process a @c wxEVT_WEBVIEW_FULLSCREEN_CHANGED event, generated when
+       the page wants to enter or leave fullscreen. Use GetInt to get the status.
+       Not implemented for the IE backend
+       and is only available in wxWidgets 3.1.5 or later.
+    @event{EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED(id, func)}
+        Process a @c wxEVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED event
+        only available in wxWidgets 3.1.5 or later. For usage details see
+        wxWebView::AddScriptMessageHandler().
+    @event{EVT_WEBVIEW_SCRIPT_RESULT(id, func)}
+        Process a @c wxEVT_WEBVIEW_SCRIPT_RESULT event
+        only available in wxWidgets 3.1.6 or later. For usage details see
+        wxWebView::RunScriptAsync().
+    @event{wxEVT_WEBVIEW_BROWSING_DATA_CLEARED(id, func)}
+        Process a @c wxEVT_WEBVIEW_BROWSING_DATA_CLEARED event
+        only available in wxWidgets 3.3.0 or later. For usage details see
+        wxWebView::ClearBrowsingData().
     @endEventTable
 
     @since 2.9.3
@@ -1047,7 +2055,8 @@ public:
     wxWebViewEvent();
     wxWebViewEvent(wxEventType type, int id, const wxString href,
                    const wxString target,
-                   wxWebViewNavigationActionFlags flags = wxWEBVIEW_NAV_ACTION_NONE);
+                   wxWebViewNavigationActionFlags flags = wxWEBVIEW_NAV_ACTION_NONE,
+                   const wxString& messageHandler = wxString());
 
     /**
         Get the name of the target frame which the url of this event
@@ -1068,12 +2077,56 @@ public:
         @since 3.1.2
     */
     wxWebViewNavigationActionFlags GetNavigationAction() const;
+
+    /**
+        Get the name of the script handler. Only valid for events of type
+        @c wxEVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED
+
+        @since 3.1.5
+    */
+    const wxString& GetMessageHandler() const;
+
+    /**
+        Get information about the target window. Only valid for events of type
+        @c wxEVT_WEBVIEW_NEWWINDOW_FEATURES
+
+        @note This function is not implemented and always returns @NULL when using WebKit1 or Internet Explorer backend.
+
+        @see wxWebViewWindowFeatures
+        @since 3.3.0
+    */
+    wxWebViewWindowFeatures* GetTargetWindowFeatures() const;
+
+    /**
+        Returns @true if the operation failed.
+        Only valid for events of type
+        @c wxEVT_WEBVIEW_SCRIPT_RESULT and @c wxEVT_WEBVIEW_BROWSING_DATA_CLEARED
+
+        @since 3.1.6
+    */
+    bool IsError() const;
+
+    /**
+        Returns @true if the navigation target is the main frame. Only valid
+        for events of type @c wxEVT_WEBVIEW_NAVIGATING
+
+        @note This is only available with the macOS and the Edge backend.
+
+        @since 3.3.0
+    */
+    bool IsTargetMainFrame() const;
 };
 
 
+wxEventType wxEVT_WEBVIEW_CREATED;
 wxEventType wxEVT_WEBVIEW_NAVIGATING;
 wxEventType wxEVT_WEBVIEW_NAVIGATED;
 wxEventType wxEVT_WEBVIEW_LOADED;
 wxEventType wxEVT_WEBVIEW_ERROR;
 wxEventType wxEVT_WEBVIEW_NEWWINDOW;
+wxEventType wxEVT_WEBVIEW_NEWWINDOW_FEATURES;
 wxEventType wxEVT_WEBVIEW_TITLE_CHANGED;
+wxEventType wxEVT_WEBVIEW_FULLSCREEN_CHANGED;
+wxEventType wxEVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED;
+wxEventType wxEVT_WEBVIEW_SCRIPT_RESULT;
+wxEventType wxEVT_WEBVIEW_WINDOW_CLOSE_REQUESTED;

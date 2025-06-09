@@ -13,10 +13,6 @@
 
 #include  "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif  //__BORLANDC__
-
 #ifndef WX_PRECOMP
     #include  "wx/string.h"
     #include  "wx/intl.h"
@@ -76,11 +72,10 @@ wxString wxTextBuffer::Translate(const wxString& text, wxTextFileType type)
     // unnecessary relocations
     result.Alloc(text.Len());
 
-    wxChar chLast = 0;
-    for ( wxString::const_iterator i = text.begin(); i != text.end(); ++i )
+    wxUniChar chLast = 0;
+    for ( wxUniChar ch : text )
     {
-        wxChar ch = *i;
-        switch ( ch ) {
+        switch ( ch.GetValue() ) {
             case wxT('\n'):
                 // Dos/Unix line termination
                 result += eol;
@@ -223,18 +218,18 @@ wxTextFileType wxTextBuffer::GuessType() const
 
     size_t n;
     for ( n = 0; n < nScan; n++ )     // the beginning
-        AnalyseLine(n);
+        AnalyseLine(n)
     for ( n = (nCount - nScan)/2; n < (nCount + nScan)/2; n++ )
-        AnalyseLine(n);
+        AnalyseLine(n)
     for ( n = nCount - nScan; n < nCount; n++ )
-        AnalyseLine(n);
+        AnalyseLine(n)
 
     #undef   AnalyseLine
 
     // interpret the results (FIXME far from being even 50% fool proof)
     if ( nScan > 0 && nDos + nUnix + nMac == 0 ) {
         // no newlines at all
-        wxLogWarning(_("'%s' is probably a binary buffer."), m_strBufferName.c_str());
+        wxLogWarning(_("'%s' is probably a binary buffer."), m_strBufferName);
     }
     else {
         #define   GREATER_OF(t1, t2) n##t1 == n##t2 ? typeDefault               \

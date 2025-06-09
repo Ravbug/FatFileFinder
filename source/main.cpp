@@ -27,6 +27,11 @@ public:
 wxIMPLEMENT_APP(FatFileFinder);
 bool FatFileFinder::OnInit()
 {
+#if _WIN32
+	MSWEnableDarkMode();
+	SetAppearance(Appearance::System);
+#endif
+
     frame = new MainFrame( );
     frame->Show( true );
     return true;

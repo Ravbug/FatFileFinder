@@ -10,7 +10,7 @@
 set(wxSAMPLE_FOLDER html)
 set(wxSAMPLE_SUBDIR html/)
 
-wx_add_sample(about DATA data/about.htm data/logo.png LIBRARIES wxhtml)
+wx_add_sample(about DATA data/about.htm data/logo.png data/bg.svg LIBRARIES wxhtml)
 wx_list_add_prefix(HELP_DATA_FILES helpfiles/
     Index.hhk
     another.hhc
@@ -25,14 +25,12 @@ wx_list_add_prefix(HELP_DATA_FILES helpfiles/
     )
 wx_add_sample(help DATA ${HELP_DATA_FILES} LIBRARIES wxhtml NAME htmlhelp DEPENDS wxUSE_HELP)
 wx_add_sample(helpview DATA test.zip LIBRARIES wxhtml DEPENDS wxUSE_HELP)
-#TODO: htmlctrl sample uses outdated definitions
-#wx_add_sample(htmlctrl LIBRARIES wxhtml)
 wx_add_sample(printing DATA logo6.gif test.htm LIBRARIES wxhtml NAME htmlprinting
     DEPENDS wxUSE_PRINTING_ARCHITECTURE)
 wx_add_sample(test
     DATA
         imagemap.png pic.png pic2.bmp i18n.gif
-        imagemap.htm tables.htm test.htm listtest.htm 8859_2.htm cp1250.htm
+        imagemap.htm tables.htm test.htm id.html listtest.htm 8859_2.htm cp1250.htm
         regres.htm foo.png subsup.html
     LIBRARIES wxnet wxhtml NAME htmltest)
 wx_add_sample(virtual DATA start.htm LIBRARIES wxhtml)

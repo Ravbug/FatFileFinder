@@ -86,7 +86,7 @@ public:
     wxChar GetChar();
 
     /**
-        Reads a unsigned 16 bit integer from the stream.
+        Reads an unsigned 16 bit integer from the stream.
 
         See Read8() for the description of the @a base parameter.
     */
@@ -467,7 +467,7 @@ public:
 
 
 /** @addtogroup group_funcmacro_misc */
-//@{
+///@{
 
 /**
     Writes @c '\\n' to @a stream.
@@ -476,4 +476,4 @@ public:
 */
 wxTextOutputStream& endl(wxTextOutputStream& stream);
 
-//@}
+///@}

@@ -18,10 +18,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if defined(__BORLANDC__)
-#pragma hdrstop
-#endif
-
 #include "wx/msw/rt/utils.h"
 
 #if wxUSE_WINRT
@@ -167,7 +163,7 @@ int RTCore::ms_isAvailable = -1;
 //
 
 TempStringRef::TempStringRef(const wxString &str)
-    : m_hstring(NULL), m_header()
+    : m_hstring(nullptr), m_header()
 {
     if ( !RTCore::IsAvailable() )
     {
@@ -239,12 +235,12 @@ public:
     {
     }
 
-    virtual bool OnInit() wxOVERRIDE
+    virtual bool OnInit() override
     {
         return true;
     }
 
-    virtual void OnExit() wxOVERRIDE
+    virtual void OnExit() override
     {
         RTCore::Uninitalize();
     }

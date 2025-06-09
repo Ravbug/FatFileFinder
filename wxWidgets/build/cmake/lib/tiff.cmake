@@ -8,13 +8,8 @@
 #############################################################################
 
 if(wxUSE_LIBTIFF STREQUAL "builtin")
-    # TODO: implement building libtiff via ExternalProject_Add()
-    if(UNIX AND NOT APPLE)
-        message(WARNING "Builtin libtiff on unix is currently not supported")
-        wx_option_force_value(wxUSE_LIBTIFF OFF)
-        return()
-    endif()
-
+    # TODO: implement building libtiff via its CMake file, using
+    # add_subdirectory or ExternalProject_Add
     if(WIN32)
         set(TIFF_PLATFORM_SRC src/tiff/libtiff/tif_win32.c)
     elseif(UNIX)
@@ -39,9 +34,11 @@ if(wxUSE_LIBTIFF STREQUAL "builtin")
         src/tiff/libtiff/tif_fax3sm.c
         src/tiff/libtiff/tif_flush.c
         src/tiff/libtiff/tif_getimage.c
+        src/tiff/libtiff/tif_hash_set.c
         src/tiff/libtiff/tif_jbig.c
         src/tiff/libtiff/tif_jpeg.c
         src/tiff/libtiff/tif_jpeg_12.c
+        src/tiff/libtiff/tif_lerc.c
         src/tiff/libtiff/tif_luv.c
         src/tiff/libtiff/tif_lzma.c
         src/tiff/libtiff/tif_lzw.c

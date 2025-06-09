@@ -2,7 +2,6 @@
 // Name:        wx/event.h
 // Purpose:     Event classes
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
@@ -19,26 +18,26 @@
 
 #if wxUSE_GUI
     #include "wx/gdicmn.h"
+    #include "wx/geometry.h"
     #include "wx/cursor.h"
     #include "wx/mousestate.h"
 #endif
 
 #include "wx/dynarray.h"
+#include "wx/itemid.h"
 #include "wx/thread.h"
 #include "wx/tracker.h"
 #include "wx/typeinfo.h"
 #include "wx/any.h"
 #include "wx/vector.h"
+#include "wx/recguard.h"
+#include "wx/sharedptr.h"
 
 #include "wx/meta/convertible.h"
+#include "wx/meta/removeref.h"
 
-// Currently VC7 is known to not be able to compile CallAfter() code, so
-// disable it for it (FIXME-VC7).
-#if !defined(__VISUALC__) || wxCHECK_VISUALC_VERSION(8)
-    #include "wx/meta/removeref.h"
-
-    #define wxHAS_CALL_AFTER
-#endif
+// This is now always defined, but keep it for backwards compatibility.
+#define wxHAS_CALL_AFTER
 
 // ----------------------------------------------------------------------------
 // forward declarations
@@ -50,6 +49,8 @@ class WXDLLIMPEXP_FWD_BASE wxEventFilter;
 #if wxUSE_GUI
     class WXDLLIMPEXP_FWD_CORE wxDC;
     class WXDLLIMPEXP_FWD_CORE wxMenu;
+    class WXDLLIMPEXP_FWD_CORE wxMenuItem;
+    class WXDLLIMPEXP_FWD_CORE wxReadOnlyDC;
     class WXDLLIMPEXP_FWD_CORE wxWindow;
     class WXDLLIMPEXP_FWD_CORE wxWindowBase;
 #endif // wxUSE_GUI
@@ -91,7 +92,7 @@ typedef int wxEventType;
     wxEventTableEntry(type, winid, idLast, wxNewEventTableFunctor(type, fn), obj)
 
 #define wxDECLARE_EVENT_TABLE_TERMINATOR() \
-    wxEventTableEntry(wxEVT_NULL, 0, 0, NULL, NULL)
+    wxEventTableEntry(wxEVT_NULL, 0, 0, nullptr, nullptr)
 
 // generate a new unique event type
 extern WXDLLIMPEXP_BASE wxEventType wxNewEventType();
@@ -138,49 +139,66 @@ inline wxEventFunction wxEventFunctionCast(void (wxEvtHandler::*func)(T&))
     // code using event table macros.
 
     wxGCC_WARNING_SUPPRESS_CAST_FUNCTION_TYPE()
+    wxCLANG_WARNING_SUPPRESS(cast-function-type)
 
     return reinterpret_cast<wxEventFunction>(func);
 
+    wxCLANG_WARNING_RESTORE(cast-function-type)
     wxGCC_WARNING_RESTORE_CAST_FUNCTION_TYPE()
 }
 
-// Special hack to remove "noexcept" from the function type when using C++17 or
-// later: static_cast<> below would fail to cast a member function pointer to a
-// member of a derived class to the base class if noexcept is specified for the
-// former, so remove it first if necessary.
-#if __cplusplus >= 201703L
+// In good old pre-C++17 times we could just static_cast the event handler,
+// defined in some class deriving from wxEvtHandler, to the "functype" which is
+// a type of wxEvtHandler method. But with C++17 this doesn't work when the
+// handler is a noexcept function, so we need to cast it to a noexcept function
+// pointer first.
+#if wxCHECK_CXX_STD(201703L)
 
 namespace wxPrivate
 {
 
-// Generic template version, doing nothing.
-template <typename T>
-struct RemoveNoexceptEventHandler
+// Cast to noexcept function type first if necessary.
+template <typename E, typename C>
+constexpr auto DoCast(void (C::*pmf)(E&))
 {
-    using type = T;
+    return static_cast<void (wxEvtHandler::*)(E&)>(pmf);
+}
+
+template <typename E, typename C>
+constexpr auto DoCast(void (C::*pmf)(E&) noexcept)
+{
+    return static_cast<void (wxEvtHandler::*)(E&)>(
+            static_cast<void (wxEvtHandler::*)(E&) noexcept>(pmf)
+        );
+}
+
+// Helper used to recover the type of the handler argument from the function
+// type. This is required in order to explicitly pass this type to DoCast<> as
+// the compiler would be unable to deduce it for overloaded functions.
+
+// Generic template version, doing nothing.
+template <typename F>
+struct EventArgOf;
+
+// Specialization sufficient to cover all event handler function types.
+template <typename C, typename E>
+struct EventArgOf<void (C::*)(E&)>
+{
+    using type = E;
 };
 
-// Specialization removing noexcept when it's specified.
-//
-// Note that this doesn't pretend to be generally suitable, this is just enough
-// to work in our particular case.
-template <typename R, typename C, typename E>
-struct RemoveNoexceptEventHandler<R (C::*)(E&) noexcept>
-{
-    using type = R (C::*)(E&);
-};
 
 } // namespace wxPrivate
 
-#define wxREMOVE_NOEXCEPT_EVENT_HANDLER(pmf) \
-    static_cast<wxPrivate::RemoveNoexceptEventHandler<decltype(pmf)>::type>(pmf)
+#define wxEventHandlerNoexceptCast(functype, pmf) \
+    wxPrivate::DoCast<wxPrivate::EventArgOf<functype>::type>(pmf)
 #else
-#define wxREMOVE_NOEXCEPT_EVENT_HANDLER(pmf) pmf
+#define wxEventHandlerNoexceptCast(functype, pmf) static_cast<functype>(pmf)
 #endif
 
 // Try to cast the given event handler to the correct handler type:
 #define wxEVENT_HANDLER_CAST( functype, func ) \
-    wxEventFunctionCast(static_cast<functype>(wxREMOVE_NOEXCEPT_EVENT_HANDLER(&func)))
+    wxEventFunctionCast(wxEventHandlerNoexceptCast(functype, &func))
 
 
 // The tag is a type associated to the event type (which is an integer itself,
@@ -230,14 +248,14 @@ public:
     // If the functor holds an wxEvtHandler, then get access to it and track
     // its lifetime with wxEventConnectionRef:
     virtual wxEvtHandler *GetEvtHandler() const
-        { return NULL; }
+        { return nullptr; }
 
     // This is only used to maintain backward compatibility in
     // wxAppConsoleBase::CallEventHandler and ensures that an overwritten
     // wxAppConsoleBase::HandleEvent is still called for functors which hold an
     // wxEventFunction:
     virtual wxEventFunction GetEvtMethod() const
-        { return NULL; }
+        { return nullptr; }
 
 private:
     WX_DECLARE_ABSTRACT_TYPEINFO(wxEventFunctor)
@@ -251,9 +269,9 @@ public:
         : m_handler( handler ), m_method( method )
         { }
 
-    virtual void operator()(wxEvtHandler *handler, wxEvent& event) wxOVERRIDE;
+    virtual void operator()(wxEvtHandler *handler, wxEvent& event) override;
 
-    virtual bool IsMatching(const wxEventFunctor& functor) const wxOVERRIDE
+    virtual bool IsMatching(const wxEventFunctor& functor) const override
     {
         if ( wxTypeId(functor) == wxTypeId(*this) )
         {
@@ -267,18 +285,15 @@ public:
             return false;
     }
 
-    virtual wxEvtHandler *GetEvtHandler() const wxOVERRIDE
+    virtual wxEvtHandler *GetEvtHandler() const override
         { return m_handler; }
 
-    virtual wxEventFunction GetEvtMethod() const wxOVERRIDE
+    virtual wxEventFunction GetEvtMethod() const override
         { return m_method; }
 
 private:
     wxEvtHandler *m_handler;
     wxEventFunction m_method;
-
-    // Provide a dummy default ctor for type info purposes
-    wxObjectEventFunctor() : m_handler(NULL), m_method(NULL) { }
 
     WX_DECLARE_TYPEINFO_INLINE(wxObjectEventFunctor)
 };
@@ -297,7 +312,7 @@ inline wxObjectEventFunctor *
 wxNewEventTableFunctor(const wxEventType& WXUNUSED(evtType),
                        wxObjectEventFunction method)
 {
-    return new wxObjectEventFunctor(method, NULL);
+    return new wxObjectEventFunctor(method, nullptr);
 }
 
 inline wxObjectEventFunctor
@@ -358,11 +373,11 @@ struct HandlerImpl<T, A, false>
     static bool IsEvtHandler()
         { return false; }
     static T *ConvertFromEvtHandler(wxEvtHandler *)
-        { return NULL; }
+        { return nullptr; }
     static wxEvtHandler *ConvertToEvtHandler(T *)
-        { return NULL; }
+        { return nullptr; }
     static wxEventFunction ConvertToEvtMethod(void (T::*)(A&))
-        { return NULL; }
+        { return nullptr; }
 };
 
 } // namespace wxPrivate
@@ -405,10 +420,10 @@ public:
         // if you get an error here it means that the signature of the handler
         // you're trying to use is not compatible with (i.e. is not the same as
         // or a base class of) the real event class used for this event type
-        CheckHandlerArgument(static_cast<EventClass *>(NULL));
+        CheckHandlerArgument(static_cast<EventClass *>(nullptr));
     }
 
-    virtual void operator()(wxEvtHandler *handler, wxEvent& event) wxOVERRIDE
+    virtual void operator()(wxEvtHandler *handler, wxEvent& event) override
     {
         Class * realHandler = m_handler;
         if ( !realHandler )
@@ -425,7 +440,7 @@ public:
         (realHandler->*m_method)(static_cast<EventArg&>(event));
     }
 
-    virtual bool IsMatching(const wxEventFunctor& functor) const wxOVERRIDE
+    virtual bool IsMatching(const wxEventFunctor& functor) const override
     {
         if ( wxTypeId(functor) != wxTypeId(*this) )
             return false;
@@ -436,22 +451,19 @@ public:
         // the cast is valid because wxTypeId()s matched above
         const ThisFunctor& other = static_cast<const ThisFunctor &>(functor);
 
-        return (m_method == other.m_method || other.m_method == NULL) &&
-               (m_handler == other.m_handler || other.m_handler == NULL);
+        return (m_method == other.m_method || other.m_method == nullptr) &&
+               (m_handler == other.m_handler || other.m_handler == nullptr);
     }
 
-    virtual wxEvtHandler *GetEvtHandler() const wxOVERRIDE
+    virtual wxEvtHandler *GetEvtHandler() const override
         { return this->ConvertToEvtHandler(m_handler); }
 
-    virtual wxEventFunction GetEvtMethod() const wxOVERRIDE
+    virtual wxEventFunction GetEvtMethod() const override
         { return this->ConvertToEvtMethod(m_method); }
 
 private:
     EventHandler *m_handler;
     void (Class::*m_method)(EventArg&);
-
-    // Provide a dummy default ctor for type info purposes
-    wxEventFunctorMethod() { }
 
     typedef wxEventFunctorMethod<EventTag, Class,
                                  EventArg, EventHandler> thisClass;
@@ -476,22 +488,22 @@ public:
         // if you get an error here it means that the signature of the handler
         // you're trying to use is not compatible with (i.e. is not the same as
         // or a base class of) the real event class used for this event type
-        CheckHandlerArgument(static_cast<EventClass *>(NULL));
+        CheckHandlerArgument(static_cast<EventClass *>(nullptr));
     }
 
-    virtual void operator()(wxEvtHandler *WXUNUSED(handler), wxEvent& event) wxOVERRIDE
+    virtual void operator()(wxEvtHandler *WXUNUSED(handler), wxEvent& event) override
     {
         // If you get an error here like "must use .* or ->* to call
         // pointer-to-member function" then you probably tried to call
         // Bind/Unbind with a method pointer but without a handler pointer or
-        // NULL as a handler e.g.:
+        // nullptr as a handler e.g.:
         // Unbind( wxEVT_XXX, &EventHandler::method );
         // or
-        // Unbind( wxEVT_XXX, &EventHandler::method, NULL )
+        // Unbind( wxEVT_XXX, &EventHandler::method, nullptr )
         m_handler(static_cast<EventArg&>(event));
     }
 
-    virtual bool IsMatching(const wxEventFunctor &functor) const wxOVERRIDE
+    virtual bool IsMatching(const wxEventFunctor &functor) const override
     {
         if ( wxTypeId(functor) != wxTypeId(*this) )
             return false;
@@ -505,9 +517,6 @@ public:
 
 private:
     void (*m_handler)(EventArg&);
-
-    // Provide a dummy default ctor for type info purposes
-    wxEventFunctorFunction() { }
 
     typedef wxEventFunctorFunction<EventTag, EventArg> thisClass;
     WX_DECLARE_TYPEINFO_INLINE(thisClass)
@@ -524,19 +533,19 @@ public:
         : m_handler(handler), m_handlerAddr(&handler)
         { }
 
-    virtual void operator()(wxEvtHandler *WXUNUSED(handler), wxEvent& event) wxOVERRIDE
+    virtual void operator()(wxEvtHandler *WXUNUSED(handler), wxEvent& event) override
     {
         // If you get an error here like "must use '.*' or '->*' to call
         // pointer-to-member function" then you probably tried to call
         // Bind/Unbind with a method pointer but without a handler pointer or
-        // NULL as a handler e.g.:
+        // nullptr as a handler e.g.:
         // Unbind( wxEVT_XXX, &EventHandler::method );
         // or
-        // Unbind( wxEVT_XXX, &EventHandler::method, NULL )
+        // Unbind( wxEVT_XXX, &EventHandler::method, nullptr )
         m_handler(static_cast<EventArg&>(event));
     }
 
-    virtual bool IsMatching(const wxEventFunctor &functor) const wxOVERRIDE
+    virtual bool IsMatching(const wxEventFunctor &functor) const override
     {
         if ( wxTypeId(functor) != wxTypeId(*this) )
             return false;
@@ -557,9 +566,6 @@ private:
 
     // Use the address of the original functor for comparison in IsMatching:
     const void *m_handlerAddr;
-
-    // Provide a dummy default ctor for type info purposes
-    wxEventFunctorFunctor() { }
 
     typedef wxEventFunctorFunctor<EventTag, Functor> thisClass;
     WX_DECLARE_TYPEINFO_INLINE(thisClass)
@@ -632,7 +638,7 @@ inline wxEventFunctorMethod<EventTag, Class, EventArg, Class> *
 wxNewEventTableFunctor(const EventTag&, void (Class::*method)(EventArg&))
 {
     return new wxEventFunctorMethod<EventTag, Class, EventArg, Class>(
-                    method, NULL);
+                    method, nullptr);
 }
 
 
@@ -666,6 +672,7 @@ class WXDLLIMPEXP_FWD_CORE wxWindowDestroyEvent;
 class WXDLLIMPEXP_FWD_CORE wxShowEvent;
 class WXDLLIMPEXP_FWD_CORE wxIconizeEvent;
 class WXDLLIMPEXP_FWD_CORE wxMaximizeEvent;
+class WXDLLIMPEXP_FWD_CORE wxFullScreenEvent;
 class WXDLLIMPEXP_FWD_CORE wxMouseCaptureChangedEvent;
 class WXDLLIMPEXP_FWD_CORE wxMouseCaptureLostEvent;
 class WXDLLIMPEXP_FWD_CORE wxPaintEvent;
@@ -674,6 +681,7 @@ class WXDLLIMPEXP_FWD_CORE wxNcPaintEvent;
 class WXDLLIMPEXP_FWD_CORE wxMenuEvent;
 class WXDLLIMPEXP_FWD_CORE wxContextMenuEvent;
 class WXDLLIMPEXP_FWD_CORE wxSysColourChangedEvent;
+class WXDLLIMPEXP_FWD_CORE wxSysMetricChangedEvent;
 class WXDLLIMPEXP_FWD_CORE wxDisplayChangedEvent;
 class WXDLLIMPEXP_FWD_CORE wxDPIChangedEvent;
 class WXDLLIMPEXP_FWD_CORE wxQueryNewPaletteEvent;
@@ -684,6 +692,7 @@ class WXDLLIMPEXP_FWD_CORE wxInitDialogEvent;
 class WXDLLIMPEXP_FWD_CORE wxUpdateUIEvent;
 class WXDLLIMPEXP_FWD_CORE wxClipboardTextEvent;
 class WXDLLIMPEXP_FWD_CORE wxHelpEvent;
+class WXDLLIMPEXP_FWD_CORE wxMultiTouchEvent;
 class WXDLLIMPEXP_FWD_CORE wxGestureEvent;
 class WXDLLIMPEXP_FWD_CORE wxPanGestureEvent;
 class WXDLLIMPEXP_FWD_CORE wxZoomGestureEvent;
@@ -796,6 +805,12 @@ wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_SCROLLWIN_PAGEDOWN, wxScrollWin
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_SCROLLWIN_THUMBTRACK, wxScrollWinEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_SCROLLWIN_THUMBRELEASE, wxScrollWinEvent);
 
+    // MultiTouch event types
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_TOUCH_BEGIN, wxMultiTouchEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_TOUCH_MOVE, wxMultiTouchEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_TOUCH_END, wxMultiTouchEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_TOUCH_CANCEL, wxMultiTouchEvent);
+
     // Gesture events
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_GESTURE_PAN, wxPanGestureEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_GESTURE_ZOOM, wxZoomGestureEvent);
@@ -817,6 +832,7 @@ wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_DESTROY, wxWindowDestroyEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_SHOW, wxShowEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_ICONIZE, wxIconizeEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_MAXIMIZE, wxMaximizeEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_FULLSCREEN, wxFullScreenEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_MOUSE_CAPTURE_CHANGED, wxMouseCaptureChangedEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_MOUSE_CAPTURE_LOST, wxMouseCaptureLostEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_PAINT, wxPaintEvent);
@@ -827,6 +843,7 @@ wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_MENU_CLOSE, wxMenuEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_MENU_HIGHLIGHT, wxMenuEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_CONTEXT_MENU, wxContextMenuEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_SYS_COLOUR_CHANGED, wxSysColourChangedEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_SYS_METRIC_CHANGED, wxSysMetricChangedEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_DISPLAY_CHANGED, wxDisplayChangedEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_DPI_CHANGED, wxDPIChangedEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_QUERY_NEW_PALETTE, wxQueryNewPaletteEvent);
@@ -989,7 +1006,7 @@ public:
     // This function is used to create a copy of the event polymorphically and
     // all derived classes must implement it because otherwise wxPostEvent()
     // for them wouldn't work (it needs to do a copy of the event)
-    virtual wxEvent *Clone() const = 0;
+    wxNODISCARD virtual wxEvent *Clone() const = 0;
 
     // this function is used to selectively process events in wxEventLoopBase::YieldFor
     // NOTE: by default it returns wxEVT_CATEGORY_UI just because the major
@@ -1072,7 +1089,7 @@ public:
     // never be used anywhere else.
     void DidntHonourProcessOnlyIn()
     {
-        m_handlerToProcessOnlyIn = NULL;
+        m_handlerToProcessOnlyIn = nullptr;
     }
 
 protected:
@@ -1094,7 +1111,7 @@ protected:
     // the parent window (if any)
     int               m_propagationLevel;
 
-    // The object that the event is being propagated from, initially NULL and
+    // The object that the event is being propagated from, initially nullptr and
     // only set by wxPropagateOnce.
     wxEvtHandler*     m_propagatedFrom;
 
@@ -1157,10 +1174,10 @@ private:
 class WXDLLIMPEXP_BASE wxPropagateOnce
 {
 public:
-    // The handler argument should normally be non-NULL to allow the parent
+    // The handler argument should normally be non-null to allow the parent
     // event handler to know that it's being used to process an event coming
-    // from the child, it's only NULL by default for backwards compatibility.
-    wxPropagateOnce(wxEvent& event, wxEvtHandler* handler = NULL)
+    // from the child, it's only nullptr by default for backwards compatibility.
+    wxPropagateOnce(wxEvent& event, wxEvtHandler* handler = nullptr)
         : m_event(event),
           m_propagatedFromOld(event.m_propagatedFrom)
     {
@@ -1182,6 +1199,35 @@ private:
     wxEvtHandler* const m_propagatedFromOld;
 
     wxDECLARE_NO_COPY_CLASS(wxPropagateOnce);
+};
+
+// Helper class changing the event object to make the event appear as coming
+// from a different source: this is somewhat of a hack, but avoids copying the
+// events just to change their event object field.
+class wxEventObjectOriginSetter
+{
+public:
+    wxEventObjectOriginSetter(wxEvent& event, wxObject* source, int winid = 0)
+        : m_event(event),
+          m_sourceOrig(event.GetEventObject()),
+          m_idOrig(event.GetId())
+    {
+        m_event.SetEventObject(source);
+        m_event.SetId(winid);
+    }
+
+    ~wxEventObjectOriginSetter()
+    {
+        m_event.SetId(m_idOrig);
+        m_event.SetEventObject(m_sourceOrig);
+    }
+
+private:
+    wxEvent& m_event;
+    wxObject* const m_sourceOrig;
+    const int m_idOrig;
+
+    wxDECLARE_NO_COPY_CLASS(wxEventObjectOriginSetter);
 };
 
 // A helper object used to temporarily make wxEvent::ShouldProcessOnlyIn()
@@ -1234,7 +1280,7 @@ protected:
     int               m_commandInt;
     long              m_extraLong;     // Additional information (e.g. select/deselect)
 
-    wxDECLARE_NO_ASSIGN_CLASS(wxEventBasicPayloadMixin);
+    wxDECLARE_NO_ASSIGN_DEF_COPY(wxEventBasicPayloadMixin);
 };
 
 class WXDLLIMPEXP_BASE wxEventAnyPayloadMixin : public wxEventBasicPayloadMixin
@@ -1297,7 +1343,7 @@ public:
     void RequestMore(bool needMore = true) { m_requestMore = needMore; }
     bool MoreRequested() const { return m_requestMore; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxIdleEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxIdleEvent(*this); }
 
     // Specify how wxWidgets will send idle events: to
     // all windows, or only to those which specify that they
@@ -1335,14 +1381,14 @@ public:
         SetString(GetString().Clone());
     }
 
-    virtual wxEvent *Clone() const wxOVERRIDE
+    wxNODISCARD virtual wxEvent *Clone() const override
     {
         return new wxThreadEvent(*this);
     }
 
     // this is important to avoid that calling wxEventLoopBase::YieldFor thread events
     // gets processed when this is unwanted:
-    virtual wxEventCategory GetEventCategory() const wxOVERRIDE
+    virtual wxEventCategory GetEventCategory() const override
         { return wxEVT_CATEGORY_THREAD; }
 
 private:
@@ -1355,8 +1401,6 @@ private:
 // specified method. The difference with a simple method call is that this is
 // done asynchronously, i.e. at some later time, instead of immediately when
 // the event object is constructed.
-
-#ifdef wxHAS_CALL_AFTER
 
 // This is a base class used to process all method calls.
 class wxAsyncMethodCallEvent : public wxEvent
@@ -1399,12 +1443,12 @@ public:
     {
     }
 
-    virtual wxEvent *Clone() const wxOVERRIDE
+    wxNODISCARD virtual wxEvent *Clone() const override
     {
         return new wxAsyncMethodCallEvent0(*this);
     }
 
-    virtual void Execute() wxOVERRIDE
+    virtual void Execute() override
     {
         (m_object->*m_method)();
     }
@@ -1441,12 +1485,12 @@ public:
     {
     }
 
-    virtual wxEvent *Clone() const wxOVERRIDE
+    wxNODISCARD virtual wxEvent *Clone() const override
     {
         return new wxAsyncMethodCallEvent1(*this);
     }
 
-    virtual void Execute() wxOVERRIDE
+    virtual void Execute() override
     {
         (m_object->*m_method)(m_param1);
     }
@@ -1488,12 +1532,12 @@ public:
     {
     }
 
-    virtual wxEvent *Clone() const wxOVERRIDE
+    wxNODISCARD virtual wxEvent *Clone() const override
     {
         return new wxAsyncMethodCallEvent2(*this);
     }
 
-    virtual void Execute() wxOVERRIDE
+    virtual void Execute() override
     {
         (m_object->*m_method)(m_param1, m_param2);
     }
@@ -1524,12 +1568,12 @@ public:
     {
     }
 
-    virtual wxEvent *Clone() const wxOVERRIDE
+    wxNODISCARD virtual wxEvent *Clone() const override
     {
         return new wxAsyncMethodCallEventFunctor(*this);
     }
 
-    virtual void Execute() wxOVERRIDE
+    virtual void Execute() override
     {
         m_fn();
     }
@@ -1537,9 +1581,6 @@ public:
 private:
     FunctorType m_fn;
 };
-
-#endif // wxHAS_CALL_AFTER
-
 
 #if wxUSE_GUI
 
@@ -1570,8 +1611,8 @@ public:
     wxCommandEvent(wxEventType commandType = wxEVT_NULL, int winid = 0)
         : wxEvent(winid, commandType)
     {
-        m_clientData = NULL;
-        m_clientObject = NULL;
+        m_clientData = nullptr;
+        m_clientObject = nullptr;
         m_isCommandEvent = true;
 
         // the command events are propagated upwards by default
@@ -1611,8 +1652,8 @@ public:
     // true if the listbox event was a selection.
     bool IsSelection() const { return (m_extraLong != 0); }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxCommandEvent(*this); }
-    virtual wxEventCategory GetEventCategory() const wxOVERRIDE { return wxEVT_CATEGORY_USER_INPUT; }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxCommandEvent(*this); }
+    virtual wxEventCategory GetEventCategory() const override { return wxEVT_CATEGORY_USER_INPUT; }
 
 protected:
     void*             m_clientData;    // Arbitrary client data
@@ -1645,7 +1686,7 @@ public:
     // for implementation code only: is the operation allowed?
     bool IsAllowed() const { return m_bAllow; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxNotifyEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxNotifyEvent(*this); }
 
 private:
     bool m_bAllow;
@@ -1655,7 +1696,7 @@ private:
 };
 
 
-// Scroll event class, derived form wxCommandEvent. wxScrollEvents are
+// Scroll event class, derived from wxCommandEvent. wxScrollEvents are
 // sent by wxSlider and wxScrollBar.
 /*
  wxEVT_SCROLL_TOP
@@ -1680,10 +1721,10 @@ public:
     void SetOrientation(int orient) { m_extraLong = (long) orient; }
     void SetPosition(int pos) { m_commandInt = pos; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxScrollEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxScrollEvent(*this); }
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxScrollEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxScrollEvent);
 };
 
 // ScrollWin event class, derived fom wxEvent. wxScrollWinEvents
@@ -1713,7 +1754,7 @@ public:
     void SetOrientation(int orient) { m_extraLong = (long) orient; }
     void SetPosition(int pos) { m_commandInt = pos; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxScrollWinEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxScrollWinEvent(*this); }
 
 protected:
     int               m_commandInt;
@@ -1821,7 +1862,7 @@ public:
     int GetClickCount() const { return m_clickCount; }
 
     // Find the logical position of the event given the DC
-    wxPoint GetLogicalPosition(const wxDC& dc) const;
+    wxPoint GetLogicalPosition(const wxReadOnlyDC& dc) const;
 
     // Get wheel rotation, positive or negative indicates direction of
     // rotation.  Current devices all send an event when rotation is equal to
@@ -1857,9 +1898,12 @@ public:
     // Is the system set to do page scrolling?
     bool IsPageScroll() const { return ((unsigned int)m_linesPerAction == UINT_MAX); }
 
+    // Check if the event was synthesized from a touch event.
+    bool IsSynthesized() const { return m_synthesized; }
+
     float GetMagnification() const { return m_magnification; }
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxMouseEvent(*this); }
-    virtual wxEventCategory GetEventCategory() const wxOVERRIDE { return wxEVT_CATEGORY_USER_INPUT; }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxMouseEvent(*this); }
+    virtual wxEventCategory GetEventCategory() const override { return wxEVT_CATEGORY_USER_INPUT; }
 
     wxMouseEvent& operator=(const wxMouseEvent& event)
     {
@@ -1878,6 +1922,7 @@ public:
     int           m_linesPerAction;
     int           m_columnsPerAction;
     float         m_magnification;
+    bool          m_synthesized;
 
 protected:
     void Assign(const wxMouseEvent& evt);
@@ -1907,6 +1952,7 @@ public:
           m_cursor(event.m_cursor)
         { }
 
+    wxPoint GetPosition() const { return wxPoint(m_x, m_y); }
     wxCoord GetX() const { return m_x; }
     wxCoord GetY() const { return m_y; }
 
@@ -1914,7 +1960,7 @@ public:
     const wxCursor& GetCursor() const { return m_cursor; }
     bool HasCursor() const { return m_cursor.IsOk(); }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxSetCursorEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxSetCursorEvent(*this); }
 
 private:
     wxCoord  m_x, m_y;
@@ -1922,6 +1968,42 @@ private:
 
 private:
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxSetCursorEvent);
+};
+
+// MultiTouch Event
+
+class wxTouchSequenceId : public wxItemId<void*>
+{
+public:
+    using wxItemId::wxItemId;
+};
+
+class WXDLLIMPEXP_CORE wxMultiTouchEvent : public wxEvent
+{
+public:
+    wxMultiTouchEvent(wxWindowID winid = 0, wxEventType type = wxEVT_NULL)
+        : wxEvent(winid, type)
+    {
+    }
+
+    wxMultiTouchEvent(const wxMultiTouchEvent& event) = default;
+
+    const wxPoint2DDouble& GetPosition() const { return m_pos; }
+    void SetPosition(const wxPoint2DDouble& pos) { m_pos = pos; }
+    bool IsPrimary() const { return m_isPrimary; }
+    void SetPrimary(bool primary) { m_isPrimary = primary; }
+    const wxTouchSequenceId& GetSequenceId() const { return m_sequence; }
+    void SetSequenceId(const wxTouchSequenceId& sequence) { m_sequence = sequence; }
+
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxMultiTouchEvent(*this); }
+
+protected:
+    wxPoint2DDouble m_pos;
+    wxTouchSequenceId m_sequence;
+    bool m_isPrimary = false;
+
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxMultiTouchEvent);
+
 };
 
  // Gesture Event
@@ -1952,7 +2034,7 @@ public:
     bool IsGestureEnd() const { return m_isEnd; }
     void SetGestureEnd(bool isEnd = true) { m_isEnd = isEnd; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxGestureEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxGestureEvent(*this); }
 
 protected:
     wxPoint m_pos;
@@ -1985,7 +2067,7 @@ public:
     wxPoint GetDelta() const { return m_delta; }
     void SetDelta(const wxPoint& delta) { m_delta = delta; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxPanGestureEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxPanGestureEvent(*this); }
 
 private:
     wxPoint m_delta;
@@ -2014,7 +2096,7 @@ public:
     double GetZoomFactor() const { return m_zoomFactor; }
     void SetZoomFactor(double zoomFactor) { m_zoomFactor = zoomFactor; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxZoomGestureEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxZoomGestureEvent(*this); }
 
 private:
     double m_zoomFactor;
@@ -2043,7 +2125,7 @@ public:
     double GetRotationAngle() const { return m_rotationAngle; }
     void SetRotationAngle(double rotationAngle) { m_rotationAngle = rotationAngle; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxRotateGestureEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxRotateGestureEvent(*this); }
 
 private:
     double m_rotationAngle;
@@ -2067,7 +2149,7 @@ public:
     wxTwoFingerTapEvent(const wxTwoFingerTapEvent& event) : wxGestureEvent(event)
     { }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxTwoFingerTapEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxTwoFingerTapEvent(*this); }
 
 private:
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxTwoFingerTapEvent);
@@ -2089,7 +2171,7 @@ public:
     wxLongPressEvent(const wxLongPressEvent& event) : wxGestureEvent(event)
     { }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxLongPressEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxLongPressEvent(*this); }
 private:
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxLongPressEvent);
 };
@@ -2110,7 +2192,7 @@ public:
     wxPressAndTapEvent(const wxPressAndTapEvent& event) : wxGestureEvent(event)
     { }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxPressAndTapEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxPressAndTapEvent(*this); }
 private:
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxPressAndTapEvent);
 };
@@ -2170,16 +2252,17 @@ public:
     // returns true iff this event's key code is of a certain type
     bool IsKeyInCategory(int category) const;
 
-#if wxUSE_UNICODE
     // get the Unicode character corresponding to this key
     wxChar GetUnicodeKey() const { return m_uniChar; }
-#endif // wxUSE_UNICODE
 
     // get the raw key code (platform-dependent)
     wxUint32 GetRawKeyCode() const { return m_rawCode; }
 
     // get the raw key flags (platform-dependent)
     wxUint32 GetRawKeyFlags() const { return m_rawFlags; }
+
+    // returns true if this is a key auto repeat event
+    bool IsAutoRepeat() const { return m_isRepeat; }
 
     // Find the position of the event
     void GetPosition(wxCoord *xpos, wxCoord *ypos) const
@@ -2217,8 +2300,8 @@ public:
     bool IsNextEventAllowed() const { return m_allowNext; }
 
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxKeyEvent(*this); }
-    virtual wxEventCategory GetEventCategory() const wxOVERRIDE { return wxEVT_CATEGORY_USER_INPUT; }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxKeyEvent(*this); }
+    virtual wxEventCategory GetEventCategory() const override { return wxEVT_CATEGORY_USER_INPUT; }
 
     // we do need to copy wxKeyEvent sometimes (in wxTreeCtrl code, for
     // example)
@@ -2231,16 +2314,17 @@ public:
 
     long          m_keyCode;
 
-#if wxUSE_UNICODE
     // This contains the full Unicode character
     // in a character events in Unicode mode
     wxChar        m_uniChar;
-#endif
 
     // these fields contain the platform-specific information about
     // key that was pressed
     wxUint32      m_rawCode;
     wxUint32      m_rawFlags;
+
+    // Indicates whether the key event is a repeat
+    bool          m_isRepeat = false;
 
 private:
     // Set the event to propagate if necessary, i.e. if it's of wxEVT_CHAR_HOOK
@@ -2249,8 +2333,6 @@ private:
     {
         if ( m_eventType == wxEVT_CHAR_HOOK )
             m_propagationLevel = wxEVENT_PROPAGATE_MAX;
-
-        m_allowNext = false;
     }
 
     // Copy only the event data present in this class, this is used by
@@ -2265,9 +2347,8 @@ private:
 
         m_rawCode = evt.m_rawCode;
         m_rawFlags = evt.m_rawFlags;
-#if wxUSE_UNICODE
         m_uniChar = evt.m_uniChar;
-#endif
+        m_isRepeat = evt.m_isRepeat;
     }
 
     // Initialize m_x and m_y using the current mouse cursor position if
@@ -2277,11 +2358,11 @@ private:
     // If this flag is true, the normal key events should still be generated
     // even if wxEVT_CHAR_HOOK had been handled. By default it is false as
     // handling wxEVT_CHAR_HOOK suppresses all the subsequent events.
-    bool m_allowNext;
+    bool m_allowNext = false;
 
     // If true, m_x and m_y were already initialized. If false, try to get them
     // when they're requested.
-    bool m_hasPosition;
+    bool m_hasPosition = false;
 
     wxDECLARE_DYNAMIC_CLASS(wxKeyEvent);
 };
@@ -2313,7 +2394,7 @@ public:
     wxRect GetRect() const { return m_rect; }
     void SetRect(const wxRect& rect) { m_rect = rect; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxSizeEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxSizeEvent(*this); }
 
 public:
     // For internal usage only. Will be converted to protected members.
@@ -2353,7 +2434,7 @@ public:
     wxRect GetRect() const { return m_rect; }
     void SetRect(const wxRect& rect) { m_rect = rect; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxMoveEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxMoveEvent(*this); }
 
 protected:
     wxPoint m_pos;
@@ -2376,15 +2457,15 @@ class WXDLLIMPEXP_CORE wxPaintEvent : public wxEvent
 #ifdef WXBUILDING
 public:
 #endif // WXBUILDING
-    explicit wxPaintEvent(wxWindowBase* window = NULL);
+    explicit wxPaintEvent(wxWindowBase* window = nullptr);
 
 public:
     // default copy ctor and dtor are fine
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxPaintEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxPaintEvent(*this); }
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxPaintEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxPaintEvent);
 };
 
 class WXDLLIMPEXP_CORE wxNcPaintEvent : public wxEvent
@@ -2394,13 +2475,13 @@ class WXDLLIMPEXP_CORE wxNcPaintEvent : public wxEvent
 #ifdef WXBUILDING
 public:
 #endif // WXBUILDING
-    explicit wxNcPaintEvent(wxWindowBase* window = NULL);
+    explicit wxNcPaintEvent(wxWindowBase* window = nullptr);
 
 public:
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxNcPaintEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxNcPaintEvent(*this); }
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxNcPaintEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxNcPaintEvent);
 };
 
 // Erase background event class
@@ -2411,7 +2492,7 @@ private:
 class WXDLLIMPEXP_CORE wxEraseEvent : public wxEvent
 {
 public:
-    wxEraseEvent(int Id = 0, wxDC *dc = NULL)
+    wxEraseEvent(int Id = 0, wxDC *dc = nullptr)
         : wxEvent(Id, wxEVT_ERASE_BACKGROUND),
           m_dc(dc)
         { }
@@ -2423,7 +2504,7 @@ public:
 
     wxDC *GetDC() const { return m_dc; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxEraseEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxEraseEvent(*this); }
 
 protected:
     wxDC *m_dc;
@@ -2443,7 +2524,7 @@ class WXDLLIMPEXP_CORE wxFocusEvent : public wxEvent
 public:
     wxFocusEvent(wxEventType type = wxEVT_NULL, int winid = 0)
         : wxEvent(winid, type)
-        { m_win = NULL; }
+        { m_win = nullptr; }
 
     wxFocusEvent(const wxFocusEvent& event)
         : wxEvent(event)
@@ -2451,11 +2532,11 @@ public:
 
     // The window associated with this event is the window which had focus
     // before for SET event and the window which will have focus for the KILL
-    // one. NB: it may be NULL in both cases!
+    // one. NB: it may be null in both cases!
     wxWindow *GetWindow() const { return m_win; }
     void SetWindow(wxWindow *win) { m_win = win; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxFocusEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxFocusEvent(*this); }
 
 private:
     wxWindow *m_win;
@@ -2469,14 +2550,14 @@ private:
 class WXDLLIMPEXP_CORE wxChildFocusEvent : public wxCommandEvent
 {
 public:
-    wxChildFocusEvent(wxWindow *win = NULL);
+    wxChildFocusEvent(wxWindow *win = nullptr);
 
     wxWindow *GetWindow() const { return (wxWindow *)GetEventObject(); }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxChildFocusEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxChildFocusEvent(*this); }
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxChildFocusEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxChildFocusEvent);
 };
 
 // Activate event class
@@ -2514,7 +2595,7 @@ public:
     bool GetActive() const { return m_active; }
     Reason GetActivationReason() const { return m_activationReason;}
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxActivateEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxActivateEvent(*this); }
 
 private:
     bool m_active;
@@ -2536,10 +2617,10 @@ public:
         : wxEvent(Id, wxEVT_INIT_DIALOG)
         { }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxInitDialogEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxInitDialogEvent(*this); }
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxInitDialogEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxInitDialogEvent);
 };
 
 // Miscellaneous menu event class
@@ -2552,12 +2633,12 @@ private:
 class WXDLLIMPEXP_CORE wxMenuEvent : public wxEvent
 {
 public:
-    wxMenuEvent(wxEventType type = wxEVT_NULL, int winid = 0, wxMenu* menu = NULL)
+    wxMenuEvent(wxEventType type = wxEVT_NULL, int winid = 0, wxMenu* menu = nullptr, wxMenuItem* menuItem = nullptr)
         : wxEvent(winid, type)
-        { m_menuId = winid; m_menu = menu; }
+        { m_menuId = winid; m_menu = menu; m_menuItem = menuItem; }
     wxMenuEvent(const wxMenuEvent& event)
         : wxEvent(event)
-    { m_menuId = event.m_menuId; m_menu = event.m_menu; }
+    { m_menuId = event.m_menuId; m_menu = event.m_menu; m_menuItem = event.m_menuItem; }
 
     // only for wxEVT_MENU_HIGHLIGHT
     int GetMenuId() const { return m_menuId; }
@@ -2568,11 +2649,14 @@ public:
     // only for wxEVT_MENU_OPEN/CLOSE
     wxMenu* GetMenu() const { return m_menu; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxMenuEvent(*this); }
+    wxMenuItem* GetMenuItem() const { return m_menuItem; }
+
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxMenuEvent(*this); }
 
 private:
-    int     m_menuId;
-    wxMenu* m_menu;
+    int         m_menuId;
+    wxMenu*     m_menu;
+    wxMenuItem* m_menuItem;
 
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxMenuEvent);
 };
@@ -2622,7 +2706,7 @@ public:
     bool CanVeto() const { return m_canVeto; }
     bool GetVeto() const { return m_canVeto && m_veto; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxCloseEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxCloseEvent(*this); }
 
 protected:
     bool m_loggingOff,
@@ -2652,11 +2736,7 @@ public:
     // return true if the window was shown, false if hidden
     bool IsShown() const { return m_show; }
 
-#if WXWIN_COMPATIBILITY_2_8
-    wxDEPRECATED( bool GetShow() const { return IsShown(); } )
-#endif
-
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxShowEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxShowEvent(*this); }
 
 protected:
     bool m_show;
@@ -2679,13 +2759,10 @@ public:
         : wxEvent(event)
     { m_iconized = event.m_iconized; }
 
-#if WXWIN_COMPATIBILITY_2_8
-    wxDEPRECATED( bool Iconized() const { return IsIconized(); } )
-#endif
     // return true if the frame was iconized, false if restored
     bool IsIconized() const { return m_iconized; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxIconizeEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxIconizeEvent(*this); }
 
 protected:
     bool m_iconized;
@@ -2704,10 +2781,34 @@ public:
         : wxEvent(winid, wxEVT_MAXIMIZE)
         { }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxMaximizeEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxMaximizeEvent(*this); }
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxMaximizeEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxMaximizeEvent);
+};
+
+/*
+ wxEVT_FULLSCREEN
+ */
+class WXDLLIMPEXP_CORE wxFullScreenEvent : public wxEvent
+{
+public:
+    wxFullScreenEvent(int winid = 0, bool fullscreen = true)
+        : wxEvent(winid, wxEVT_FULLSCREEN)
+        { m_fullscreen = fullscreen; }
+    wxFullScreenEvent(const wxFullScreenEvent& event)
+        : wxEvent(event)
+        { m_fullscreen = event.m_fullscreen; }
+
+    bool IsFullScreen() const { return m_fullscreen; }
+
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxFullScreenEvent(*this); }
+
+protected:
+    bool m_fullscreen;
+
+private:
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxFullScreenEvent);
 };
 
 // Joystick event class
@@ -2804,7 +2905,7 @@ public:
     { return (((but == wxJOY_BUTTON_ANY) && (m_buttonState != 0)) ||
             ((m_buttonState & but) == but)); }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxJoystickEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxJoystickEvent(*this); }
 
 private:
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxJoystickEvent);
@@ -2824,7 +2925,7 @@ public:
 
     wxDropFilesEvent(wxEventType type = wxEVT_NULL,
                      int noFiles = 0,
-                     wxString *files = NULL)
+                     wxString *files = nullptr)
         : wxEvent(0, type),
           m_noFiles(noFiles),
           m_pos(),
@@ -2836,7 +2937,7 @@ public:
         : wxEvent(other),
           m_noFiles(other.m_noFiles),
           m_pos(other.m_pos),
-          m_files(NULL)
+          m_files(nullptr)
     {
         m_files = new wxString[m_noFiles];
         for ( int n = 0; n < m_noFiles; n++ )
@@ -2854,7 +2955,7 @@ public:
     int GetNumberOfFiles() const { return m_noFiles; }
     wxString *GetFiles() const { return m_files; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxDropFilesEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxDropFilesEvent(*this); }
 
 private:
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxDropFilesEvent);
@@ -2885,27 +2986,32 @@ public:
     wxUpdateUIEvent(wxWindowID commandId = 0)
         : wxCommandEvent(wxEVT_UPDATE_UI, commandId)
     {
-        m_checked =
+        m_3checked = wxCHK_UNCHECKED;
         m_enabled =
         m_shown =
         m_setEnabled =
         m_setShown =
         m_setText =
         m_setChecked = false;
+        m_isCheckable = true;
+        m_is3State = false;
     }
     wxUpdateUIEvent(const wxUpdateUIEvent& event)
         : wxCommandEvent(event),
-          m_checked(event.m_checked),
+          m_3checked(event.m_3checked),
           m_enabled(event.m_enabled),
           m_shown(event.m_shown),
           m_setEnabled(event.m_setEnabled),
           m_setShown(event.m_setShown),
           m_setText(event.m_setText),
           m_setChecked(event.m_setChecked),
+          m_isCheckable(event.m_isCheckable),
+          m_is3State(event.m_is3State),
           m_text(event.m_text)
     { }
 
-    bool GetChecked() const { return m_checked; }
+    bool GetChecked() const { return Get3StateValue() != wxCHK_UNCHECKED; }
+    wxCheckBoxState Get3StateValue() const { return m_3checked; }
     bool GetEnabled() const { return m_enabled; }
     bool GetShown() const { return m_shown; }
     wxString GetText() const { return m_text; }
@@ -2914,10 +3020,18 @@ public:
     bool GetSetEnabled() const { return m_setEnabled; }
     bool GetSetShown() const { return m_setShown; }
 
-    void Check(bool check) { m_checked = check; m_setChecked = true; }
+    void Check(bool check) { Set3StateValue(check ? wxCHK_CHECKED : wxCHK_UNCHECKED); }
+    void Set3StateValue(wxCheckBoxState check);
     void Enable(bool enable) { m_enabled = enable; m_setEnabled = true; }
     void Show(bool show) { m_shown = show; m_setShown = true; }
     void SetText(const wxString& text) { m_text = text; m_setText = true; }
+
+    // A flag saying if the item can be checked. True by default.
+    bool IsCheckable() const { return m_isCheckable; }
+    void DisallowCheck();
+    // A flag saying if the item can be wxCHK_UNDETERMINED. False by default.
+    bool Is3State() const { return m_is3State; }
+    void Allow3rdState(bool b = true);
 
     // Sets the interval between updates in milliseconds.
     // Set to -1 to disable updates, or to 0 to update as frequently as possible.
@@ -2941,20 +3055,20 @@ public:
     // Returns the UI update mode
     static wxUpdateUIMode GetMode() { return sm_updateMode; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxUpdateUIEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxUpdateUIEvent(*this); }
 
 protected:
-    bool          m_checked;
+    wxCheckBoxState m_3checked;
     bool          m_enabled;
     bool          m_shown;
     bool          m_setEnabled;
     bool          m_setShown;
     bool          m_setText;
     bool          m_setChecked;
+    bool          m_isCheckable;
+    bool          m_is3State;
     wxString      m_text;
-#if wxUSE_LONGLONG
     static wxLongLong       sm_lastUpdate;
-#endif
     static long             sm_updateInterval;
     static wxUpdateUIMode   sm_updateMode;
 
@@ -2966,7 +3080,6 @@ private:
  wxEVT_SYS_COLOUR_CHANGED
  */
 
-// TODO: shouldn't all events record the window ID?
 class WXDLLIMPEXP_CORE wxSysColourChangedEvent : public wxEvent
 {
 public:
@@ -2974,10 +3087,38 @@ public:
         : wxEvent(0, wxEVT_SYS_COLOUR_CHANGED)
         { }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxSysColourChangedEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxSysColourChangedEvent(*this); }
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxSysColourChangedEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxSysColourChangedEvent);
+};
+
+/*
+ wxEVT_SYS_METRIC_CHANGED
+ */
+
+enum class wxSysMetric
+{
+    Other,
+    CursorSize
+};
+
+class WXDLLIMPEXP_CORE wxSysMetricChangedEvent : public wxEvent
+{
+public:
+    explicit wxSysMetricChangedEvent(wxSysMetric metric = wxSysMetric::Other)
+        : wxEvent(0, wxEVT_SYS_METRIC_CHANGED),
+          m_metric(metric)
+        { }
+
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxSysMetricChangedEvent(*this); }
+
+    wxSysMetric GetMetric() const { return m_metric; }
+
+private:
+    const wxSysMetric m_metric;
+
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxSysMetricChangedEvent);
 };
 
 /*
@@ -2989,7 +3130,7 @@ private:
 class WXDLLIMPEXP_CORE wxMouseCaptureChangedEvent : public wxEvent
 {
 public:
-    wxMouseCaptureChangedEvent(wxWindowID winid = 0, wxWindow* gainedCapture = NULL)
+    wxMouseCaptureChangedEvent(wxWindowID winid = 0, wxWindow* gainedCapture = nullptr)
         : wxEvent(winid, wxEVT_MOUSE_CAPTURE_CHANGED),
           m_gainedCapture(gainedCapture)
         { }
@@ -2999,7 +3140,7 @@ public:
           m_gainedCapture(event.m_gainedCapture)
         { }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxMouseCaptureChangedEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxMouseCaptureChangedEvent(*this); }
 
     wxWindow* GetCapturedWindow() const { return m_gainedCapture; }
 
@@ -3011,7 +3152,7 @@ private:
 
 /*
  wxEVT_MOUSE_CAPTURE_LOST
- The window losing the capture receives this message, unless it released it
+ The window losing the capture receives this message, unless it released
  it itself or unless wxWindow::CaptureMouse was called on another window
  (and so capture will be restored when the new capturer releases it).
  */
@@ -3027,7 +3168,7 @@ public:
         : wxEvent(event)
     {}
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxMouseCaptureLostEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxMouseCaptureLostEvent(*this); }
 
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxMouseCaptureLostEvent);
 };
@@ -3037,15 +3178,15 @@ public:
  */
 class WXDLLIMPEXP_CORE wxDisplayChangedEvent : public wxEvent
 {
-private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxDisplayChangedEvent);
-
 public:
     wxDisplayChangedEvent()
         : wxEvent(0, wxEVT_DISPLAY_CHANGED)
         { }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxDisplayChangedEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxDisplayChangedEvent(*this); }
+
+private:
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxDisplayChangedEvent);
 };
 
 /*
@@ -3065,13 +3206,25 @@ public:
     wxSize GetOldDPI() const { return m_oldDPI; }
     wxSize GetNewDPI() const { return m_newDPI; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxDPIChangedEvent(*this); }
+    // Scale the value by the ratio between new and old DPIs carried by this
+    // event.
+    wxPoint Scale(wxPoint pt) const;
+    wxSize Scale(wxSize sz) const;
+    wxRect Scale(wxRect r) const
+    {
+        return wxRect(Scale(r.GetPosition()), Scale(r.GetSize()));
+    }
+
+    int ScaleX(int x) const { return Scale(wxSize(x, -1)).x; }
+    int ScaleY(int y) const { return Scale(wxSize(-1, y)).y; }
+
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxDPIChangedEvent(*this); }
 
 private:
     wxSize m_oldDPI;
     wxSize m_newDPI;
 
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxDPIChangedEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxDPIChangedEvent);
 };
 
 /*
@@ -3083,7 +3236,7 @@ class WXDLLIMPEXP_CORE wxPaletteChangedEvent : public wxEvent
 public:
     wxPaletteChangedEvent(wxWindowID winid = 0)
         : wxEvent(winid, wxEVT_PALETTE_CHANGED),
-          m_changedWindow(NULL)
+          m_changedWindow(nullptr)
         { }
 
     wxPaletteChangedEvent(const wxPaletteChangedEvent& event)
@@ -3094,7 +3247,7 @@ public:
     void SetChangedWindow(wxWindow* win) { m_changedWindow = win; }
     wxWindow* GetChangedWindow() const { return m_changedWindow; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxPaletteChangedEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxPaletteChangedEvent(*this); }
 
 protected:
     wxWindow*     m_changedWindow;
@@ -3124,7 +3277,7 @@ public:
     void SetPaletteRealized(bool realized) { m_paletteRealized = realized; }
     bool GetPaletteRealized() const { return m_paletteRealized; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxQueryNewPaletteEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxQueryNewPaletteEvent(*this); }
 
 protected:
     bool m_paletteRealized;
@@ -3144,7 +3297,7 @@ public:
     wxNavigationKeyEvent()
         : wxEvent(0, wxEVT_NAVIGATION_KEY),
           m_flags(IsForward | FromTab),    // defaults are for TAB
-          m_focus(NULL)
+          m_focus(nullptr)
         {
             m_propagationLevel = wxEVENT_PROPAGATE_NONE;
         }
@@ -3175,7 +3328,7 @@ public:
     void SetFromTab(bool bIs)
         { if ( bIs ) m_flags |= FromTab; else m_flags &= ~FromTab; }
 
-    // the child which has the focus currently (may be NULL - use
+    // the child which has the focus currently (may be null - use
     // wxWindow::FindFocus then)
     wxWindow* GetCurrentFocus() const { return m_focus; }
     void SetCurrentFocus(wxWindow *win) { m_focus = win; }
@@ -3183,7 +3336,7 @@ public:
     // Set flags
     void SetFlags(long flags) { m_flags = flags; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxNavigationKeyEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxNavigationKeyEvent(*this); }
 
     enum wxNavigationKeyEventFlags
     {
@@ -3213,27 +3366,27 @@ private:
 class WXDLLIMPEXP_CORE wxWindowCreateEvent : public wxCommandEvent
 {
 public:
-    wxWindowCreateEvent(wxWindow *win = NULL);
+    wxWindowCreateEvent(wxWindow *win = nullptr);
 
     wxWindow *GetWindow() const { return (wxWindow *)GetEventObject(); }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxWindowCreateEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxWindowCreateEvent(*this); }
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxWindowCreateEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxWindowCreateEvent);
 };
 
 class WXDLLIMPEXP_CORE wxWindowDestroyEvent : public wxCommandEvent
 {
 public:
-    wxWindowDestroyEvent(wxWindow *win = NULL);
+    wxWindowDestroyEvent(wxWindow *win = nullptr);
 
     wxWindow *GetWindow() const { return (wxWindow *)GetEventObject(); }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxWindowDestroyEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxWindowDestroyEvent(*this); }
 
 private:
-    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxWindowDestroyEvent);
+    wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxWindowDestroyEvent);
 };
 
 // A help event is sent when the user clicks on a window in context-help mode.
@@ -3281,7 +3434,7 @@ public:
     const wxString& GetTarget() const { return m_target; }
     void SetTarget(const wxString& target) { m_target = target; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxHelpEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxHelpEvent(*this); }
 
     // optional indication of the event source
     Origin GetOrigin() const { return m_origin; }
@@ -3323,7 +3476,7 @@ public:
         : wxCommandEvent(event)
     { }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxClipboardTextEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxClipboardTextEvent(*this); }
 
 private:
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxClipboardTextEvent);
@@ -3355,7 +3508,7 @@ public:
     const wxPoint& GetPosition() const { return m_pos; }
     void SetPosition(const wxPoint& pos) { m_pos = pos; }
 
-    virtual wxEvent *Clone() const wxOVERRIDE { return new wxContextMenuEvent(*this); }
+    wxNODISCARD virtual wxEvent *Clone() const override { return new wxContextMenuEvent(*this); }
 
 protected:
     wxPoint   m_pos;
@@ -3409,7 +3562,7 @@ struct WXDLLIMPEXP_BASE wxEventTableEntryBase
         // being initialized (a temporary instance is created and then this
         // constructor is called).
 
-        const_cast<wxEventTableEntryBase&>( entry ).m_fn = NULL;
+        const_cast<wxEventTableEntryBase&>( entry ).m_fn = nullptr;
     }
 
     ~wxEventTableEntryBase()
@@ -3450,7 +3603,7 @@ struct WXDLLIMPEXP_BASE wxEventTableEntry : public wxEventTableEntryBase
     const int& m_eventType;
 
 private:
-    wxDECLARE_NO_ASSIGN_CLASS(wxEventTableEntry);
+    wxDECLARE_NO_ASSIGN_DEF_COPY(wxEventTableEntry);
 };
 
 // an entry used in dynamic event table managed by wxEvtHandler::Connect()
@@ -3513,12 +3666,6 @@ public:
 
     // Clear table
     void Clear();
-
-#if wxUSE_MEMORY_TRACING
-    // Clear all tables: only used to work around problems in memory tracing
-    // code
-    static void ClearAll();
-#endif // wxUSE_MEMORY_TRACING
 
 protected:
     // Init the hash table with the entries of the static event table.
@@ -3657,7 +3804,6 @@ public:
     static void WXConsumeException();
 #endif // wxUSE_EXCEPTIONS
 
-#ifdef wxHAS_CALL_AFTER
     // Asynchronous method calls: these methods schedule the given method
     // pointer for a later call (during the next idle event loop iteration).
     //
@@ -3701,7 +3847,6 @@ public:
     {
         QueueEvent(new wxAsyncMethodCallEventFunctor<T>(this, fn));
     }
-#endif // wxHAS_CALL_AFTER
 
 
     // Connecting and disconnecting
@@ -3722,8 +3867,8 @@ public:
                  int lastId,
                  wxEventType eventType,
                  wxObjectEventFunction func,
-                 wxObject *userData = NULL,
-                 wxEvtHandler *eventSink = NULL)
+                 wxObject *userData = nullptr,
+                 wxEvtHandler *eventSink = nullptr)
     {
         DoBind(winid, lastId, eventType,
                   wxNewEventFunctor(eventType, func, eventSink),
@@ -3734,23 +3879,23 @@ public:
     void Connect(int winid,
                  wxEventType eventType,
                  wxObjectEventFunction func,
-                 wxObject *userData = NULL,
-                 wxEvtHandler *eventSink = NULL)
+                 wxObject *userData = nullptr,
+                 wxEvtHandler *eventSink = nullptr)
         { Connect(winid, wxID_ANY, eventType, func, userData, eventSink); }
 
     // Even more convenient: without id (same as using id of wxID_ANY)
     void Connect(wxEventType eventType,
                  wxObjectEventFunction func,
-                 wxObject *userData = NULL,
-                 wxEvtHandler *eventSink = NULL)
+                 wxObject *userData = nullptr,
+                 wxEvtHandler *eventSink = nullptr)
         { Connect(wxID_ANY, wxID_ANY, eventType, func, userData, eventSink); }
 
     bool Disconnect(int winid,
                     int lastId,
                     wxEventType eventType,
-                    wxObjectEventFunction func = NULL,
-                    wxObject *userData = NULL,
-                    wxEvtHandler *eventSink = NULL)
+                    wxObjectEventFunction func = nullptr,
+                    wxObject *userData = nullptr,
+                    wxEvtHandler *eventSink = nullptr)
     {
         return DoUnbind(winid, lastId, eventType,
                             wxMakeEventFunctor(eventType, func, eventSink),
@@ -3759,15 +3904,15 @@ public:
 
     bool Disconnect(int winid = wxID_ANY,
                     wxEventType eventType = wxEVT_NULL,
-                    wxObjectEventFunction func = NULL,
-                    wxObject *userData = NULL,
-                    wxEvtHandler *eventSink = NULL)
+                    wxObjectEventFunction func = nullptr,
+                    wxObject *userData = nullptr,
+                    wxEvtHandler *eventSink = nullptr)
         { return Disconnect(winid, wxID_ANY, eventType, func, userData, eventSink); }
 
     bool Disconnect(wxEventType eventType,
                     wxObjectEventFunction func,
-                    wxObject *userData = NULL,
-                    wxEvtHandler *eventSink = NULL)
+                    wxObject *userData = nullptr,
+                    wxEvtHandler *eventSink = nullptr)
         { return Disconnect(wxID_ANY, eventType, func, userData, eventSink); }
 
     // Bind functions to an event:
@@ -3776,7 +3921,7 @@ public:
               void (*function)(EventArg &),
               int winid = wxID_ANY,
               int lastId = wxID_ANY,
-              wxObject *userData = NULL)
+              wxObject *userData = nullptr)
     {
         DoBind(winid, lastId, eventType,
                   wxNewEventFunctor(eventType, function),
@@ -3789,7 +3934,7 @@ public:
                 void (*function)(EventArg &),
                 int winid = wxID_ANY,
                 int lastId = wxID_ANY,
-                wxObject *userData = NULL)
+                wxObject *userData = nullptr)
     {
         return DoUnbind(winid, lastId, eventType,
                             wxMakeEventFunctor(eventType, function),
@@ -3802,7 +3947,7 @@ public:
               const Functor &functor,
               int winid = wxID_ANY,
               int lastId = wxID_ANY,
-              wxObject *userData = NULL)
+              wxObject *userData = nullptr)
     {
         DoBind(winid, lastId, eventType,
                   wxNewEventFunctor(eventType, functor),
@@ -3815,7 +3960,7 @@ public:
                 const Functor &functor,
                 int winid = wxID_ANY,
                 int lastId = wxID_ANY,
-                wxObject *userData = NULL)
+                wxObject *userData = nullptr)
     {
         return DoUnbind(winid, lastId, eventType,
                             wxMakeEventFunctor(eventType, functor),
@@ -3832,7 +3977,7 @@ public:
               EventHandler *handler,
               int winid = wxID_ANY,
               int lastId = wxID_ANY,
-              wxObject *userData = NULL)
+              wxObject *userData = nullptr)
     {
         DoBind(winid, lastId, eventType,
                   wxNewEventFunctor(eventType, method, handler),
@@ -3845,7 +3990,7 @@ public:
                 EventHandler *handler,
                 int winid = wxID_ANY,
                 int lastId = wxID_ANY,
-                wxObject *userData = NULL )
+                wxObject *userData = nullptr )
     {
         return DoUnbind(winid, lastId, eventType,
                             wxMakeEventFunctor(eventType, method, handler),
@@ -3894,13 +4039,13 @@ private:
                    int lastId,
                    wxEventType eventType,
                    wxEventFunctor *func,
-                   wxObject* userData = NULL);
+                   wxObject* userData = nullptr);
 
     bool DoUnbind(int winid,
                       int lastId,
                       wxEventType eventType,
                       const wxEventFunctor& func,
-                      wxObject *userData = NULL);
+                      wxObject *userData = nullptr);
 
     static const wxEventTableEntry sm_eventTableEntries[];
 
@@ -3933,15 +4078,6 @@ protected:
     // base class implementation passes the event to wxTheApp
     virtual bool TryAfter(wxEvent& event);
 
-#if WXWIN_COMPATIBILITY_2_8
-    // deprecated method: override TryBefore() instead of this one
-    wxDEPRECATED_BUT_USED_INTERNALLY_INLINE(
-        virtual bool TryValidator(wxEvent& WXUNUSED(event)), return false; )
-
-    wxDEPRECATED_BUT_USED_INTERNALLY_INLINE(
-        virtual bool TryParent(wxEvent& event), return DoTryApp(event); )
-#endif // WXWIN_COMPATIBILITY_2_8
-
     // Overriding this method allows filtering the event handlers dynamically
     // connected to this object. If this method returns false, the handler is
     // not connected at all. If it returns true, it is connected using the
@@ -3961,8 +4097,15 @@ protected:
     wxEvtHandler*       m_nextHandler;
     wxEvtHandler*       m_previousHandler;
 
-    typedef wxVector<wxDynamicEventTableEntry*> DynamicEvents;
-    DynamicEvents* m_dynamicEvents;
+    struct DynamicEvents
+    {
+        wxVector<wxDynamicEventTableEntry*> m_entries;
+        wxRecursionGuardFlag m_flag = 0;
+    };
+    // use wxSharedPtr so that SearchDynamicEventTable() can use another
+    // instance of wxSharedPtr to extend the life of the wxRecursionGuardFlag
+    // to outlive wxRecursionGuard
+    wxSharedPtr<DynamicEvents> m_dynamicEvents;
 
     wxList*             m_pendingEvents;
 
@@ -4035,7 +4178,7 @@ inline void wxObjectEventFunctor::operator()(wxEvtHandler *handler, wxEvent& eve
 class wxEventConnectionRef : public wxTrackerNode
 {
 public:
-    wxEventConnectionRef() : m_src(NULL), m_sink(NULL), m_refCount(0) { }
+    wxEventConnectionRef() : m_src(nullptr), m_sink(nullptr), m_refCount(0) { }
     wxEventConnectionRef(wxEvtHandler *src, wxEvtHandler *sink)
         : m_src(src), m_sink(sink), m_refCount(1)
     {
@@ -4043,14 +4186,14 @@ public:
     }
 
     // The sink is being destroyed
-    virtual void OnObjectDestroy( ) wxOVERRIDE
+    virtual void OnObjectDestroy( ) override
     {
         if ( m_src )
             m_src->OnSinkDestroyed( m_sink );
         delete this;
     }
 
-    virtual wxEventConnectionRef *ToEventConnection() wxOVERRIDE { return this; }
+    virtual wxEventConnectionRef *ToEventConnection() override { return this; }
 
     void IncRef() { m_refCount++; }
     void DecRef()
@@ -4123,7 +4266,7 @@ public:
         m_eventsToBlock.push_back(type);
     }
 
-    virtual bool ProcessEvent(wxEvent& event) wxOVERRIDE;
+    virtual bool ProcessEvent(wxEvent& event) override;
 
 protected:
     wxArrayInt m_eventsToBlock;
@@ -4150,6 +4293,7 @@ typedef void (wxEvtHandler::*wxJoystickEventFunction)(wxJoystickEvent&);
 typedef void (wxEvtHandler::*wxDropFilesEventFunction)(wxDropFilesEvent&);
 typedef void (wxEvtHandler::*wxInitDialogEventFunction)(wxInitDialogEvent&);
 typedef void (wxEvtHandler::*wxSysColourChangedEventFunction)(wxSysColourChangedEvent&);
+typedef void (wxEvtHandler::*wxSysMetricChangedEventFunction)(wxSysMetricChangedEvent&);
 typedef void (wxEvtHandler::*wxDisplayChangedEventFunction)(wxDisplayChangedEvent&);
 typedef void (wxEvtHandler::*wxDPIChangedEventFunction)(wxDPIChangedEvent&);
 typedef void (wxEvtHandler::*wxUpdateUIEventFunction)(wxUpdateUIEvent&);
@@ -4169,12 +4313,14 @@ typedef void (wxEvtHandler::*wxContextMenuEventFunction)(wxContextMenuEvent&);
 typedef void (wxEvtHandler::*wxMouseCaptureChangedEventFunction)(wxMouseCaptureChangedEvent&);
 typedef void (wxEvtHandler::*wxMouseCaptureLostEventFunction)(wxMouseCaptureLostEvent&);
 typedef void (wxEvtHandler::*wxClipboardTextEventFunction)(wxClipboardTextEvent&);
+typedef void (wxEvtHandler::*wxMultiTouchEventFunction)(wxMultiTouchEvent&);
 typedef void (wxEvtHandler::*wxPanGestureEventFunction)(wxPanGestureEvent&);
 typedef void (wxEvtHandler::*wxZoomGestureEventFunction)(wxZoomGestureEvent&);
 typedef void (wxEvtHandler::*wxRotateGestureEventFunction)(wxRotateGestureEvent&);
 typedef void (wxEvtHandler::*wxTwoFingerTapEventFunction)(wxTwoFingerTapEvent&);
 typedef void (wxEvtHandler::*wxLongPressEventFunction)(wxLongPressEvent&);
 typedef void (wxEvtHandler::*wxPressAndTapEventFunction)(wxPressAndTapEvent&);
+typedef void (wxEvtHandler::*wxFullScreenEventFunction)(wxFullScreenEvent&);
 
 #define wxCommandEventHandler(func) \
     wxEVENT_HANDLER_CAST(wxCommandEventFunction, func)
@@ -4213,6 +4359,8 @@ typedef void (wxEvtHandler::*wxPressAndTapEventFunction)(wxPressAndTapEvent&);
     wxEVENT_HANDLER_CAST(wxInitDialogEventFunction, func)
 #define wxSysColourChangedEventHandler(func) \
     wxEVENT_HANDLER_CAST(wxSysColourChangedEventFunction, func)
+#define wxSysMetricChangedEventHandler(func) \
+    wxEVENT_HANDLER_CAST(wxSysMetricChangedEventFunction, func)
 #define wxDisplayChangedEventHandler(func) \
     wxEVENT_HANDLER_CAST(wxDisplayChangedEventFunction, func)
 #define wxDPIChangedEventHandler(func) \
@@ -4251,6 +4399,8 @@ typedef void (wxEvtHandler::*wxPressAndTapEventFunction)(wxPressAndTapEvent&);
     wxEVENT_HANDLER_CAST(wxMouseCaptureLostEventFunction, func)
 #define wxClipboardTextEventHandler(func) \
     wxEVENT_HANDLER_CAST(wxClipboardTextEventFunction, func)
+#define wxMultiTouchEventHandler(func) \
+    wxEVENT_HANDLER_CAST(wxMultiTouchEventFunction, func)
 #define wxPanGestureEventHandler(func) \
     wxEVENT_HANDLER_CAST(wxPanGestureEventFunction, func)
 #define wxZoomGestureEventHandler(func) \
@@ -4263,6 +4413,8 @@ typedef void (wxEvtHandler::*wxPressAndTapEventFunction)(wxPressAndTapEvent&);
     wxEVENT_HANDLER_CAST(wxLongPressEventFunction, func)
 #define wxPressAndTapEventHandler(func) \
     wxEVENT_HANDLER_CAST(wxPressAndTapEventFunction, func)
+#define wxFullScreenEventHandler(func) \
+    wxEVENT_HANDLER_CAST(wxFullScreenEventFunction, func)
 
 #endif // wxUSE_GUI
 
@@ -4273,16 +4425,12 @@ typedef void (wxEvtHandler::*wxPressAndTapEventFunction)(wxPressAndTapEvent&);
     private:                                                            \
         static const wxEventTableEntry sm_eventTableEntries[];          \
     protected:                                                          \
-        wxCLANG_WARNING_SUPPRESS(inconsistent-missing-override)         \
-        const wxEventTable* GetEventTable() const;                      \
-        wxEventHashTable& GetEventHashTable() const;                    \
-        wxCLANG_WARNING_RESTORE(inconsistent-missing-override)          \
+        wxWARNING_SUPPRESS_MISSING_OVERRIDE()                           \
+        const wxEventTable* GetEventTable() const wxDUMMY_OVERRIDE;     \
+        wxEventHashTable& GetEventHashTable() const wxDUMMY_OVERRIDE;   \
+        wxWARNING_RESTORE_MISSING_OVERRIDE()                            \
         static const wxEventTable        sm_eventTable;                 \
         static wxEventHashTable          sm_eventHashTable
-
-// N.B.: when building DLL with Borland C++ 5.5 compiler, you must initialize
-//       sm_eventTable before using it in GetEventTable() or the compiler gives
-//       E2233 (see http://groups.google.com/groups?selm=397dcc8a%241_2%40dnews)
 
 #define wxBEGIN_EVENT_TABLE(theClass, baseClass) \
     const wxEventTable theClass::sm_eventTable = \
@@ -4414,7 +4562,7 @@ typedef void (wxEvtHandler::*wxPressAndTapEventFunction)(wxPressAndTapEvent&);
 //  - id1, id2 ids of the first/last id
 //  - fn the function (should be cast to the right type)
 #define wx__DECLARE_EVT2(evt, id1, id2, fn) \
-    wxDECLARE_EVENT_TABLE_ENTRY(evt, id1, id2, fn, NULL),
+    wxDECLARE_EVENT_TABLE_ENTRY(evt, id1, id2, fn, nullptr),
 #define wx__DECLARE_EVT1(evt, id, fn) \
     wx__DECLARE_EVT2(evt, id, wxID_ANY, fn)
 #define wx__DECLARE_EVT0(evt, fn) \
@@ -4475,6 +4623,7 @@ typedef void (wxEvtHandler::*wxPressAndTapEventFunction)(wxPressAndTapEvent&);
 #define EVT_DROP_FILES(func)  wx__DECLARE_EVT0(wxEVT_DROP_FILES, wxDropFilesEventHandler(func))
 #define EVT_INIT_DIALOG(func)  wx__DECLARE_EVT0(wxEVT_INIT_DIALOG, wxInitDialogEventHandler(func))
 #define EVT_SYS_COLOUR_CHANGED(func) wx__DECLARE_EVT0(wxEVT_SYS_COLOUR_CHANGED, wxSysColourChangedEventHandler(func))
+#define EVT_SYS_METRIC_CHANGED(func) wx__DECLARE_EVT0(wxEVT_SYS_METRIC_CHANGED, wxSysMetricChangedEventHandler(func))
 #define EVT_DISPLAY_CHANGED(func)  wx__DECLARE_EVT0(wxEVT_DISPLAY_CHANGED, wxDisplayChangedEventHandler(func))
 #define EVT_DPI_CHANGED(func)  wx__DECLARE_EVT0(wxEVT_DPI_CHANGED, wxDPIChangedEventHandler(func))
 #define EVT_SHOW(func) wx__DECLARE_EVT0(wxEVT_SHOW, wxShowEventHandler(func))
@@ -4488,6 +4637,7 @@ typedef void (wxEvtHandler::*wxPressAndTapEventFunction)(wxPressAndTapEvent&);
 #define EVT_SET_CURSOR(func) wx__DECLARE_EVT0(wxEVT_SET_CURSOR, wxSetCursorEventHandler(func))
 #define EVT_MOUSE_CAPTURE_CHANGED(func) wx__DECLARE_EVT0(wxEVT_MOUSE_CAPTURE_CHANGED, wxMouseCaptureChangedEventHandler(func))
 #define EVT_MOUSE_CAPTURE_LOST(func) wx__DECLARE_EVT0(wxEVT_MOUSE_CAPTURE_LOST, wxMouseCaptureLostEventHandler(func))
+#define EVT_FULLSCREEN(func) wx__DECLARE_EVT0(wxEVT_FULLSCREEN, wxFullScreenEventHandler(func))
 
 // Mouse events
 #define EVT_LEFT_DOWN(func) wx__DECLARE_EVT0(wxEVT_LEFT_DOWN, wxMouseEventHandler(func))
@@ -4598,13 +4748,26 @@ typedef void (wxEvtHandler::*wxPressAndTapEventFunction)(wxPressAndTapEvent&);
     EVT_COMMAND_SCROLL_THUMBRELEASE(winid, func) \
     EVT_COMMAND_SCROLL_CHANGED(winid, func)
 
+// Multi-Touch events
+#define EVT_TOUCH_BEGIN(func) wx__DECLARE_EVT0(wxEVT_TOUCH_BEGIN, wxMultiTouchEventHandler(func))
+#define EVT_TOUCH_MOVE(func) wx__DECLARE_EVT0(wxEVT_TOUCH_MOVE, wxMultiTouchEventHandler(func))
+#define EVT_TOUCH_END(func) wx__DECLARE_EVT0(wxEVT_TOUCH_END, wxMultiTouchEventHandler(func))
+#define EVT_TOUCH_CANCEL(func) wx__DECLARE_EVT0(wxEVT_TOUCH_CANCEL, wxMultiTouchEventHandler(func))
+
+// All touch events
+#define EVT_TOUCH_EVENTS(func) \
+    EVT_TOUCH_BEGIN(func) \
+    EVT_TOUCH_MOVE(func) \
+    EVT_TOUCH_END(func) \
+    EVT_TOUCH_CANCEL(func)
+
 // Gesture events
 #define EVT_GESTURE_PAN(winid, func) wx__DECLARE_EVT1(wxEVT_GESTURE_PAN, winid, wxPanGestureEventHandler(func))
 #define EVT_GESTURE_ZOOM(winid, func) wx__DECLARE_EVT1(wxEVT_GESTURE_ZOOM, winid, wxZoomGestureEventHandler(func))
 #define EVT_GESTURE_ROTATE(winid, func) wx__DECLARE_EVT1(wxEVT_GESTURE_ROTATE, winid, wxRotateGestureEventHandler(func))
 #define EVT_TWO_FINGER_TAP(winid, func) wx__DECLARE_EVT1(wxEVT_TWO_FINGER_TAP, winid, wxTwoFingerTapEventHandler(func))
 #define EVT_LONG_PRESS(winid, func) wx__DECLARE_EVT1(wxEVT_LONG_PRESS, winid, wxLongPressEventHandler(func))
-#define EVT_PRESS_AND_TAP(winid, func) wx__DECLARE_EVT1(wxEVT_PRESS_AND_TAP, winid, wxPressAndTapEvent(func))
+#define EVT_PRESS_AND_TAP(winid, func) wx__DECLARE_EVT1(wxEVT_PRESS_AND_TAP, winid, wxPressAndTapEventHandler(func))
 
 // Convenience macros for commonly-used commands
 #define EVT_CHECKBOX(winid, func) wx__DECLARE_EVT1(wxEVT_CHECKBOX, winid, wxCommandEventHandler(func))

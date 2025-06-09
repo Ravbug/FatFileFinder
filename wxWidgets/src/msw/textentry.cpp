@@ -18,9 +18,6 @@
 // for compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #ifndef WX_PRECOMP
     #include "wx/arrstr.h"
@@ -180,7 +177,7 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt,
                                            LPOLESTR *rgelt,
-                                           ULONG *pceltFetched) wxOVERRIDE
+                                           ULONG *pceltFetched) override
     {
         if ( !rgelt || (!pceltFetched && celt > 1) )
             return E_POINTER;
@@ -222,7 +219,7 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt) wxOVERRIDE
+    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt) override
     {
         if ( !celt )
             return E_INVALIDARG;
@@ -244,7 +241,7 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Reset() wxOVERRIDE
+    virtual HRESULT STDMETHODCALLTYPE Reset() override
     {
         CSLock lock(m_csRestart);
 
@@ -253,7 +250,7 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumString **ppEnum) wxOVERRIDE
+    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumString **ppEnum) override
     {
         if ( !ppEnum )
             return E_POINTER;
@@ -289,7 +286,7 @@ private:
         ::InitializeCriticalSection(&m_csCompleter);
         ::InitializeCriticalSection(&m_csRestart);
 
-        m_completer = NULL;
+        m_completer = nullptr;
         m_restart = FALSE;
     }
 
@@ -331,7 +328,7 @@ private:
     CRITICAL_SECTION m_csCompleter;
 
     // The completer we delegate to for the completions generation. It is never
-    // NULL after the initial ChangeCompleter() call.
+    // nullptr after the initial ChangeCompleter() call.
     wxTextCompleter *m_completer;
 
 
@@ -372,12 +369,12 @@ public:
         : m_entry(entry),
           m_win(entry->GetEditableWindow())
     {
-        m_autoComplete = NULL;
-        m_autoCompleteDropDown = NULL;
-        m_enumStrings = NULL;
+        m_autoComplete = nullptr;
+        m_autoCompleteDropDown = nullptr;
+        m_enumStrings = nullptr;
 
-        m_fixedCompleter = NULL;
-        m_customCompleter = NULL;
+        m_fixedCompleter = nullptr;
+        m_customCompleter = nullptr;
 
         m_connectedCharEvent = false;
 
@@ -387,7 +384,7 @@ public:
         HRESULT hr = CoCreateInstance
                      (
                         wxCLSID_AutoComplete,
-                        NULL,
+                        nullptr,
                         CLSCTX_INPROC_SERVER,
                         IID_IAutoComplete,
                         reinterpret_cast<void **>(&m_autoComplete)
@@ -402,13 +399,13 @@ public:
         m_enumStrings = new wxIEnumString;
         m_enumStrings->AddRef();
         hr = m_autoComplete->Init(m_entry->GetEditHWND(), m_enumStrings,
-                                  NULL, NULL);
+                                  nullptr, nullptr);
         if ( FAILED(hr) )
         {
             wxLogApiError(wxT("IAutoComplete::Init"), hr);
 
             m_enumStrings->Release();
-            m_enumStrings = NULL;
+            m_enumStrings = nullptr;
 
             return;
         }
@@ -431,7 +428,7 @@ public:
         }
 
         // Finally set the completion options using IAutoComplete2.
-        IAutoComplete2 *pAutoComplete2 = NULL;
+        IAutoComplete2 *pAutoComplete2 = nullptr;
         hr = m_autoComplete->QueryInterface
                              (
                                IID_IAutoComplete2,
@@ -480,7 +477,7 @@ public:
         DoRefresh();
     }
 
-    // Takes ownership of the pointer if it is non-NULL.
+    // Takes ownership of the pointer if it is non-null.
     bool ChangeCustomCompleter(wxTextCompleter *completer)
     {
         // Ensure that the old completer is not used any more before deleting
@@ -508,7 +505,7 @@ public:
                 // defined at wx level run first).
                 //
                 // Notice that we can't use wxEVT_TEXT here
-                // neither as, due to our use of ACO_AUTOAPPEND, we get
+                // either as, due to our use of ACO_AUTOAPPEND, we get
                 // EN_CHANGE notifications from the control every time
                 // IAutoComplete auto-appends something to it.
                 m_win->Bind(wxEVT_AFTER_CHAR,
@@ -604,7 +601,7 @@ private:
             // Check if the drop down is currently open.
             DWORD dwFlags = 0;
             if ( SUCCEEDED(m_autoCompleteDropDown->GetDropDownStatus(&dwFlags,
-                                                                     NULL))
+                                                                     nullptr))
                     && dwFlags == ACDD_VISIBLE )
             {
                 if ( event.GetKeyCode() == WXK_ESCAPE )
@@ -649,10 +646,10 @@ private:
     // Enumerator for strings currently used for auto-completion.
     wxIEnumString *m_enumStrings;
 
-    // Fixed string completer or NULL if none.
+    // Fixed string completer or nullptr if none.
     wxTextCompleterFixed *m_fixedCompleter;
 
-    // Custom completer or NULL if none.
+    // Custom completer or nullptr if none.
     wxTextCompleter *m_customCompleter;
 
     // Initially false, set to true after connecting OnTextChanged() handler.
@@ -661,6 +658,10 @@ private:
 
     wxDECLARE_NO_COPY_CLASS(wxTextAutoCompleteData);
 };
+
+// Special pointer value which indicates that we're using SHAutoComplete().
+static wxTextAutoCompleteData* const wxDUMMY_SHAUTOCOMPLETE_DATA =
+    reinterpret_cast<wxTextAutoCompleteData*>(-1);
 
 #endif // HAS_AUTOCOMPLETE
 
@@ -675,14 +676,15 @@ private:
 wxTextEntry::wxTextEntry()
 {
 #ifdef HAS_AUTOCOMPLETE
-    m_autoCompleteData = NULL;
+    m_autoCompleteData = nullptr;
 #endif // HAS_AUTOCOMPLETE
 }
 
 wxTextEntry::~wxTextEntry()
 {
 #ifdef HAS_AUTOCOMPLETE
-    delete m_autoCompleteData;
+    if ( MSWHasAutoCompleteData() )
+        delete m_autoCompleteData;
 #endif // HAS_AUTOCOMPLETE
 }
 
@@ -771,7 +773,7 @@ void wxTextEntry::SetInsertionPoint(long pos)
 long wxTextEntry::GetInsertionPoint() const
 {
     long from;
-    GetSelection(&from, NULL);
+    GetSelection(&from, nullptr);
     return from;
 }
 
@@ -811,8 +813,6 @@ void wxTextEntry::GetSelection(long *from, long *to) const
 
 #ifdef HAS_AUTOCOMPLETE
 
-#if wxUSE_DYNLIB_CLASS
-
 bool wxTextEntry::DoAutoCompleteFileNames(int flags)
 {
     DWORD dwFlags = 0;
@@ -836,40 +836,57 @@ bool wxTextEntry::DoAutoCompleteFileNames(int flags)
 
     // Disable the other kinds of completion now that we use the built-in file
     // names completion.
-    if ( m_autoCompleteData )
-        m_autoCompleteData->DisableCompletion();
+    if ( MSWHasAutoCompleteData() )
+        delete m_autoCompleteData;
+
+    // Set it to the special value indicating that we're using SHAutoComplete().
+    m_autoCompleteData = wxDUMMY_SHAUTOCOMPLETE_DATA;
 
     return true;
 }
-
-#endif // wxUSE_DYNLIB_CLASS
 
 void wxTextEntry::MSWProcessSpecialKey(wxKeyEvent& WXUNUSED(event))
 {
     wxFAIL_MSG(wxS("Must be overridden if can be called"));
 }
 
-wxTextAutoCompleteData *wxTextEntry::GetOrCreateCompleter()
+bool wxTextEntry::MSWUsesStandardAutoComplete() const
 {
-    if ( !m_autoCompleteData )
+    return m_autoCompleteData == wxDUMMY_SHAUTOCOMPLETE_DATA;
+}
+
+bool wxTextEntry::MSWHasAutoCompleteData() const
+{
+    // We use special wxDUMMY_SHAUTOCOMPLETE_DATA for the pointer to indicate
+    // that we're using SHAutoComplete(), so we need to check for it too, and
+    // not just whether the pointer is non-null.
+    return m_autoCompleteData != nullptr
+            && m_autoCompleteData != wxDUMMY_SHAUTOCOMPLETE_DATA;
+}
+
+bool wxTextEntry::MSWEnsureHasAutoCompleteData()
+{
+    if ( !MSWHasAutoCompleteData() )
     {
         wxTextAutoCompleteData * const ac = new wxTextAutoCompleteData(this);
-        if ( ac->IsOk() )
-            m_autoCompleteData = ac;
-        else
+        if ( !ac->IsOk() )
+        {
             delete ac;
+            return false;
+        }
+
+        m_autoCompleteData = ac;
     }
 
-    return m_autoCompleteData;
+    return true;
 }
 
 bool wxTextEntry::DoAutoCompleteStrings(const wxArrayString& choices)
 {
-    wxTextAutoCompleteData * const ac = GetOrCreateCompleter();
-    if ( !ac )
+    if ( !MSWEnsureHasAutoCompleteData() )
         return false;
 
-    ac->ChangeStrings(choices);
+    m_autoCompleteData->ChangeStrings(choices);
 
     return true;
 }
@@ -879,14 +896,13 @@ bool wxTextEntry::DoAutoCompleteCustom(wxTextCompleter *completer)
     // First deal with the case when we just want to disable auto-completion.
     if ( !completer )
     {
-        if ( m_autoCompleteData )
+        if ( MSWHasAutoCompleteData() )
             m_autoCompleteData->DisableCompletion();
         //else: Nothing to do, we hadn't used auto-completion even before.
     }
     else // Have a valid completer.
     {
-        wxTextAutoCompleteData * const ac = GetOrCreateCompleter();
-        if ( !ac )
+        if ( !MSWEnsureHasAutoCompleteData() )
         {
             // Delete the custom completer for consistency with the case when
             // we succeed to avoid memory leaks in user code.
@@ -895,7 +911,7 @@ bool wxTextEntry::DoAutoCompleteCustom(wxTextCompleter *completer)
         }
 
         // This gives ownership of the custom completer to m_autoCompleteData.
-        if ( !ac->ChangeCustomCompleter(completer) )
+        if ( !m_autoCompleteData->ChangeCustomCompleter(completer) )
             return false;
     }
 
@@ -975,7 +991,7 @@ void wxTextEntry::ForceUpper()
 
 bool wxTextEntry::SetHint(const wxString& hint)
 {
-    if ( wxGetWinVersion() >= wxWinVersion_Vista && wxUxThemeIsActive() )
+    if ( wxUxThemeIsActive() )
     {
         // notice that this message always works with Unicode strings
         //
@@ -1050,6 +1066,93 @@ bool wxTextEntry::ClickDefaultButtonIfPossible()
     return !wxIsAnyModifierDown() &&
                 wxWindow::MSWClickButtonIfPossible(
                     wxWindow::MSWGetDefaultButtonFor(GetEditableWindow()));
+}
+
+// This function is also used by wxSpinCtrl, so make it extern to allow reusing
+// it from there.
+extern bool wxMSWTextEntryShouldPreProcessMessage(WXMSG* msg)
+{
+    // check for our special keys here: if we don't do it and the parent frame
+    // uses them as accelerators, they wouldn't work at all, so we disable
+    // usual preprocessing for them
+    if ( msg->message == WM_KEYDOWN )
+    {
+        const WPARAM vkey = msg->wParam;
+        if ( HIWORD(msg->lParam) & KF_ALTDOWN )
+        {
+            // Alt-Backspace is accelerator for "Undo"
+            if ( vkey == VK_BACK )
+                return false;
+        }
+        else // no Alt
+        {
+            // we want to process some Ctrl-foo and Shift-bar but no key
+            // combinations without either Ctrl or Shift nor with both of them
+            // pressed
+            const int ctrl = wxIsCtrlDown(),
+                      shift = wxIsShiftDown();
+            switch ( ctrl + shift )
+            {
+                default:
+                    wxFAIL_MSG( wxT("how many modifiers have we got?") );
+                    wxFALLTHROUGH;
+
+                case 0:
+                    switch ( vkey )
+                    {
+                        case VK_DELETE:
+                        case VK_HOME:
+                        case VK_END:
+                            return false;
+                    }
+                    break;
+
+                case 1:
+                    // either Ctrl or Shift pressed
+                    if ( ctrl )
+                    {
+                        switch ( vkey )
+                        {
+                            case 'A':
+                            case 'C':
+                            case 'V':
+                            case 'X':
+                            case VK_INSERT:
+                            case VK_DELETE:
+                            case VK_HOME:
+                            case VK_END:
+                            case VK_LEFT:
+                            case VK_RIGHT:
+                                return false;
+                        }
+                    }
+                    else // Shift is pressed
+                    {
+                        switch ( vkey )
+                        {
+                            case VK_INSERT:
+                            case VK_DELETE:
+                            case VK_HOME:
+                            case VK_END:
+                            case VK_LEFT:
+                            case VK_RIGHT:
+                                return false;
+                        }
+                    }
+                    break;
+
+                case 2:
+                    break;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool wxTextEntry::MSWShouldPreProcessMessage(WXMSG* msg) const
+{
+    return wxMSWTextEntryShouldPreProcessMessage(msg);
 }
 
 #endif // wxUSE_TEXTCTRL || wxUSE_COMBOBOX

@@ -52,14 +52,14 @@ public:
     */
     bool Create(wxWindow* parent, const wxFontData& data);
 
-    //@{
+    ///@{
     /**
         Returns the @ref wxFontData "font data" associated with the
         font dialog.
     */
     const wxFontData& GetFontData() const;
     wxFontData& GetFontData();
-    //@}
+    ///@}
 
     /**
         Shows the dialog, returning @c wxID_OK if the user pressed Ok, and
@@ -81,7 +81,7 @@ public:
 // ============================================================================
 
 /** @addtogroup group_funcmacro_dialog */
-//@{
+///@{
 
 /**
     Shows the font selection dialog and returns the font selected by user or
@@ -97,9 +97,9 @@ public:
 
     @header{wx/fontdlg.h}
 */
-wxFont wxGetFontFromUser(wxWindow* parent,
-                         const wxFont& fontInit,
+wxFont wxGetFontFromUser(wxWindow* parent = nullptr,
+                         const wxFont& fontInit = wxNullFont,
                          const wxString& caption = wxEmptyString);
 
-//@}
+///@}
 

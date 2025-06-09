@@ -16,12 +16,14 @@
 
 class WXDLLIMPEXP_CORE wxAnyButton : public wxAnyButtonBase
 {
+    typedef wxAnyButtonBase BaseType;
 public:
     wxAnyButton()
     {
         m_isCurrent =
         m_isPressed = false;
     }
+    virtual void SetLabel(const wxString& label) override;
 
     // implementation
     // --------------
@@ -37,13 +39,13 @@ public:
     void GTKReleased();
 
 protected:
-    virtual GdkWindow *GTKGetWindow(wxArrayGdkWindows& windows) const wxOVERRIDE;
+    virtual GdkWindow *GTKGetWindow(wxArrayGdkWindows& windows) const override;
 
-    virtual void DoEnable(bool enable) wxOVERRIDE;
+    virtual void DoEnable(bool enable) override;
 
-    virtual wxBitmap DoGetBitmap(State which) const wxOVERRIDE;
-    virtual void DoSetBitmap(const wxBitmap& bitmap, State which) wxOVERRIDE;
-    virtual void DoSetBitmapPosition(wxDirection dir) wxOVERRIDE;
+    virtual wxBitmap DoGetBitmap(State which) const override;
+    virtual void DoSetBitmap(const wxBitmapBundle& bitmap, State which) override;
+    virtual void DoSetBitmapPosition(wxDirection dir) override;
 
     // update the bitmap to correspond to the current button state
     void GTKUpdateBitmap();
@@ -60,13 +62,13 @@ private:
     State GTKGetCurrentBitmapState() const;
 
     // show the given bitmap (must be valid)
-    void GTKDoShowBitmap(const wxBitmap& bitmap);
+    void GTKDoShowBitmap(const wxBitmapBundle& bitmap);
 
 
     // the bitmaps for the different state of the buttons, all of them may be
     // invalid and the button only shows a bitmap at all if State_Normal bitmap
     // is valid
-    wxBitmap m_bitmaps[State_Max];
+    wxBitmapBundle m_bitmaps[State_Max];
 
     // true iff mouse is currently over the button
     bool m_isCurrent;

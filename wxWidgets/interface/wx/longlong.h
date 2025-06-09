@@ -8,15 +8,11 @@
 /**
     @class wxLongLong
 
-    This class represents a signed 64 bit long number. It is implemented using the
-    native 64 bit type where available (machines with 64 bit longs or compilers
-    which have (an analog of) @e long long type) and uses the emulation code in
-    the other cases which ensures that it is the most efficient solution for
-    working with 64 bit integers independently of the architecture.
+    This is a legacy class wrapping a 64-bit integer.
 
     @note This class is obsolete as there are no supported implementations not
     providing a native 64 bit integer type any longer and the application code
-    can safely use "long long" or "std::int64_t" directly instead of using this
+    should use "long long" or "std::int64_t" directly instead of using this
     class.
 
     wxLongLong defines all usual arithmetic operations such as addition,
@@ -59,14 +55,14 @@ public:
     */
     wxLongLong(long hi, unsigned long lo);
 
-    //@{
+    ///@{
     /**
         Returns an absolute value of wxLongLong - either making a copy (const version)
         or modifying it in place (the second one).
     */
     wxLongLong Abs() const;
     wxLongLong& Abs();
-    //@}
+    ///@}
 
     /**
         This allows converting a double value to wxLongLong type.
@@ -131,21 +127,21 @@ public:
     wxLongLong& operator-(const wxLongLong& ll);
 
 
-    //@{
+    ///@{
     /**
         Pre/post increment operator.
     */
     wxLongLong operator++();
     wxLongLong operator++(int);
-    //@}
+    ///@}
 
-    //@{
+    ///@{
     /**
         Pre/post decrement operator.
     */
     wxLongLong operator--();
     wxLongLong operator--(int);
-    //@}
+    ///@}
 
     /**
         Returns the value of this wxLongLong with opposite sign.
@@ -191,7 +187,10 @@ public:
 /**
     @class wxULongLong
 
-    This class represents an unsigned 64 bit long number.
+    This is a legacy class wrapping an unsigned 64-bit integer.
+
+    @note Just as wxLongLong, this class is obsolete and shouldn't be used in
+    the new code.
 
     See wxLongLong for more details.
 
@@ -273,21 +272,21 @@ public:
     wxULongLong& operator-(const wxULongLong& ll);
 
 
-    //@{
+    ///@{
     /**
         Pre/post increment operator.
     */
     wxULongLong operator++();
     wxULongLong operator++(int);
-    //@}
+    ///@}
 
-    //@{
+    ///@{
     /**
         Pre/post decrement operator.
     */
     wxULongLong operator--();
     wxULongLong operator--(int);
-    //@}
+    ///@}
 
     /**
         Assignment operator from signed long long. The sign bit will be copied too.
@@ -329,7 +328,7 @@ public:
 // ============================================================================
 
 /** @addtogroup group_funcmacro_misc */
-//@{
+///@{
 
 /**
     This macro is defined to contain the @c printf() format specifier using
@@ -337,10 +336,8 @@ public:
     printed. Example of using it:
 
     @code
-    #ifdef wxLongLong_t
-        wxLongLong_t ll = wxLL(0x1234567890abcdef);
-        printf("Long long = %" wxLongLongFmtSpec "x\n", ll);
-    #endif
+    wxLongLong_t ll = wxLL(0x1234567890abcdef);
+    printf("Long long = %" wxLongLongFmtSpec "x\n", ll);
     @endcode
 
     @see wxLL()
@@ -354,9 +351,7 @@ public:
     and allow the use of 64 bit compile time constants:
 
     @code
-    #ifdef wxLongLong_t
-        wxLongLong_t ll = wxLL(0x1234567890abcdef);
-    #endif
+    wxLongLong_t ll = wxLL(0x1234567890abcdef);
     @endcode
 
     @see wxULL(), wxLongLong
@@ -370,9 +365,7 @@ wxLongLong_t wxLL(number);
     and allow the use of 64 bit compile time constants:
 
     @code
-    #ifdef wxLongLong_t
-        unsigned wxLongLong_t ll = wxULL(0x1234567890abcdef);
-    #endif
+    unsigned wxLongLong_t ll = wxULL(0x1234567890abcdef);
     @endcode
 
     @see wxLL(), wxLongLong
@@ -381,5 +374,5 @@ wxLongLong_t wxLL(number);
 */
 wxLongLong_t wxULL(number);
 
-//@}
+///@}
 

@@ -2,7 +2,6 @@
 // Name:        src/osx/carbon/utilscocoa.mm
 // Purpose:     various cocoa mixin utility functions
 // Author:      Stefan Csomor
-// Modified by:
 // Created:     1998-01-01
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -27,6 +26,7 @@
 #endif
 
 #include "wx/fontutil.h"
+#include "wx/private/bmpbndl.h"
 
 #ifdef __WXMAC__
 
@@ -100,7 +100,7 @@ void* wxMacCocoaRetain( void* obj )
 
 NSFont* wxFont::OSXGetNSFont() const
 {
-    wxCHECK_MSG( m_refData != NULL , 0, wxT("invalid font") );
+    wxCHECK_MSG( m_refData != nullptr , nullptr, wxT("invalid font") );
 
     // cast away constness otherwise lazy font resolution is not possible
     const_cast<wxFont *>(this)->RealizeResource();
@@ -116,7 +116,7 @@ NSFont* wxFont::OSXGetNSFont() const
     // As a workaround for this bug, don't use toll-free bridging, but
     // re-create NSFont from the descriptor instead on buggy OS X versions.
     int osMajor, osMinor;
-    wxGetOsVersion(&osMajor, &osMinor, NULL);
+    wxGetOsVersion(&osMajor, &osMinor, nullptr);
     if (osMajor == 10 && osMinor == 11)
     {
         return [NSFont fontWithDescriptor:[font fontDescriptor] size:[font pointSize]];
@@ -132,7 +132,7 @@ NSFont* wxFont::OSXGetNSFont() const
 
 UIFont* wxFont::OSXGetUIFont() const
 {
-    wxCHECK_MSG( m_refData != NULL , 0, wxT("invalid font") );
+    wxCHECK_MSG( m_refData != nullptr , 0, wxT("invalid font") );
 
     // cast away constness otherwise lazy font resolution is not possible
     const_cast<wxFont *>(this)->RealizeResource();
@@ -165,14 +165,14 @@ WXWindow wxOSXGetKeyWindow()
 
 #if wxOSX_USE_IPHONE
 
-wxBitmap wxOSXCreateSystemBitmap(const wxString& name, const wxString &client, const wxSize& size)
+wxBitmapBundle wxOSXCreateSystemBitmapBundle(const wxString& name, const wxString &client, const wxSize& size)
 {
 #if 1
     // unfortunately this only accesses images in the app bundle, not the system wide globals
     wxCFStringRef cfname(name);
-    return wxBitmap( [[UIImage imageNamed:cfname.AsNSString()] CGImage] );
+    return wxOSXMakeBundleFromImage( [UIImage imageNamed:cfname.AsNSString()] );
 #else
-    return wxBitmap();
+    return wxNullBitmap;
 #endif
 }
 
@@ -183,18 +183,26 @@ wxBitmap wxOSXCreateSystemBitmap(const wxString& name, const wxString &client, c
 WXImage wxOSXGetSystemImage(const wxString& name)
 {
     wxCFStringRef cfname(name);
+
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_16
+    if ( WX_IS_MACOS_AVAILABLE(11, 0) )
+    {
+        NSImage *symbol = [NSImage imageWithSystemSymbolName:cfname.AsNSString() accessibilityDescription:nil];
+        if ( symbol )
+            return symbol;
+    }
+#endif
+    
     NSImage* nsimage = [NSImage imageNamed:cfname.AsNSString()];
     return nsimage;
 }
 
-wxBitmap wxOSXCreateSystemBitmap(const wxString& name, const wxString &client, const wxSize& sizeHint)
+wxBitmapBundle wxOSXCreateSystemBitmapBundle(const wxString& name, const wxString &WXUNUSED(client), const wxSize& WXUNUSED(sizeHint))
 {
     NSImage* nsimage = wxOSXGetSystemImage(name);
     if ( nsimage )
     {
-        // if ( sizeHint != wxDefaultSize )
-        //    [nsimage setSize:NSMakeSize(sizeHint.GetHeight(), sizeHint.GetWidth())];
-        return wxBitmap( nsimage );
+        return wxOSXMakeBundleFromImage( nsimage );
     }
     return wxNullBitmap;
 }
@@ -250,14 +258,14 @@ CGContextRef WXDLLIMPEXP_CORE wxOSXCreateBitmapContextFromImage( WXImage nsimage
 {
     // based on http://www.mail-archive.com/cocoa-dev@lists.apple.com/msg18065.html
 
-    CGContextRef hbitmap = NULL;
+    CGContextRef hbitmap = nullptr;
     if (nsimage != nil)
     {
         double scale = wxOSXGetMainScreenContentScaleFactor();
 
         CGSize imageSize = wxOSXGetImageSize(nsimage);
 
-        hbitmap = CGBitmapContextCreate(NULL, imageSize.width*scale, imageSize.height*scale, 8, 0, wxMacGetGenericRGBColorSpace(), kCGImageAlphaPremultipliedFirst);
+        hbitmap = CGBitmapContextCreate(nullptr, imageSize.width*scale, imageSize.height*scale, 8, 0, wxMacGetGenericRGBColorSpace(), kCGImageAlphaPremultipliedFirst);
         CGContextScaleCTM( hbitmap, scale, scale );
         CGContextClearRect(hbitmap,CGRectMake(0, 0, imageSize.width, imageSize.height));
 
@@ -278,10 +286,68 @@ CGContextRef WXDLLIMPEXP_CORE wxOSXCreateBitmapContextFromImage( WXImage nsimage
     return hbitmap;
 }
 
+namespace
+{
+#if wxOSX_USE_COCOA
+    NSCompositingOperation wxOSXNSCompositionFromWXComposition( wxCompositionMode composition )
+    {
+        NSCompositingOperation mode = NSCompositingOperationSourceOver;
+        switch( composition )
+        {
+            case wxCOMPOSITION_CLEAR:
+                mode = NSCompositingOperationClear;
+                break;
+            case wxCOMPOSITION_SOURCE:
+                mode = NSCompositingOperationCopy;
+                break;
+            case wxCOMPOSITION_OVER:
+                mode = NSCompositingOperationSourceOver;
+                break;
+            case wxCOMPOSITION_IN:
+                mode = NSCompositingOperationSourceIn;
+                break;
+            case wxCOMPOSITION_OUT:
+                mode = NSCompositingOperationSourceOut;
+                break;
+            case wxCOMPOSITION_ATOP:
+                mode = NSCompositingOperationSourceAtop;
+                break;
+            case wxCOMPOSITION_DEST_OVER:
+                mode = NSCompositingOperationDestinationOver;
+                break;
+            case wxCOMPOSITION_DEST_IN:
+                mode = NSCompositingOperationDestinationIn;
+                break;
+            case wxCOMPOSITION_DEST_OUT:
+                mode = NSCompositingOperationDestinationOut;
+                break;
+            case wxCOMPOSITION_DEST_ATOP:
+                mode = NSCompositingOperationDestinationAtop;
+                break;
+            case wxCOMPOSITION_XOR:
+                mode = NSCompositingOperationExclusion; // Not NSCompositingOperationXOR!
+                break;
+            case wxCOMPOSITION_ADD:
+                mode = NSCompositingOperationPlusLighter ;
+                break;
+            case wxCOMPOSITION_DIFF:
+                mode = NSCompositingOperationDifference ;
+                break;
+            default:
+                mode = NSCompositingOperationSourceOver;
+                break;
+        }
+
+        return mode;
+    }
+#endif
+} // anonymous namespace
+
 void WXDLLIMPEXP_CORE wxOSXDrawNSImage(
                                           CGContextRef    inContext,
                                           const CGRect *  inBounds,
-                                          WXImage      inImage)
+                                          WXImage      inImage,
+                                          wxCompositionMode composition)
 {
     if (inImage != nil)
     {
@@ -292,13 +358,14 @@ void WXDLLIMPEXP_CORE wxOSXDrawNSImage(
         CGContextScaleCTM(inContext, 1, -1);
 
 #if wxOSX_USE_COCOA
-       NSGraphicsContext *previousContext = [NSGraphicsContext currentContext];
+        NSGraphicsContext *previousContext = [NSGraphicsContext currentContext];
         NSGraphicsContext *nsGraphicsContext = [NSGraphicsContext graphicsContextWithCGContext:inContext flipped:NO];
         [NSGraphicsContext setCurrentContext:nsGraphicsContext];
-        [inImage drawInRect:NSRectFromCGRect(r) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+
+        [inImage drawInRect:NSRectFromCGRect(r) fromRect:NSZeroRect operation:wxOSXNSCompositionFromWXComposition(composition) fraction:1.0];
         [NSGraphicsContext setCurrentContext:previousContext];
 #else
-        CGContextDrawImage(inContext, *inBounds, [inImage CGImage]);
+        CGContextDrawImage(inContext, r, [inImage CGImage]);
 #endif
         CGContextRestoreGState(inContext);
 
@@ -319,7 +386,7 @@ WXImage wxOSXGetIconForType(OSType type )
 #if wxOSX_USE_COCOA
     return [[NSWorkspace sharedWorkspace] iconForFileType: NSFileTypeForHFSTypeCode(type)];
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 
@@ -357,7 +424,7 @@ CGSize wxOSXGetImageSize(WXImage image)
 
 CGImageRef wxOSXCreateCGImageFromImage( WXImage nsimage, double *scaleptr )
 {
-    CGImageRef image = NULL;
+    CGImageRef image = nullptr;
     if (nsimage != nil)
     {
 #if wxOSX_USE_COCOA
@@ -391,7 +458,7 @@ static NSCursor* wxCreateStockCursor( short sIndex )
     //NSCursor takes an NSImage takes a number of Representations - here
     //we need only one for the raw data
     wxNSObjRef<NSBitmapImageRep*> theRep( [[NSBitmapImageRep alloc]
-        initWithBitmapDataPlanes: NULL  // Tell Cocoa to allocate the planes for us.
+        initWithBitmapDataPlanes: nullptr  // Tell Cocoa to allocate the planes for us.
         pixelsWide: 16      // All classic cursors are 16x16
         pixelsHigh: 16
         bitsPerSample: 1    // All classic cursors are bitmaps with bitmasks
@@ -405,11 +472,11 @@ static NSCursor* wxCreateStockCursor( short sIndex )
     // Ensure that Cocoa allocated 2 and only 2 of the 5 possible planes
     unsigned char *planes[5];
     [theRep getBitmapDataPlanes:planes];
-    wxCHECK(planes[0] != NULL, nil);
-    wxCHECK(planes[1] != NULL, nil);
-    wxCHECK(planes[2] == NULL, nil);
-    wxCHECK(planes[3] == NULL, nil);
-    wxCHECK(planes[4] == NULL, nil);
+    wxCHECK(planes[0] != nullptr, nil);
+    wxCHECK(planes[1] != nullptr, nil);
+    wxCHECK(planes[2] == nullptr, nil);
+    wxCHECK(planes[3] == nullptr, nil);
+    wxCHECK(planes[4] == nullptr, nil);
 
     // NOTE1: The Cursor's bits field is white=0 black=1.. thus the bitwise-not
     // Why not use NSCalibratedBlackColorSpace?  Because that reverses the
@@ -567,6 +634,11 @@ WX_NSCursor wxMacCocoaCreateStockCursor( int cursor_type )
     return cursor;
 }
 
+WXImage WXDLLIMPEXP_CORE wxOSXGetNSImageFromNSCursor(const WXHCURSOR cursor)
+{
+    return [(NSCursor *)cursor image];
+}
+
 //  C-based style wrapper routines around NSCursor
 WX_NSCursor  wxMacCocoaCreateCursorFromCGImage( CGImageRef cgImageRef, float hotSpotX, float hotSpotY )
 {
@@ -599,6 +671,11 @@ void  wxMacCocoaShowCursor()
 {
     [NSCursor unhide];
 }
+
+wxPoint wxMacCocoaGetCursorHotSpot(WX_NSCursor cursor)
+{
+    return wxPoint([cursor hotSpot].x, [cursor hotSpot].y);
+}
 #endif
 
 //---------------------------------------------------------
@@ -607,20 +684,12 @@ void  wxMacCocoaShowCursor()
 
 wxString wxStringWithNSString(NSString *nsstring)
 {
-#if wxUSE_UNICODE
     return wxString([nsstring UTF8String], wxConvUTF8);
-#else
-    return wxString([nsstring lossyCString]);
-#endif // wxUSE_UNICODE
 }
 
 NSString* wxNSStringWithWxString(const wxString &wxstring)
 {
-#if wxUSE_UNICODE
     return [NSString stringWithUTF8String: wxstring.mb_str(wxConvUTF8)];
-#else
-    return [NSString stringWithCString: wxstring.c_str() length:wxstring.Len()];
-#endif // wxUSE_UNICODE
 }
 
 // ----------------------------------------------------------------------------

@@ -2,7 +2,6 @@
 // Name:        src/common/stockitem.cpp
 // Purpose:     Stock buttons, menu and toolbar items labels
 // Author:      Vaclav Slavik
-// Modified by:
 // Created:     2004-08-15
 // Copyright:   (c) Vaclav Slavik, 2004
 // Licence:     wxWindows licence
@@ -19,9 +18,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #include "wx/stockitem.h"
 
@@ -123,6 +119,15 @@ wxString wxGetStockLabel(wxWindowID id, long flags)
     // for it because it is already bound to Esc implicitly)
     if ( id == wxID_CANCEL )
         flags &= ~wxSTOCK_WITH_MNEMONIC;
+
+    // Another one: "Help" in the context of a menu label has a different
+    // translation for some languages (Italian), so try this first.
+    if ( id == wxID_HELP && (flags & wxSTOCK_WITH_MNEMONIC) )
+    {
+        stockLabel = wxGETTEXT_IN_CONTEXT("standard Windows menu", "&Help");
+        if ( !stockLabel.empty() )
+            return stockLabel;
+    }
 #endif // __WXMSW__
 
 
@@ -143,7 +148,7 @@ wxString wxGetStockLabel(wxWindowID id, long flags)
         STOCKITEM(wxID_BOLD,                _("&Bold"),               _("Bold"));
         STOCKITEM(wxID_BOTTOM,              _("&Bottom"),             _("Bottom"));
         STOCKITEM(wxID_CANCEL,              _("&Cancel"),             _("Cancel"));
-        STOCKITEM(wxID_CDROM,               _("&CD-Rom"),             _("CD-Rom"));
+        STOCKITEM(wxID_CDROM,               _("&CD-ROM"),             _("CD-ROM"));
         STOCKITEM(wxID_CLEAR,               _("&Clear"),              _("Clear"));
         STOCKITEM(wxID_CLOSE,               _("&Close"),              _("Close"));
         STOCKITEM(wxID_CONVERT,             _("&Convert"),            _("Convert"));
@@ -298,11 +303,13 @@ wxAcceleratorEntry wxGetStockAccelerator(wxWindowID id)
         STOCKITEM(wxID_FIND,                wxACCEL_CTRL,'F')
         STOCKITEM(wxID_NEW,                 wxACCEL_CTRL,'N')
         STOCKITEM(wxID_OPEN,                wxACCEL_CTRL,'O')
+        STOCKITEM(wxID_CLOSE,               wxACCEL_CTRL,'W')
         STOCKITEM(wxID_PASTE,               wxACCEL_CTRL,'V')
         STOCKITEM(wxID_PRINT,               wxACCEL_CTRL,'P')
         STOCKITEM(wxID_REDO,                wxACCEL_CTRL | wxACCEL_SHIFT,'Z')
         STOCKITEM(wxID_REPLACE,             wxACCEL_CTRL,'H')
         STOCKITEM(wxID_SAVE,                wxACCEL_CTRL,'S')
+        STOCKITEM(wxID_SAVEAS,              wxACCEL_CTRL | wxACCEL_SHIFT,'S')
         STOCKITEM(wxID_SELECTALL,           wxACCEL_CTRL,'A')
         STOCKITEM(wxID_UNDO,                wxACCEL_CTRL,'Z')
 #ifdef __WXOSX__

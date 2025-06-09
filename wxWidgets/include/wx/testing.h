@@ -34,6 +34,10 @@ class WXDLLIMPEXP_FWD_CORE wxFileDialogBase;
 #include "wx/msgdlg.h"
 #include "wx/filedlg.h"
 
+#ifndef __WXDEBUG__
+    #include "wx/crt.h"
+#endif // !__WXDEBUG__
+
 #include <typeinfo>
 
 class wxTestingModalHook;
@@ -65,7 +69,7 @@ class wxModalExpectation
 {
 public:
     wxModalExpectation() : m_isOptional(false) {}
-    virtual ~wxModalExpectation() {}
+    virtual ~wxModalExpectation() = default;
 
     wxString GetDescription() const
     {
@@ -107,7 +111,7 @@ template<class T> class wxExpectModal;
     T must be a class derived from wxDialog and E is the derived class type,
     i.e. this is an example of using CRTP. The default value of E is fine in
     case you're using this class as a base for your wxExpectModal<>
-    specialization anyhow but also if you don't use neither Optional() nor
+    specialization anyhow but also if you don't use either Optional() or
     Describe() methods, as the derived class type is only needed for them.
  */
 template<class T, class E = wxExpectModal<T> >
@@ -163,7 +167,7 @@ public:
     }
 
 protected:
-    virtual int Invoke(wxDialog *dlg) const wxOVERRIDE
+    virtual int Invoke(wxDialog *dlg) const override
     {
         DialogType *t = dynamic_cast<DialogType*>(dlg);
         if ( t )
@@ -173,7 +177,7 @@ protected:
     }
 
     /// Returns description of the expected dialog (by default, its class).
-    virtual wxString GetDefaultDescription() const wxOVERRIDE
+    virtual wxString GetDefaultDescription() const override
     {
         return wxGetDialogClassDescription(wxCLASSINFO(T), typeid(T));
     }
@@ -220,7 +224,7 @@ public:
     }
 
 protected:
-    virtual int OnInvoked(T *WXUNUSED(dlg)) const wxOVERRIDE
+    virtual int OnInvoked(T *WXUNUSED(dlg)) const override
     {
         return m_id;
     }
@@ -239,7 +243,7 @@ public:
     }
 
 protected:
-    virtual wxString GetDefaultDescription() const wxOVERRIDE
+    virtual wxString GetDefaultDescription() const override
     {
         // It can be useful to show which buttons the expected message box was
         // supposed to have, in case there could have been several of them.
@@ -289,7 +293,7 @@ public:
     }
 
 protected:
-    virtual int OnInvoked(wxFileDialog *dlg) const wxOVERRIDE
+    virtual int OnInvoked(wxFileDialog *dlg) const override
     {
         dlg->SetPath(m_path);
         return m_id;
@@ -311,9 +315,9 @@ public:
     // wxTEST_DIALOG macro, otherwise it falls back to the location of this
     // line itself, which is not very useful, so normally you should provide
     // your own values.
-    wxTestingModalHook(const char* file = NULL,
+    wxTestingModalHook(const char* file = nullptr,
                        int line = 0,
-                       const char* func = NULL)
+                       const char* func = nullptr)
         : m_file(file), m_line(line), m_func(func)
     {
         Register();
@@ -351,7 +355,7 @@ public:
     }
 
 protected:
-    virtual int Enter(wxDialog *dlg) wxOVERRIDE
+    virtual int Enter(wxDialog *dlg) override
     {
         while ( !m_expectations.empty() )
         {
@@ -421,10 +425,20 @@ protected:
     // course, can itself be customized.
     virtual void ReportFailure(const wxString& msg)
     {
+#ifdef __WXDEBUG__
         wxFAIL_MSG_AT( msg,
                        m_file ? m_file : __FILE__,
                        m_line ? m_line : __LINE__,
-                       m_func ? m_func : __WXFUNCTION__ );
+                       m_func ? m_func : __func__ );
+#else // !__WXDEBUG__
+        // We still need to report the failure somehow when wx asserts are
+        // disabled.
+        wxFprintf(stderr, wxASCII_STR("%s at %s:%d in %s()\n"),
+                  msg,
+                  wxASCII_STR(m_file ? m_file : __FILE__),
+                  m_line ? m_line : __LINE__,
+                  wxASCII_STR(m_func ? m_func : __func__));
+#endif // __WXDEBUG__/!__WXDEBUG__
     }
 
 private:
@@ -501,21 +515,14 @@ private:
           wxExpectModal<> for your dialog type and implement its OnInvoked()
           method.
  */
-#ifdef HAVE_VARIADIC_MACROS
-
-// See wx/cpp.h for the explanations of this hack.
-#if defined(__GNUC__) && __GNUC__ == 3
-    #pragma GCC system_header
-#endif /* gcc-3.x */
-
 #define wxTEST_DIALOG(codeToRun, ...)                                          \
-    {                                                                          \
-        wxTEST_DIALOG_HOOK_CLASS wx_hook(__FILE__, __LINE__, __WXFUNCTION__);  \
+    wxSTATEMENT_MACRO_BEGIN                                                    \
+        wxTEST_DIALOG_HOOK_CLASS wx_hook(__FILE__, __LINE__, __func__);        \
         wxCALL_FOR_EACH(WX_TEST_IMPL_ADD_EXPECTATION, __VA_ARGS__)             \
         codeToRun;                                                             \
         wx_hook.CheckUnmetExpectations();                                      \
-    }
-#endif /* HAVE_VARIADIC_MACROS */
+    wxSTATEMENT_MACRO_END
+
 
 #endif // !WXBUILDING
 

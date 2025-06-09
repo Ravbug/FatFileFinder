@@ -18,9 +18,6 @@
 // for compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #include "wx/log.h"
 #include "wx/gtk/private/mnemonics.h"
@@ -61,9 +58,9 @@ static wxString GTKProcessMnemonics(const wxString& label, MnemonicsFlag flag)
     labelGTK.reserve(label.length());
     for ( wxString::const_iterator i = label.begin(); i != label.end(); ++i )
     {
-        wxChar ch = *i;
+        wxUniChar ch = *i;
 
-        switch ( ch )
+        switch ( ch.GetValue() )
         {
             case wxT('&'):
                 if ( i + 1 == label.end() )
@@ -101,7 +98,7 @@ static wxString GTKProcessMnemonics(const wxString& label, MnemonicsFlag flag)
                 }
 
                 ch = *(++i); // skip '&' itself
-                switch ( ch )
+                switch ( ch.GetValue() )
                 {
                     case wxT('&'):
                         // special case: "&&" is not a mnemonic at all but just

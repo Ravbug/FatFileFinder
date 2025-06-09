@@ -106,7 +106,7 @@ public:
         Each page may have an attached image.
         The functions of this group manipulate that image.
     */
-    //@{
+    ///@{
 
 
     /**
@@ -120,7 +120,7 @@ public:
     */
     virtual bool SetPageImage(size_t page, int image) = 0;
 
-    //@}
+    ///@}
 
 
 
@@ -130,7 +130,7 @@ public:
         Each page has a text string attached.
         The functions of this group manipulate that text.
     */
-    //@{
+    ///@{
 
     /**
         Returns the string for the given page.
@@ -139,9 +139,13 @@ public:
 
     /**
         Sets the text for the given page.
+
+        The text may contain mnemonics, i.e. accelerator characters preceded by
+        the ampersand (`&`) character. If you need to include a literal
+        ampersand in the text, you need to double it, i.e. use `&&`.
     */
     virtual bool SetPageText(size_t page, const wxString& text) = 0;
-    //@}
+    ///@}
 
 
 
@@ -150,7 +154,7 @@ public:
 
         The functions of this group manipulate the selection.
     */
-    //@{
+    ///@{
 
     /**
         Returns the currently selected page, or @c wxNOT_FOUND if none was selected.
@@ -205,7 +209,7 @@ public:
     */
     int FindPage(const wxWindow* page) const;
 
-    //@}
+    ///@}
 
 
 
@@ -218,7 +222,7 @@ public:
 
     /**
         Returns the index of the tab at the specified position or @c wxNOT_FOUND
-        if none. If @a flags parameter is non-@NULL, the position of the point
+        if none. If @a flags parameter is non-null, the position of the point
         inside the tab is returned as well.
 
         @param pt
@@ -232,7 +236,7 @@ public:
         @return Returns the zero-based tab index or @c wxNOT_FOUND if there is no
                 tab at the specified position.
     */
-    virtual int HitTest(const wxPoint& pt, long* flags = NULL) const;
+    virtual int HitTest(const wxPoint& pt, long* flags = nullptr) const;
 
 
 
@@ -241,7 +245,7 @@ public:
 
         Functions for adding/removing pages from this control.
     */
-    //@{
+    ///@{
 
     /**
         Adds a new page.
@@ -257,7 +261,8 @@ public:
         @param page
             Specifies the new page.
         @param text
-            Specifies the text for the new page.
+            Specifies the text of the new page. Note that it may contain
+            mnemonic characters, see SetPageText() for more information.
         @param select
             Specifies whether the page should be selected.
         @param imageId
@@ -297,7 +302,8 @@ public:
         @param page
             Specifies the new page.
         @param text
-            Specifies the text for the new page.
+            Specifies the text of the new page. Note that it may contain
+            mnemonic characters, see SetPageText() for more information.
         @param select
             Specifies whether the page should be selected.
         @param imageId
@@ -333,7 +339,22 @@ public:
     */
     wxWindow* GetPage(size_t page) const;
 
-    //@}
+    /**
+        Returns the sizer containing the control for page selection, if any.
+
+        Some derived classes, e.g. wxChoicebook, use a separate control for
+        switching the currently selected page and this function returns the
+        sizer used for positioning this control and the pages themselves inside
+        the book control.
+
+        Note that many classes, notably wxNotebook, do not use any such
+        control, and this function simply returns @NULL for them.
+
+        @return Non-owning pointer to the sizer or @NULL.
+    */
+    wxSizer* GetControlSizer() const;
+
+    ///@}
 
 
 /*
@@ -359,9 +380,6 @@ public:
     // set/get option to shrink to fit current page
     void SetFitToCurrentPage(bool fit) { m_fitToCurrentPage = fit; }
     bool GetFitToCurrentPage() const { return m_fitToCurrentPage; }
-
-    // returns the sizer containing the control, if any
-    wxSizer* GetControlSizer() const { return m_controlSizer; }
 
     // we do have multiple pages
     virtual bool HasMultiplePages() const { return true; }

@@ -64,9 +64,6 @@ license is as follows:
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_XPM
 
@@ -112,11 +109,11 @@ namespace
 void
 MakeValidCIdent(wxString* str)
 {
-    const wxChar chUnderscore = wxT('_');
+    const wxUniChar chUnderscore = wxT('_');
 
     for ( wxString::iterator it = str->begin(); it != str->end(); ++it )
     {
-        const wxChar ch = *it;
+        const wxUniChar ch = *it;
         if ( wxIsdigit(ch) )
         {
             if ( it == str->begin() )

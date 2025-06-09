@@ -2,7 +2,6 @@
 // Name:        src/unix/mimetype.cpp
 // Purpose:     classes and functions to manage MIME types
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     23.09.98
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence (part of wxExtra library)
@@ -11,9 +10,6 @@
 // for compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_MIMETYPE && wxUSE_FILE
 
@@ -37,6 +33,7 @@
 #include "wx/filename.h"
 #include "wx/app.h"
 #include "wx/apptrait.h"
+#include "wx/uilocale.h"
 
 // other standard headers
 #include <ctype.h>
@@ -71,7 +68,7 @@ public:
        {
           wxString t = tok.GetNextToken();
           t.MakeLower();
-          if ((!!t) && (t.Find( "comment" ) != 0) && (t.Find( "#" ) != 0) && (t.Find( "generic" ) != 0))
+          if (!t.empty() && (t.Find( "comment" ) != 0) && (t.Find( "#" ) != 0) && (t.Find( "generic" ) != 0))
              m_text.Add( t );
        }
        return true;
@@ -132,7 +129,7 @@ private:
 // Read a XDG *.desktop file of type 'Application'
 void wxMimeTypesManagerImpl::LoadXDGApp(const wxString& filename)
 {
-    wxLogTrace(TRACE_MIME, wxT("loading XDG file %s"), filename.c_str());
+    wxLogTrace(TRACE_MIME, wxT("loading XDG file %s"), filename);
 
     wxMimeTextFile file(filename);
     if ( !file.Open() )
@@ -158,9 +155,8 @@ void wxMimeTypesManagerImpl::LoadXDGApp(const wxString& filename)
     wxString nameapp;
     nIndex = wxNOT_FOUND;
 #if wxUSE_INTL // try "Name[locale name]" first
-    wxLocale *locale = wxGetLocale();
-    if ( locale )
-        nIndex = file.pIndexOf(wxT("Name[")+locale->GetName()+wxT("]="));
+    if ( wxUILocale::GetCurrent().IsSupported() )
+        nIndex = file.pIndexOf(wxT("Name[")+wxUILocale::GetCurrent().GetName()+wxT("]="));
 #endif // wxUSE_INTL
     if(nIndex == wxNOT_FOUND)
         nIndex = file.pIndexOf( wxT("Name=") );
@@ -171,8 +167,8 @@ void wxMimeTypesManagerImpl::LoadXDGApp(const wxString& filename)
     wxString nameicon, namemini;
     nIndex = wxNOT_FOUND;
 #if wxUSE_INTL // try "Icon[locale name]" first
-    if ( locale )
-        nIndex = file.pIndexOf(wxT("Icon[")+locale->GetName()+wxT("]="));
+    if ( wxUILocale::GetCurrent().IsSupported() )
+        nIndex = file.pIndexOf(wxT("Icon[")+wxUILocale::GetCurrent().GetName()+wxT("]="));
 #endif // wxUSE_INTL
     if(nIndex == wxNOT_FOUND)
         nIndex = file.pIndexOf( wxT("Icon=") );
@@ -246,7 +242,7 @@ void wxMimeTypesManagerImpl::LoadXDGGlobs(const wxString& filename)
     if ( !wxFileName::FileExists(filename) )
         return;
 
-    wxLogTrace(TRACE_MIME, wxT("loading XDG globs file from %s"), filename.c_str());
+    wxLogTrace(TRACE_MIME, wxT("loading XDG globs file from %s"), filename);
 
     wxMimeTextFile file(filename);
     if ( !file.Open() )
@@ -258,13 +254,20 @@ void wxMimeTypesManagerImpl::LoadXDGGlobs(const wxString& filename)
        wxStringTokenizer tok( file.GetLine(i), ":" );
        wxString mime = tok.GetNextToken();
        wxString ext = tok.GetNextToken();
+       if (!ext.StartsWith(wxT("*.")))
+           continue;
        ext.Remove( 0, 2 );
+       if (ext.find_first_of('*') != wxString::npos ||
+           ext.find_first_of('[') != wxString::npos)
+       {
+           continue;
+       }
        wxArrayString exts;
        exts.Add( ext );
 
        wxString icon = GetIconFromMimeType(mime);
 
-       AddToMimeData(mime, icon, NULL, exts, wxEmptyString, true );
+       AddToMimeData(mime, icon, nullptr, exts, wxEmptyString, true );
     }
 }
 
@@ -320,7 +323,7 @@ size_t wxFileTypeImpl::GetAllCommands(wxArrayString *verbs,
                                   wxArrayString *commands,
                                   const wxFileType::MessageParameters& params) const
 {
-    wxString vrb, cmd, sTmp;
+    wxString vrb, cmd;
     size_t count = 0;
     wxMimeTypeCommands * sPairs;
 
@@ -709,7 +712,7 @@ wxFileType * wxMimeTypesManagerImpl::Associate(const wxFileTypeInfo& ftInfo)
     }
 
     if ( !DoAssociation(strType, strIcon, entry, sA_Exts, strDesc) )
-        return NULL;
+        return nullptr;
 
     return GetFileTypeFromMimeType(strType);
 }
@@ -834,13 +837,18 @@ int wxMimeTypesManagerImpl::AddToMimeData(const wxString& strType,
 
     // add all extensions we don't have yet
     wxString ext;
+    wxString ext2;
     size_t count = strExtensions.GetCount();
     for ( size_t i = 0; i < count; i++ )
     {
         ext = strExtensions[i];
         ext += wxT(' ');
 
-        if ( exts.Find(ext) == wxNOT_FOUND )
+        if (exts.StartsWith(ext))
+            continue;
+        ext2 = wxT(' ');
+        ext2 += ext;
+        if (exts.Find(ext2) == wxNOT_FOUND)
         {
             exts += ext;
         }
@@ -858,11 +866,11 @@ int wxMimeTypesManagerImpl::AddToMimeData(const wxString& strType,
 wxFileType * wxMimeTypesManagerImpl::GetFileTypeFromExtension(const wxString& ext)
 {
     if (ext.empty() )
-        return NULL;
+        return nullptr;
 
     InitIfNeeded();
 
-    wxFileType* fileTypeFallback = NULL;
+    wxFileType* fileTypeFallback = nullptr;
     size_t count = m_aExtensions.GetCount();
     for ( size_t n = 0; n < count; n++ )
     {
@@ -909,7 +917,7 @@ wxFileType * wxMimeTypesManagerImpl::GetFileTypeFromMimeType(const wxString& mim
 {
     InitIfNeeded();
 
-    wxFileType * fileType = NULL;
+    wxFileType * fileType = nullptr;
     // mime types are not case-sensitive
     wxString mimetype(mimeType);
     mimetype.MakeLower();
@@ -954,7 +962,7 @@ wxFileType * wxMimeTypesManagerImpl::GetFileTypeFromMimeType(const wxString& mim
 
 wxString wxMimeTypesManagerImpl::GetCommand(const wxString & verb, size_t nIndex) const
 {
-    wxString command, testcmd, sV, sTmp;
+    wxString command, sV, sTmp;
     sV = verb + wxT("=");
 
     // list of verb = command pairs for this mimetype
@@ -1011,7 +1019,7 @@ void wxMimeTypesManagerImpl::AddMimeTypeInfo(const wxString& strMimeType,
         sTmp = sTmp.BeforeLast(wxT(' '));
     }
 
-    AddToMimeData(strMimeType, strIcon, NULL, sExts, strDesc, true);
+    AddToMimeData(strMimeType, strIcon, nullptr, sExts, strDesc, true);
 }
 
 size_t wxMimeTypesManagerImpl::EnumAllFileTypes(wxArrayString& mimetypes)

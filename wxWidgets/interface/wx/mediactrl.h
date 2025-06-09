@@ -5,6 +5,8 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
+#define wxMC_NO_AUTORESIZE         0x0001
+
 /**
     Describes the current state of the media.
 
@@ -46,10 +48,10 @@ enum wxMediaCtrlPlayerControls
     Event wxMediaCtrl uses.
 
     @beginEventTable{wxMediaEvent}
-    @event{EVT_MEDIA_LOADED(id\, func)}
+    @event{EVT_MEDIA_LOADED(id, func)}
            Sent when a media has loaded enough data that it can start playing.
            Processes a @c wxEVT_MEDIA_LOADED event type.
-    @event{EVT_MEDIA_STOP(id\, func)}
+    @event{EVT_MEDIA_STOP(id, func)}
            Sent when a media has switched to the @c wxMEDIASTATE_STOPPED state.
            You may be able to Veto this event to prevent it from stopping,
            causing it to continue playing - even if it has reached that end of
@@ -57,16 +59,16 @@ enum wxMediaCtrlPlayerControls
            want to loop the media, for example, catch the @c EVT_MEDIA_FINISHED
            and play there instead).
            Processes a @c wxEVT_MEDIA_STOP event type.
-    @event{EVT_MEDIA_FINISHED(id\, func)}
+    @event{EVT_MEDIA_FINISHED(id, func)}
            Sent when a media has finished playing in a wxMediaCtrl.
            Processes a @c wxEVT_MEDIA_FINISHED event type.
-    @event{EVT_MEDIA_STATECHANGED(id\, func)}
+    @event{EVT_MEDIA_STATECHANGED(id, func)}
            Sent when a media has switched its state (from any media state).
            Processes a @c wxEVT_MEDIA_STATECHANGED event type.
-    @event{EVT_MEDIA_PLAY(id\, func)}
+    @event{EVT_MEDIA_PLAY(id, func)}
            Sent when a media has switched to the @c wxMEDIASTATE_PLAYING state.
            Processes a @c wxEVT_MEDIA_PLAY event type.
-    @event{EVT_MEDIA_PAUSE(id\, func)}
+    @event{EVT_MEDIA_PAUSE(id, func)}
            Sent when a media has switched to the @c wxMEDIASTATE_PAUSED state.
            Processes a @c wxEVT_MEDIA_PAUSE event type.
     @endEventTable
@@ -225,6 +227,18 @@ public:
     wxActiveXContainer documentation.
 
 
+    @beginStyleTable
+    @style{wxMC_NO_AUTORESIZE}
+           By default, the control will automatically adjust its size to
+           exactly fit the size of a loaded video as soon as a video is loaded.
+           If this flag is given, the control will not change its size
+           automatically and it must be done manually (if desired) using Layout().
+           It is strongly recommended to use this flag and handle control
+           resizing manually (note that this style is only available in
+           wxWidgets 3.1.6, so it is only possible to do it when using this or
+           later version).
+    @endStyleTable
+
     @library{wxmedia}
     @category{media}
 
@@ -255,7 +269,8 @@ public:
         @param size
             Size to put the control at and to stretch movie to.
         @param style
-            Optional styles.
+            Optional styles. It is recommended to use ::wxMC_NO_AUTORESIZE,
+            although it is not used by default for compatibility reasons.
         @param szBackend
             Name of backend you want to use, leave blank to make wxMediaCtrl figure it out.
         @param validator
@@ -289,7 +304,8 @@ public:
         @param size
             Size to put the control at and to stretch movie to.
         @param style
-            Optional styles.
+            Optional styles. It is recommended to use ::wxMC_NO_AUTORESIZE,
+            although it is not used by default for compatibility reasons.
         @param szBackend
             Name of backend you want to use, leave blank to make wxMediaCtrl figure it out.
         @param validator

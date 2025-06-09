@@ -42,16 +42,6 @@
 #define wxSTRINGIZE_T(x)            wxAPPLY_T(wxSTRINGIZE(x))
 
 /*
-    Special workarounds for compilers with broken "##" operator. For all the
-    other ones we can just use it directly.
- */
-#ifdef wxCOMPILER_BROKEN_CONCAT_OPER
-    #define wxPREPEND_L(x)      L ## x
-    #define wxAPPEND_i64(x)     x ## i64
-    #define wxAPPEND_ui64(x)    x ## ui64
-#endif /* wxCOMPILER_BROKEN_CONCAT_OPER */
-
-/*
    Helper macros for wxMAKE_UNIQUE_NAME: normally this works by appending the
    current line number to the given identifier to reduce the probability of the
    conflict (it may still happen if this is used in the headers, hence you
@@ -118,51 +108,26 @@
 #define wxDO_IF(condition) wxDO_IF_HELPER(wxMAKE_UNIQUE_NAME(wxdoif), condition)
 
 /*
-    Define __WXFUNCTION__ which is like standard __FUNCTION__ but defined as
-    NULL for the compilers which don't support the latter.
+    This macro is obsolete, use standard __func__ instead.
  */
 #ifndef __WXFUNCTION__
-    #if defined(__GNUC__) || \
-          defined(__VISUALC__) || \
-          defined(__FUNCTION__)
-        #define __WXFUNCTION__ __FUNCTION__
-    #else
-        /* still define __WXFUNCTION__ to avoid #ifdefs elsewhere */
-        #define __WXFUNCTION__ (NULL)
-    #endif
+    #define __WXFUNCTION__ __func__
 #endif /* __WXFUNCTION__ already defined */
 
-
-/* Auto-detect variadic macros support unless explicitly disabled. */
-#if !defined(HAVE_VARIADIC_MACROS) && !defined(wxNO_VARIADIC_MACROS)
-    /* Any C99 or C++11 compiler should have them. */
-    #if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || \
-        (defined(__cplusplus) && __cplusplus >= 201103L)
-        #define HAVE_VARIADIC_MACROS 1
-    #elif defined(__GNUC__)
-        #define HAVE_VARIADIC_MACROS 1
-    #elif wxCHECK_VISUALC_VERSION(8)
-        #define HAVE_VARIADIC_MACROS 1
-    #endif
-#endif /* !HAVE_VARIADIC_MACROS */
-
-
-
-#ifdef HAVE_VARIADIC_MACROS
-
 /*
-   This is a hack to make it possible to use variadic macros with g++ 3.x even
-   when using -pedantic[-errors] option: without this, it would complain that
+    Expands to the current function's full signature, if available.
 
-       "anonymous variadic macros were introduced in C99"
-
-   and the option disabling this warning (-Wno-variadic-macros) is only
-   available in gcc 4.0 and later, so until then this hack is the only thing we
-   can do.
+    Falls back to the function name (i.e., __func__) if not available.
  */
-#if defined(__GNUC__) && __GNUC__ == 3
-    #pragma GCC system_header
-#endif /* gcc-3.x */
+#ifndef __WXFUNCTION_SIG__
+    #if defined(__VISUALC__)
+        #define __WXFUNCTION_SIG__ __FUNCSIG__
+    #elif defined(__GNUG__)
+        #define __WXFUNCTION_SIG__ __PRETTY_FUNCTION__
+    #else
+        #define __WXFUNCTION_SIG__ __func__
+    #endif
+#endif /* __WXFUNCTION_SIG__ already defined */
 
 /*
    wxCALL_FOR_EACH(what, ...) calls the macro from its first argument, what(pos, x),
@@ -208,10 +173,6 @@
 
 #define wxCALL_FOR_EACH(what, ...) \
     wxCALL_FOR_EACH_(wxCALL_FOR_EACH_NARG(__VA_ARGS__), (what, __VA_ARGS__))
-
-#else
-    #define wxCALL_FOR_EACH  Error_wx_CALL_FOR_EACH_requires_variadic_macros_support
-#endif /* HAVE_VARIADIC_MACROS */
 
 #endif /* _WX_CPP_H_ */
 

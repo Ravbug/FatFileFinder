@@ -13,10 +13,11 @@ class QLabel;
 class WXDLLIMPEXP_CORE wxStaticBitmap : public wxStaticBitmapBase
 {
 public:
-    wxStaticBitmap();
+    wxStaticBitmap() = default;
+
     wxStaticBitmap( wxWindow *parent,
                     wxWindowID id,
-                    const wxBitmap& label,
+                    const wxBitmapBundle& label,
                     const wxPoint& pos = wxDefaultPosition,
                     const wxSize& size = wxDefaultSize,
                     long style = 0,
@@ -24,22 +25,16 @@ public:
 
     bool Create( wxWindow *parent,
                  wxWindowID id,
-                 const wxBitmap& label,
+                 const wxBitmapBundle& label,
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
                  long style = 0,
                  const wxString& name = wxASCII_STR(wxStaticBitmapNameStr));
 
-    virtual void SetIcon(const wxIcon& icon) wxOVERRIDE;
-    virtual void SetBitmap(const wxBitmap& bitmap) wxOVERRIDE;
-    virtual wxBitmap GetBitmap() const wxOVERRIDE;
-    virtual wxIcon GetIcon() const wxOVERRIDE;
+    virtual void SetBitmap(const wxBitmapBundle& bitmap) override;
+    virtual wxBitmap GetBitmap() const override;
 
-    virtual QWidget *GetHandle() const wxOVERRIDE;
-protected:
-
-private:
-    QLabel *m_qtLabel;
+    QLabel* GetQLabel() const;
 
     wxDECLARE_DYNAMIC_CLASS(wxStaticBitmap);
 };

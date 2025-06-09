@@ -8,9 +8,6 @@
 
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_HTML && wxUSE_STREAMS
 
@@ -103,6 +100,7 @@ TAG_HANDLER_BEGIN(PRE, "PRE")
 
         m_WParser->CloseContainer();
         c = m_WParser->OpenContainer();
+        c->CopyId(tag);
         c->SetWidthFloat(tag);
         c = m_WParser->OpenContainer();
         c->SetAlignHor(wxHTML_ALIGN_LEFT);

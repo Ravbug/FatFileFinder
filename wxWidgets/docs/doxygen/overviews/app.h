@@ -11,13 +11,14 @@
 
 @tableofcontents
 
-A wxWidgets application does not have a @e main procedure; the equivalent is
-the wxApp::OnInit member defined for a class derived from wxApp.
+A wxWidgets application does not have a @e main function; the equivalent, i.e.
+the entry point where the execution of the program begins, is the
+wxApp::OnInit() member function defined in a class derived from wxApp (this
+class is typically specified using wxIMPLEMENT_APP() macro).
 
-@e OnInit will usually create a top window as a bare minimum. Unlike in earlier
-versions of wxWidgets, OnInit does not return a frame. Instead it returns a
-boolean value which indicates whether processing should continue (@true) or not
-(@false).
+@e OnInit usually creates the main application window and returns @true.
+If it returns @false, the application will exit immediately, without starting
+to run.
 
 Note that the program's command line arguments, represented by @e argc and
 @e argv, are available from within wxApp member functions.
@@ -38,14 +39,14 @@ An example of defining an application follows:
 class DerivedApp : public wxApp
 {
 public:
-    virtual bool OnInit();
+    virtual bool OnInit() override;
 };
 
 wxIMPLEMENT_APP(DerivedApp);
 
 bool DerivedApp::OnInit()
 {
-    wxFrame *the_frame = new wxFrame(NULL, ID_MYFRAME, argv[0]);
+    wxFrame *the_frame = new wxFrame(nullptr, ID_MYFRAME, argv[0]);
     ...
     the_frame->Show(true);
 
@@ -53,12 +54,9 @@ bool DerivedApp::OnInit()
 }
 @endcode
 
-Note the use of wxIMPLEMENT_APP(appClass), which allows wxWidgets to dynamically
-create an instance of the application object at the appropriate point in
-wxWidgets initialization. Previous versions of wxWidgets used to rely on the
-creation of a global application object, but this is no longer recommended,
-because required global initialization may not have been performed at
-application object construction time.
+Note the use of wxIMPLEMENT_APP(), which defines the application entry
+point (either @c main() or @c WinMain() function, depending on the platform)
+and tells wxWidgets which application class should be used.
 
 You can also use wxDECLARE_APP(appClass) in a header file to declare the wxGetApp
 function which returns a reference to the application object. Otherwise you can

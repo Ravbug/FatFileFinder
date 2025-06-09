@@ -24,7 +24,7 @@ protected:
     // font larger than it) to it and so it must be valid.
     wxMarkupToAttrStringBase(const wxFont& font)
         : wxMarkupParserAttrOutput(font, wxColour(), wxColour()),
-          m_attrString(NULL)
+          m_attrString(nullptr)
     {}
 
     void Parse(const wxFont& font, const wxString& markup)
@@ -41,9 +41,7 @@ protected:
         // Apple documentation, attributed strings use "Helvetica 12" font by
         // default which is different from the system "Lucida Grande" font. So
         // we need to explicitly change the font for the entire string.
-        [m_attrString addAttribute:NSFontAttributeName
-                      value:font.OSXGetNSFont()
-                      range:NSMakeRange(0, [m_attrString length])];
+        ApplyFont(font, NSMakeRange(0, [m_attrString length]));
 
         // Now translate the markup tags to corresponding attributes.
         wxMarkupParser parser(*this);
@@ -56,6 +54,27 @@ protected:
     {
         if ( m_attrString )
             [m_attrString release];
+    }
+
+    void ApplyFont(const wxFont& font, const NSRange& range)
+    {
+        [m_attrString addAttribute:NSFontAttributeName
+                      value:font.OSXGetNSFont()
+                      range:range];
+
+        if ( font.GetStrikethrough() )
+        {
+            [m_attrString addAttribute:NSStrikethroughStyleAttributeName
+                                 value:@(NSUnderlineStyleSingle)
+                                 range:range];
+        }
+
+        if ( font.GetUnderlined() )
+        {
+            [m_attrString addAttribute:NSUnderlineStyleAttributeName
+                                 value:@(NSUnderlineStyleSingle)
+                                 range:range];
+        }
     }
 
     // prepare text chunk for display, e.g. strip mnemonics from it
@@ -72,28 +91,26 @@ public:
 
 
     // Implement base class pure virtual methods to process markup tags.
-    virtual void OnText(const wxString& text)
+    virtual void OnText(const wxString& text) override
     {
         m_pos += PrepareText(text).length();
     }
 
-    virtual void OnAttrStart(const Attr& WXUNUSED(attr))
+    virtual void OnAttrStart(const Attr& WXUNUSED(attr)) override
     {
         // Just remember the starting position of the range, we can't really
         // set the attribute until we find the end of it.
         m_rangeStarts.push(m_pos);
     }
 
-    virtual void OnAttrEnd(const Attr& attr)
+    virtual void OnAttrEnd(const Attr& attr) override
     {
         unsigned start = m_rangeStarts.top();
         m_rangeStarts.pop();
 
         const NSRange range = NSMakeRange(start, m_pos - start);
 
-        [m_attrString addAttribute:NSFontAttributeName
-                      value:attr.font.OSXGetNSFont()
-                      range:range];
+        ApplyFont(attr.font, range);
 
         if ( attr.foreground.IsOk() )
         {
@@ -133,7 +150,7 @@ public:
     }
 
 protected:
-    virtual wxString PrepareText(const wxString& text)
+    virtual wxString PrepareText(const wxString& text) override
     {
         return wxControl::RemoveMnemonics(text);
     }
@@ -153,7 +170,7 @@ public:
     }
 
 protected:
-    virtual wxString PrepareText(const wxString& text)
+    virtual wxString PrepareText(const wxString& text) override
     {
         return text;
     }

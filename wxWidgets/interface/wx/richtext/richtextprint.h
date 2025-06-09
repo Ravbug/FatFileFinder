@@ -44,12 +44,14 @@ enum wxRichTextPageLocation {
     You can specify the following keywords in header and footer text, which will
     be substituted for the actual values during printing and preview.
 
-    - @@DATE@: the current date.
-    - @@PAGESCNT@: the total number of pages.
-    - @@PAGENUM@: the current page number.
-    - @@TIME@: the current time.
-    - @@TITLE@: the title of the document, as passed to the wxRichTextPrinting or
+    - @@DATE@@: the current date.
+    - @@PAGESCNT@@: the total number of pages.
+    - @@PAGENUM@@: the current page number.
+    - @@TIME@@: the current time.
+    - @@TITLE@@: the title of the document, as passed to the wxRichTextPrinting or
       wxRichTextLayout constructor.
+    - @@USER@@: the user's name (support for this macro was added in wxWidgets
+      3.2.8)
 
     @library{wxrichtext}
     @category{richtext}
@@ -173,7 +175,7 @@ public:
     /**
         Assignment operator.
     */
-    void operator operator=(const wxRichTextHeaderFooterData& data);
+    void operator=(const wxRichTextHeaderFooterData& data);
 };
 
 
@@ -272,7 +274,7 @@ public:
         dialog, and also a parent window for these windows.
     */
     wxRichTextPrinting(const wxString& name = "Printing",
-                       wxWindow* parentWindow = NULL);
+                       wxWindow* parentWindow = nullptr);
 
     /**
         A convenience function to get the footer text.

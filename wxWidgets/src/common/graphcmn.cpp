@@ -2,7 +2,6 @@
 // Name:        src/common/graphcmn.cpp
 // Purpose:     graphics context methods common to all platforms
 // Author:      Stefan Csomor
-// Modified by:
 // Created:
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -11,9 +10,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if defined(__BORLANDC__)
-    #pragma hdrstop
-#endif
 
 #if wxUSE_GRAPHICS_CONTEXT
 
@@ -37,6 +33,8 @@
 #endif
 
 #include "wx/private/graphics.h"
+#include "wx/private/rescale.h"
+#include "wx/display.h"
 
 //-----------------------------------------------------------------------------
 
@@ -73,18 +71,14 @@ wxGraphicsObject::wxGraphicsObject( wxGraphicsRenderer* renderer )
     SetRefData( new wxGraphicsObjectRefData(renderer));
 }
 
-wxGraphicsObject::~wxGraphicsObject()
-{
-}
-
 bool wxGraphicsObject::IsNull() const
 {
-    return m_refData == NULL;
+    return m_refData == nullptr;
 }
 
 wxGraphicsRenderer* wxGraphicsObject::GetRenderer() const
 {
-    return ( IsNull() ? NULL : GetGraphicsData()->GetRenderer() );
+    return ( IsNull() ? nullptr : GetGraphicsData()->GetRenderer() );
 }
 
 wxGraphicsObjectRefData* wxGraphicsObject::GetGraphicsData() const
@@ -95,7 +89,7 @@ wxGraphicsObjectRefData* wxGraphicsObject::GetGraphicsData() const
 wxObjectRefData* wxGraphicsObject::CreateRefData() const
 {
     wxLogDebug(wxT("A Null Object cannot be changed"));
-    return NULL;
+    return nullptr;
 }
 
 wxObjectRefData* wxGraphicsObject::CloneRefData(const wxObjectRefData* data) const
@@ -442,6 +436,9 @@ void wxGraphicsPathData::AddRoundedRectangle( wxDouble x, wxDouble y, wxDouble w
         AddRectangle(x,y,w,h);
     else
     {
+        wxDouble maxR = std::min(w, h) / 2.0;
+        if ( radius > maxR ) radius = maxR;
+
         MoveToPoint(x+w, y+h/2);
         AddArc(x+w-radius, y+h-radius, radius, 0.0, M_PI/2.0, true);
         AddArc(x+radius, y+h-radius, radius, M_PI/2.0, M_PI, true);
@@ -544,7 +541,7 @@ void wxGraphicsGradientStops::Add(const wxGraphicsGradientStop& stop)
         }
     }
 
-    if ( stop.GetPosition() == 1. )
+    if ( stop.GetPosition() == 1 )
     {
         m_stops.insert(m_stops.end() - 1, stop);
     }
@@ -575,6 +572,7 @@ wxGraphicsContext::wxGraphicsContext(wxGraphicsRenderer* renderer,
       m_enableOffset(false),
       m_window(window)
 {
+    m_contentScaleFactor = window ? window->GetContentScaleFactor() : 1.0;
 }
 
 wxGraphicsContext::~wxGraphicsContext()
@@ -608,6 +606,12 @@ void wxGraphicsContext::EnableOffset(bool enable)
     m_enableOffset = enable;
 }
 
+void wxGraphicsContext::SetContentScaleFactor(double contentScaleFactor)
+{
+    m_enableOffset = true;
+    m_contentScaleFactor = contentScaleFactor;
+}
+
 #if 0
 void wxGraphicsContext::SetAlpha( wxDouble WXUNUSED(alpha) )
 {
@@ -621,19 +625,36 @@ wxDouble wxGraphicsContext::GetAlpha() const
 
 void wxGraphicsContext::GetDPI( wxDouble* dpiX, wxDouble* dpiY) const
 {
-    if ( m_window )
-    {
-        const wxSize ppi = m_window->GetDPI();
-        *dpiX = ppi.x;
-        *dpiY = ppi.y;
-    }
-    else
-    {
-        // Use some standard DPI value, it doesn't make much sense for the
-        // contexts not using any pixels anyhow.
-        *dpiX = 72.0;
-        *dpiY = 72.0;
-    }
+    const wxSize dpi = GetWindow() ? GetWindow()->GetDPI() : wxDisplay::GetStdPPI();
+
+    if (dpiX)
+        *dpiX = dpi.x;
+    if (dpiY)
+        *dpiY = dpi.y;
+}
+
+wxSize wxGraphicsContext::FromDIP(const wxSize& sz) const
+{
+#ifdef wxHAS_DPI_INDEPENDENT_PIXELS
+    return sz;
+#else
+    wxRealPoint dpi;
+    GetDPI(&dpi.x, &dpi.y);
+    const wxSize baseline = wxDisplay::GetStdPPI();
+    return wxRescaleCoord(sz).From(baseline).To(wxSize((int)dpi.x, (int)dpi.y));
+#endif // wxHAS_DPI_INDEPENDENT_PIXELS
+}
+
+wxSize wxGraphicsContext::ToDIP(const wxSize& sz) const
+{
+#ifdef wxHAS_DPI_INDEPENDENT_PIXELS
+    return sz;
+#else
+    wxRealPoint dpi;
+    GetDPI(&dpi.x, &dpi.y);
+    const wxSize baseline = wxDisplay::GetStdPPI();
+    return wxRescaleCoord(sz).From(wxSize((int)dpi.x, (int)dpi.y)).To(baseline);
+#endif // wxHAS_DPI_INDEPENDENT_PIXELS
 }
 
 // sets the pen
@@ -812,6 +833,7 @@ void wxGraphicsContext::DrawLines( size_t n, const wxPoint2DDouble *points, wxPo
     path.MoveToPoint(points[0].m_x, points[0].m_y);
     for ( size_t i = 1; i < n; ++i)
         path.AddLineToPoint( points[i].m_x, points[i].m_y );
+    path.CloseSubpath();
     DrawPath( path , fillStyle);
 }
 
@@ -904,8 +926,8 @@ wxGraphicsContext::CreateLinearGradientBrush(
     return GetRenderer()->CreateLinearGradientBrush
                           (
                             x1, y1,
-                            x2, y2, 
-                            gradientStops, 
+                            x2, y2,
+                            gradientStops,
                             matrix
                           );
 }
@@ -1066,7 +1088,7 @@ wxGraphicsContext* wxGraphicsRenderer::CreateContextFromUnknownDC(const wxDC& dc
 #endif
 #endif
 
-    return NULL;
+    return nullptr;
 }
 
 #endif // wxUSE_GRAPHICS_CONTEXT

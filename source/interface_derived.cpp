@@ -56,7 +56,9 @@ MainFrame::MainFrame(wxWindow* parent) : MainFrameBase( parent )
 		dpi_scale(this);
 
 		//set color
-		SetBackgroundColour(*wxWHITE);
+		if (!wxSystemSettings::GetAppearance().IsDark()) {
+			this->SetBackgroundColour(*wxWHITE);
+		}
 
 		//update names (no unicode support for now)
 		openFolderBtn->SetLabel("Open");

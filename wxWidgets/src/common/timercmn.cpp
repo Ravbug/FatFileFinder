@@ -20,9 +20,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_TIMER
 
@@ -57,13 +54,11 @@ wxTimer::~wxTimer()
 
 void wxTimer::Init()
 {
-    wxAppTraits * const traits = wxTheApp ? wxTheApp->GetTraits() : NULL;
-    m_impl = traits ? traits->CreateTimerImpl(this) : NULL;
-    if ( !m_impl )
-    {
-        wxFAIL_MSG( wxT("No timer implementation for this platform") );
+    wxAppTraits * const traits = wxApp::GetTraitsIfExists();
+    wxCHECK_RET( traits, wxT("Can't create timer, is wxApp fully initialized?") );
 
-    }
+    m_impl = traits->CreateTimerImpl(this);
+    wxCHECK_RET( m_impl, wxT("No timer implementation for this platform") );
 }
 
 // ============================================================================
@@ -79,7 +74,7 @@ void wxTimer::SetOwner(wxEvtHandler *owner, int timerid)
 
 wxEvtHandler *wxTimer::GetOwner() const
 {
-    wxCHECK_MSG( m_impl, NULL, wxT("uninitialized timer") );
+    wxCHECK_MSG( m_impl, nullptr, wxT("uninitialized timer") );
 
     return m_impl->GetOwner();
 }

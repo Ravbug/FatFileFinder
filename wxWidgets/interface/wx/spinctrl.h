@@ -41,7 +41,7 @@
     text in the edit part of the spin control directly, the EVT_TEXT is generated,
     like for the wxTextCtrl. When the use enters text into the text area, the text
     is not validated until the control loses focus (e.g. by using the TAB key).
-    The value is then adjusted to the range and a wxSpinEvent sent then if the value
+    The value is then adjusted to the range and a wxSpinEvent is then sent if the value
     is different from the last value sent.
 
     @library{wxcore}
@@ -134,9 +134,29 @@ public:
     int GetMin() const;
 
     /**
+        Returns the text in the text entry part of the control.
+
+        @note In wxQt, setting an empty string in the control is exactly the same
+        as calling SetValue(GetMin()). So this function always returns a non-empty
+        string under this platform.
+
+        @since 3.1.6
+    */
+    wxString GetTextValue() const;
+
+    /**
         Gets the value of the spin control.
     */
     int GetValue() const;
+
+    /**
+        Get the value for increment for a spin control.
+
+        The default value is 1 but it can be changed using SetIncrement().
+
+        @since 3.1.6
+    */
+    int GetIncrement() const;
 
     /**
         Sets the base to use for the numbers in this control.
@@ -173,6 +193,8 @@ public:
 
         @note Setting a range including negative values is silently ignored
         if current base is set to 16.
+
+        @note In wxQt @a minVal must be less than @a maxVal.
     */
     void SetRange(int minVal, int maxVal);
 
@@ -190,6 +212,10 @@ public:
         Sets the value of the spin control.
 
         It is recommended to use the overload taking an integer value instead.
+        If @a text doesn't represent a valid number, it may not be shown in the
+        text part of the control at all (only empty string is guaranteed to be
+        supported under all platforms) and the numeric value will be changed to
+        GetMin().
 
         Notice that, unlike wxTextCtrl::SetValue(), but like most of the other
         setter methods in wxWidgets, calling this method does not generate any
@@ -203,6 +229,22 @@ public:
         Calling this method doesn't generate any @c wxEVT_SPINCTRL events.
     */
     void SetValue(int value);
+
+    /**
+        Sets the increment for the control.
+
+        The increment is the number by which the value changes when the up or
+        down arrow is used.
+
+        The default is 1, but it can be useful to set it to a higher value when
+        using the control for bigger numbers.
+
+        Note that it is still possible to enter any value (in the valid range)
+        into the control manually, whatever is the value of the increment.
+
+        @since 3.1.6
+    */
+    void SetIncrement(int value);
 };
 
 /**
@@ -216,6 +258,18 @@ public:
            The user can use arrow keys to change the value.
     @style{wxSP_WRAP}
            The value wraps at the minimum and maximum.
+    @style{wxTE_PROCESS_ENTER}
+        Indicates that the control should generate @c wxEVT_TEXT_ENTER
+        events. Using this style will prevent the user from using the Enter key
+        for dialog navigation (e.g. activating the default button in the
+        dialog) under MSW.
+    @style{wxALIGN_LEFT}
+        Same as wxTE_LEFT for wxTextCtrl: the text is left aligned (this is the
+        default).
+    @style{wxALIGN_CENTRE_HORIZONTAL}
+        Same as wxTE_CENTRE for wxTextCtrl: the text is centered.
+    @style{wxALIGN_RIGHT}
+        Same as wxTE_RIGHT for wxTextCtrl: the text is right aligned.
     @endStyleTable
 
     @beginEventEmissionTable{wxSpinDoubleEvent}
@@ -242,6 +296,14 @@ public:
 
     /**
         Constructor, creating and showing a spin control.
+
+        If @a value is non-empty, it will be shown in the text entry part of
+        the control and if it has numeric value, the initial numeric value of
+        the control, as returned by GetValue() will also be determined by it
+        instead of by @a initial. Hence, it only makes sense to specify @a
+        initial if @a value is an empty string or is not convertible to a
+        number, otherwise @a initial is simply ignored and the number specified
+        by @a value is used.
 
         @param parent
             Parent window. Must not be @NULL.
@@ -281,7 +343,7 @@ public:
                long style = wxSP_ARROW_KEYS,
                double min = 0, double max = 100,
                double initial = 0, double inc = 1,
-               const wxString& name = wxT("wxSpinCtrlDouble"));
+               const wxString& name = "wxSpinCtrlDouble");
 
     /**
         Creation function called by the spin control constructor.
@@ -316,6 +378,17 @@ public:
     double GetMin() const;
 
     /**
+        Returns the text in the text entry part of the control.
+
+        @note In wxQt, setting an empty string in the control is exactly the same
+        as calling SetValue(GetMin()). So this function always returns a non-empty
+        string under this platform.
+
+        @since 3.1.6
+    */
+    wxString GetTextValue() const;
+
+    /**
         Gets the value of the spin control.
     */
     double GetValue() const;
@@ -328,13 +401,22 @@ public:
 
     /**
         Sets the increment value.
-        @note You may also need to change the precision of the value
-        using SetDigits().
+
+        Using this method changes the number of digits used by the control to
+        at least match the value of @a inc, e.g. using the increment of @c 0.01
+        sets the number of digits to 2 if it had been less than 2 before.
+        However it doesn't change the number of digits if it had been already
+        high enough.
+
+        In any case, you may call SetDigits() explicitly to override the
+        automatic determination of the number of digits.
     */
     void SetIncrement(double inc);
 
     /**
         Sets range of allowable values.
+
+        @note In wxQt @a minVal must be less than @a maxVal.
     */
     void SetRange(double minVal, double maxVal);
 
@@ -342,6 +424,10 @@ public:
         Sets the value of the spin control.
 
         It is recommended to use the overload taking a double value instead.
+        If @a text doesn't represent a valid number, it may not be shown in the
+        text part of the control at all (only empty string is guaranteed to be
+        supported under all platforms) and the numeric value will be changed to
+        GetMin().
 
         Notice that, unlike wxTextCtrl::SetValue(), but like most of the other
         setter methods in wxWidgets, calling this method does not generate any
@@ -365,8 +451,8 @@ public:
     @beginEventTable{wxSpinDoubleEvent}
     @event{EVT_SPINCTRLDOUBLE(id, func)}
         Generated whenever the numeric value of the spin control is changed,
-        that is, when the up/down spin button is clicked, when ENTER is pressed,
-        or the control loses focus and the new value is different from the last.
+        that is, when the up/down spin button is clicked or when the control
+        loses focus and the new value is different from the last one.
         See wxSpinDoubleEvent.
     @endEventTable
 

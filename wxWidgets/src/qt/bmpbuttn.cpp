@@ -8,16 +8,13 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
+#if wxUSE_BMPBUTTON
+
 #include "wx/bmpbuttn.h"
-
-wxBitmapButton::wxBitmapButton()
-{
-}
-
 
 wxBitmapButton::wxBitmapButton(wxWindow *parent,
                wxWindowID id,
-               const wxBitmap& bitmap,
+               const wxBitmapBundle& bitmap,
                const wxPoint& pos,
                const wxSize& size,
                long style,
@@ -30,7 +27,7 @@ wxBitmapButton::wxBitmapButton(wxWindow *parent,
 
 bool wxBitmapButton::Create(wxWindow *parent,
             wxWindowID id,
-            const wxBitmap& bitmap,
+            const wxBitmapBundle& bitmap,
             const wxPoint& pos,
             const wxSize& size,
             long style,
@@ -51,3 +48,4 @@ bool wxBitmapButton::Create(wxWindow *parent,
     return true;
 }
 
+#endif // wxUSE_BMPBUTTON

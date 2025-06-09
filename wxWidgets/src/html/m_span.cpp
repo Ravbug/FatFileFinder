@@ -8,9 +8,6 @@
 
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_HTML
 
@@ -54,7 +51,7 @@ TAG_HANDLER_BEGIN(SPAN, "SPAN" )
         m_WParser->SetFontFace(oldfontface);
         m_WParser->SetFontItalic(olditalic);
         m_WParser->GetContainer()->InsertCell(
-                new wxHtmlFontCell(m_WParser->CreateCurrentFont()));
+                new wxHtmlFontCell(tag, m_WParser->CreateCurrentFont()));
 
         if (oldclr != m_WParser->GetActualColor())
         {

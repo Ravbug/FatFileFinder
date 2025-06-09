@@ -41,15 +41,13 @@ public :
     wxInt32 GetCrossProduct( const wxPoint2DInt &vec ) const;
 
     // the reflection of this point
-    wxPoint2DInt operator-();
+    wxPoint2DInt operator-() const;
 
     wxPoint2DInt& operator=(const wxPoint2DInt& pt);
     wxPoint2DInt& operator+=(const wxPoint2DInt& pt);
     wxPoint2DInt& operator-=(const wxPoint2DInt& pt);
-    wxPoint2DInt& operator*=(const wxPoint2DInt& pt);
     wxPoint2DInt& operator*=(wxDouble n);
     wxPoint2DInt& operator*=(wxInt32 n);
-    wxPoint2DInt& operator/=(const wxPoint2DInt& pt);
     wxPoint2DInt& operator/=(wxDouble n);
     wxPoint2DInt& operator/=(wxInt32 n);
     operator wxPoint() const;
@@ -62,13 +60,11 @@ public :
 
 wxPoint2DInt operator+(const wxPoint2DInt& pt1 , const wxPoint2DInt& pt2);
 wxPoint2DInt operator-(const wxPoint2DInt& pt1 , const wxPoint2DInt& pt2);
-wxPoint2DInt operator*(const wxPoint2DInt& pt1 , const wxPoint2DInt& pt2);
+wxPoint2DInt operator*(wxDouble n , const wxPoint2DInt& pt);
 wxPoint2DInt operator*(wxInt32 n , const wxPoint2DInt& pt);
-wxPoint2DInt operator*(wxInt32 n , const wxPoint2DInt& pt);
+wxPoint2DInt operator*(const wxPoint2DInt& pt , wxDouble n);
 wxPoint2DInt operator*(const wxPoint2DInt& pt , wxInt32 n);
-wxPoint2DInt operator*(const wxPoint2DInt& pt , wxInt32 n);
-wxPoint2DInt operator/(const wxPoint2DInt& pt1 , const wxPoint2DInt& pt2);
-wxPoint2DInt operator/(const wxPoint2DInt& pt , wxInt32 n);
+wxPoint2DInt operator/(const wxPoint2DInt& pt , wxDouble n);
 wxPoint2DInt operator/(const wxPoint2DInt& pt , wxInt32 n);
 
 
@@ -86,6 +82,8 @@ public :
     // two different conversions to integers, floor and rounding
     void GetFloor( wxInt32 *x , wxInt32 *y ) const;
     void GetRounded( wxInt32 *x , wxInt32 *y ) const;
+    wxPoint GetFloor() const;
+    wxPoint GetRounded() const;
 
     wxDouble GetVectorLength() const;
      wxDouble GetVectorAngle() const ;
@@ -100,15 +98,13 @@ public :
     wxDouble GetCrossProduct( const wxPoint2DDouble &vec ) const;
 
     // the reflection of this point
-    wxPoint2DDouble operator-();
+    wxPoint2DDouble operator-() const;
 
     wxPoint2DDouble& operator=(const wxPoint2DDouble& pt);
     wxPoint2DDouble& operator+=(const wxPoint2DDouble& pt);
     wxPoint2DDouble& operator-=(const wxPoint2DDouble& pt);
-    wxPoint2DDouble& operator*=(const wxPoint2DDouble& pt);
     wxPoint2DDouble& operator*=(wxDouble n);
     wxPoint2DDouble& operator*=(wxInt32 n);
-    wxPoint2DDouble& operator/=(const wxPoint2DDouble& pt);
     wxPoint2DDouble& operator/=(wxDouble n);
     wxPoint2DDouble& operator/=(wxInt32 n);
 
@@ -121,12 +117,10 @@ public :
 
 wxPoint2DDouble operator+(const wxPoint2DDouble& pt1 , const wxPoint2DDouble& pt2);
 wxPoint2DDouble operator-(const wxPoint2DDouble& pt1 , const wxPoint2DDouble& pt2);
-wxPoint2DDouble operator*(const wxPoint2DDouble& pt1 , const wxPoint2DDouble& pt2);
 wxPoint2DDouble operator*(wxDouble n , const wxPoint2DDouble& pt);
 wxPoint2DDouble operator*(wxInt32 n , const wxPoint2DDouble& pt);
 wxPoint2DDouble operator*(const wxPoint2DDouble& pt , wxDouble n);
 wxPoint2DDouble operator*(const wxPoint2DDouble& pt , wxInt32 n);
-wxPoint2DDouble operator/(const wxPoint2DDouble& pt1 , const wxPoint2DDouble& pt2);
 wxPoint2DDouble operator/(const wxPoint2DDouble& pt , wxDouble n);
 wxPoint2DDouble operator/(const wxPoint2DDouble& pt , wxInt32 n);
 
@@ -191,7 +185,7 @@ public:
 
     void ConstrainTo( const wxRect2DDouble &rect );
 
-    wxPoint2DDouble Interpolate( wxInt32 widthfactor , wxInt32 heightfactor );
+    wxPoint2DDouble Interpolate( wxInt32 widthfactor, wxInt32 heightfactor ) const;
 
     static void Intersect( const wxRect2DDouble &src1 , const wxRect2DDouble &src2 , wxRect2DDouble *dest );
     void Intersect( const wxRect2DDouble &otherRect );
@@ -280,7 +274,7 @@ public:
     void Inset( wxInt32 left , wxInt32 top ,wxInt32 right , wxInt32 bottom  );
     void Offset( const wxPoint2DInt &pt );
     void ConstrainTo( const wxRect2DInt &rect );
-    wxPoint2DInt Interpolate( wxInt32 widthfactor , wxInt32 heightfactor );
+    wxPoint2DInt Interpolate( wxInt32 widthfactor, wxInt32 heightfactor ) const;
 
     static void Intersect( const wxRect2DInt &src1 , const wxRect2DInt &src2 , wxRect2DInt *dest );
     void Intersect( const wxRect2DInt &otherRect );

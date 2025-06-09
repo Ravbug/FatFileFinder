@@ -2,7 +2,6 @@
 // Name:        src/msw/checkbox.cpp
 // Purpose:     wxCheckBox
 // Author:      Julian Smart
-// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -19,9 +18,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_CHECKBOX
 
@@ -91,6 +87,18 @@ WXDWORD wxCheckBox::MSWGetStyle(long style, WXDWORD *exstyle) const
     return msStyle;
 }
 
+bool wxCheckBox::MSWGetDarkModeSupport(MSWDarkModeSupport& support) const
+{
+    // Just as radio buttons, check boxes have some dark theme support, but we
+    // still need to change their foreground manually to make it readable in
+    // dark mode.
+    wxCheckBoxBase::MSWGetDarkModeSupport(support);
+
+    support.setForeground = true;
+
+    return true;
+}
+
 // ----------------------------------------------------------------------------
 // wxCheckBox geometry
 // ----------------------------------------------------------------------------
@@ -101,7 +109,7 @@ wxSize wxCheckBox::DoGetBestClientSize() const
 
     if ( s_checkSize.HasChanged(this) )
     {
-        wxClientDC dc(const_cast<wxCheckBox*>(this));
+        wxInfoDC dc(const_cast<wxCheckBox*>(this));
         dc.SetFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
 
         s_checkSize.SetAtNewDPI(dc.GetCharHeight());
@@ -113,8 +121,7 @@ wxSize wxCheckBox::DoGetBestClientSize() const
     int wCheckbox, hCheckbox;
     if ( !str.empty() )
     {
-        wxClientDC dc(const_cast<wxCheckBox *>(this));
-        dc.SetFont(GetFont());
+        wxInfoDC dc(const_cast<wxCheckBox *>(this));
         dc.GetMultiLineTextExtent(GetLabelText(str), &wCheckbox, &hCheckbox);
         wCheckbox += checkSize + GetCharWidth();
 
@@ -181,6 +188,9 @@ wxCOMPILE_TIME_ASSERT(wxCHK_UNCHECKED == BST_UNCHECKED
 
 void wxCheckBox::DoSet3StateValue(wxCheckBoxState state)
 {
+    if ( m_state == state )
+        return;
+
     m_state = state;
     if ( !IsOwnerDrawn() )
         ::SendMessage(GetHwnd(), BM_SETCHECK, (WPARAM) state, 0);
@@ -250,11 +260,11 @@ int wxCheckBox::MSWGetButtonCheckedFlag() const
             return wxCONTROL_CHECKED;
 
         case wxCHK_UNDETERMINED:
-            return wxCONTROL_PRESSED;
+            return wxCONTROL_UNDETERMINED;
 
         case wxCHK_UNCHECKED:
             // no extra styles needed
-            return 0;
+            return wxCONTROL_NONE;
     }
 
     wxFAIL_MSG( wxT("unexpected Get3StateValue() return value") );

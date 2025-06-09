@@ -2,7 +2,6 @@
 // Name:        src/osx/cocoa/glcanvas.mm
 // Purpose:     wxGLCanvas, for using OpenGL with wxWidgets under Macintosh
 // Author:      Stefan Csomor
-// Modified by:
 // Created:     1998-01-01
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -18,9 +17,6 @@
 
 #include "wx/wxprec.h"
 
-#if defined(__BORLANDC__)
-    #pragma hdrstop
-#endif
 
 #if wxUSE_GLCANVAS
 
@@ -90,7 +86,7 @@ WXGLPixelFormat WXGLChoosePixelFormat(const int *GLAttrs,
     if ( GLAttrs && n1 > 1 )
     {
         n1--; // skip the ending '0'
-        while ( p < n1 )
+        while ( p < (unsigned)n1 )
         {
             data[p] = (NSOpenGLPixelFormatAttribute) GLAttrs[p];
             p++;
@@ -101,7 +97,7 @@ WXGLPixelFormat WXGLChoosePixelFormat(const int *GLAttrs,
     {
         n2--; // skip the ending '0'
         unsigned p2 = 0;
-        while ( p2 < n2 )
+        while ( p2 < (unsigned)n2 )
             data[p++] = (NSOpenGLPixelFormatAttribute) ctxAttrs[p2++];
     }
 
@@ -110,7 +106,7 @@ WXGLPixelFormat WXGLChoosePixelFormat(const int *GLAttrs,
 
     attribs = data;
 
-    return [[NSOpenGLPixelFormat alloc] initWithAttributes:(NSOpenGLPixelFormatAttribute*) attribs];
+    return [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
 }
 
 @interface wxNSCustomOpenGLView : NSOpenGLView
@@ -154,7 +150,7 @@ WXGLPixelFormat WXGLChoosePixelFormat(const int *GLAttrs,
 {
     // Prevent the NSOpenGLView from making it's own context
     // We want to force using wxGLContexts
-    return NULL;
+    return nullptr;
 }
 
 @end

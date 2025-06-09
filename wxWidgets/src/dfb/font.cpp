@@ -18,9 +18,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #include "wx/font.h"
 
@@ -87,7 +84,7 @@ wxGDIRefData *wxFont::CloneGDIRefData(const wxGDIRefData *data) const
 
 wxIDirectFBFontPtr wxFont::GetDirectFBFont(bool antialiased) const
 {
-    wxCHECK_MSG( IsOk(), NULL, wxT("invalid font") );
+    wxCHECK_MSG( IsOk(), nullptr, wxT("invalid font") );
 
     // we don't support DC scaling yet, so use scale=1
     wxFontInstance *i = M_FONTDATA->GetFontInstance(1.0, antialiased);
@@ -151,7 +148,7 @@ bool wxFont::IsFixedWidth() const
 
 const wxNativeFontInfo *wxFont::GetNativeFontInfo() const
 {
-    wxCHECK_MSG( IsOk(), NULL, wxT("invalid font") );
+    wxCHECK_MSG( IsOk(), nullptr, wxT("invalid font") );
 
     return M_FONTDATA->GetNativeFontInfo();
 }

@@ -42,6 +42,10 @@ MSVS version:
 - Add the new solution file `build/msw/wx_vcNN.sln` (where `NN` is the internal
   IDE version), typically by opening an existing solution in the new IDE and
   letting it to update it.
+- Add the new solution files `samples/samples_vcNN.sln`, `tests/test_vcNN.sln`
+  and `tests/test_gui_vcNN.sln` in a similar way.
+- Add the new version to the instructions in `how-to-add-new-sample.md` in this
+  directory.
 - Discard changes to the project files that were done by the IDE during the
   update and instead update `build/msw/wx_config.props` and add a new condition
   checking `VisualStudioVersion` value for choosing the value of
@@ -62,3 +66,5 @@ MSVS version:
   can be tested with the "Crash" menu item in the except sample) and  update
   the version check in `include/wx/msw/seh.h` to suppress this warning for the
   new version too.
+- Update checks for `VISUALSTUDIOVERSION` in `build/bakefiles/common.bkl` to
+  take the new version into account.

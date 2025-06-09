@@ -2,7 +2,6 @@
 // Name:        src/common/dynlib.cpp
 // Purpose:     Dynamic library management
 // Author:      Guilhem Lavaux
-// Modified by:
 // Created:     20/07/98
 // Copyright:   (c) 1998 Guilhem Lavaux
 //                  2000-2005 Vadim Zeitlin
@@ -22,9 +21,6 @@
 
 #include  "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_DYNLIB_CLASS
 
@@ -40,10 +36,6 @@
 #include "wx/filefn.h"
 #include "wx/filename.h"        // for SplitPath()
 #include "wx/platinfo.h"
-
-#include "wx/arrimpl.cpp"
-
-WX_DEFINE_USER_EXPORTED_OBJARRAY(wxDynamicLibraryDetailsArray)
 
 // ============================================================================
 // implementation
@@ -67,7 +59,7 @@ wxDllType wxDynamicLibrary::GetProgramHandle()
 
 bool wxDynamicLibrary::Load(const wxString& libnameOrig, int flags)
 {
-    wxASSERT_MSG(m_handle == 0, wxT("Library already loaded."));
+    wxASSERT_MSG(m_handle == nullptr, wxT("Library already loaded."));
 
     // add the proper extension for the DLL ourselves unless told not to
     wxString libname = libnameOrig;
@@ -75,7 +67,7 @@ bool wxDynamicLibrary::Load(const wxString& libnameOrig, int flags)
     {
         // and also check that the libname doesn't already have it
         wxString ext;
-        wxFileName::SplitPath(libname, NULL, NULL, &ext);
+        wxFileName::SplitPath(libname, nullptr, nullptr, &ext);
         if ( ext.empty() )
         {
             libname += GetDllExt(wxDL_MODULE);
@@ -84,7 +76,7 @@ bool wxDynamicLibrary::Load(const wxString& libnameOrig, int flags)
 
     m_handle = RawLoad(libname, flags);
 
-    if ( m_handle == 0 && !(flags & wxDL_QUIET) )
+    if ( m_handle == nullptr && !(flags & wxDL_QUIET) )
     {
         ReportError(_("Failed to load shared library '%s'"), libname);
     }
@@ -94,13 +86,13 @@ bool wxDynamicLibrary::Load(const wxString& libnameOrig, int flags)
 
 void *wxDynamicLibrary::DoGetSymbol(const wxString &name, bool *success) const
 {
-    wxCHECK_MSG( IsLoaded(), NULL,
+    wxCHECK_MSG( IsLoaded(), nullptr,
                  wxT("Can't load symbol from unloaded library") );
 
     void *symbol = RawGetSymbol(m_handle, name);
 
     if ( success )
-        *success = symbol != NULL;
+        *success = symbol != nullptr;
 
     return symbol;
 }
@@ -178,9 +170,7 @@ wxString wxDynamicLibrary::CanonicalizePluginName(const wxString& name,
     {
         suffix = wxPlatformInfo::Get().GetPortIdShortName();
     }
-#if wxUSE_UNICODE
     suffix << wxT('u');
-#endif
 #ifdef __WXDEBUG__
     suffix << wxT('d');
 #endif
@@ -214,8 +204,6 @@ wxString wxDynamicLibrary::CanonicalizePluginName(const wxString& name,
         suffix << wxT("_gcc");
     #elif defined(__VISUALC__)
         suffix << wxT("_vc");
-    #elif defined(__BORLANDC__)
-        suffix << wxT("_bcc");
     #endif
 #endif
 
@@ -227,6 +215,8 @@ wxString wxDynamicLibrary::GetPluginsDirectory()
 {
 #ifdef __UNIX__
     wxString format = wxGetInstallPrefix();
+    if ( format.empty() )
+        return wxEmptyString;
     wxString dir;
     format << wxFILE_SEP_PATH
            << wxT("lib") << wxFILE_SEP_PATH

@@ -189,7 +189,7 @@ enum wxBorder
       |  |  |  |  |  |  |  |  |  |  |  |  |  |  \____ wxPOPUP_WINDOW
       |  |  |  |  |  |  |  |  |  |  |  |  |  \_______ wxWANTS_CHARS
       |  |  |  |  |  |  |  |  |  |  |  |  \__________ wxTAB_TRAVERSAL
-      |  |  |  |  |  |  |  |  |  |  |  \_____________ wxTRANSPARENT_WINDOW
+      |  |  |  |  |  |  |  |  |  |  |  \_____________ (ex-wxTRANSPARENT_WINDOW)
       |  |  |  |  |  |  |  |  |  |  \________________ wxBORDER_NONE
       |  |  |  |  |  |  |  |  |  \___________________ wxCLIP_CHILDREN
       |  |  |  |  |  |  |  |  \______________________ wxALWAYS_SHOW_SB
@@ -241,7 +241,8 @@ enum wxBorder
 /*  for subwindows/controls */
 #define wxCLIP_SIBLINGS         0x20000000
 
-#define wxTRANSPARENT_WINDOW    0x00100000
+/* This style is obsolete and doesn't do anything. */
+#define wxTRANSPARENT_WINDOW    0
 
 /*  Add this style to a panel to get tab traversal working outside of dialogs */
 /*  (on by default for wxPanel, wxDialog, wxScrolledWindow) */
@@ -251,16 +252,8 @@ enum wxBorder
 /*  Windows, it won't normally get the dialog navigation key events) */
 #define wxWANTS_CHARS           0x00040000
 
-/*  Make window retained (Motif only, see src/generic/scrolwing.cpp)
- *  This is non-zero only under wxMotif, to avoid a clash with wxPOPUP_WINDOW
- *  on other platforms
- */
-
-#ifdef __WXMOTIF__
-#define wxRETAINED              0x00020000
-#else
+/*  Deprecated, does nothing and shouldn't be used in the new code. */
 #define wxRETAINED              0x00000000
-#endif
 #define wxBACKINGSTORE          wxRETAINED
 
 /*  set this flag to create a special popup window: it will be always shown on */
@@ -282,7 +275,7 @@ enum wxBorder
  */
 #define wxWINDOW_STYLE_MASK     \
     (wxVSCROLL|wxHSCROLL|wxBORDER_MASK|wxALWAYS_SHOW_SB|wxCLIP_CHILDREN| \
-     wxCLIP_SIBLINGS|wxTRANSPARENT_WINDOW|wxTAB_TRAVERSAL|wxWANTS_CHARS| \
+     wxCLIP_SIBLINGS|wxTAB_TRAVERSAL|wxWANTS_CHARS| \
      wxRETAINED|wxPOPUP_WINDOW|wxFULL_REPAINT_ON_RESIZE)
 
 /*
@@ -544,8 +537,9 @@ enum wxBackgroundStyle
         Indicates that the window background is not erased, letting the parent
         window show through.
 
-        Currently this style is only supported in wxOSX and wxGTK with
-        compositing available, see wxWindow::IsTransparentBackgroundSupported().
+        This style is only supported in wxOSX, wxGTK with compositing available,
+        wxMSW since 3.3.0 and wxQt.
+        see wxWindow::IsTransparentBackgroundSupported().
      */
     wxBG_STYLE_TRANSPARENT,
 };
@@ -599,11 +593,12 @@ enum wxStandardID
     /**
         Start of the range reserved for wxWidgets-defined IDs.
 
-        Don't define custom IDs in the range from wxID_LOWEST to wxID_HIGHEST.
+        Don't define custom IDs in the range from wxID_LOWEST to wxID_HIGHEST
+        (exclusive).
      */
-    wxID_LOWEST = 4999,
+    wxID_LOWEST = 5000,
 
-    wxID_OPEN,
+    wxID_OPEN = wxID_LOWEST,
     wxID_CLOSE,
     wxID_NEW,
     wxID_SAVE,
@@ -751,13 +746,14 @@ enum wxStandardID
     /**
         End of the range reserved for wxWidgets-defined IDs.
 
-        Don't define custom IDs in the range from wxID_LOWEST to wxID_HIGHEST.
+        Don't define custom IDs in the range from wxID_LOWEST to wxID_HIGHEST
+        (exclusive).
 
         When using an enum to define a number of custom IDs, assigning the
-        value of @c wxID_HIGHEST+1 to the first element ensures that none of
+        value of @c wxID_HIGHEST to the first element ensures that none of
         the enum elements will conflict with any standard IDs.
      */
-    wxID_HIGHEST = 5999
+    wxID_HIGHEST = 6000
 };
 
 /**
@@ -854,6 +850,7 @@ enum wxDataFormatId
     wxDF_LOCALE =           16,
     wxDF_PRIVATE =          20,
     wxDF_HTML =             30, /* Note: does not correspond to CF_ constant */
+    wxDF_PNG =              31, /* Note: does not correspond to CF_ constant */
     wxDF_MAX
 };
 
@@ -928,6 +925,7 @@ enum wxKeyCode
     WXK_RBUTTON,
     WXK_CANCEL,
     WXK_MBUTTON,
+    /// See WXK_NUMPAD_CENTER.
     WXK_CLEAR,
     WXK_SHIFT,
     WXK_ALT,
@@ -1019,6 +1017,7 @@ enum wxKeyCode
     WXK_NUMPAD_PAGEUP,
     WXK_NUMPAD_PAGEDOWN,
     WXK_NUMPAD_END,
+    /// See WXK_NUMPAD_CENTER.
     WXK_NUMPAD_BEGIN,
     WXK_NUMPAD_INSERT,
     WXK_NUMPAD_DELETE,
@@ -1063,23 +1062,67 @@ enum wxKeyCode
     WXK_SPECIAL19,
     WXK_SPECIAL20,
 
-    WXK_BROWSER_BACK = 501,
-    WXK_BROWSER_FORWARD,
-    WXK_BROWSER_REFRESH,
-    WXK_BROWSER_STOP,
-    WXK_BROWSER_SEARCH,
-    WXK_BROWSER_FAVORITES,
-    WXK_BROWSER_HOME,
-    WXK_VOLUME_MUTE,
-    WXK_VOLUME_DOWN,
-    WXK_VOLUME_UP,
-    WXK_MEDIA_NEXT_TRACK,
-    WXK_MEDIA_PREV_TRACK,
-    WXK_MEDIA_STOP,
-    WXK_MEDIA_PLAY_PAUSE,
-    WXK_LAUNCH_MAIL,
+    WXK_BROWSER_BACK = 501, ///< Since wxWidgets 3.1.0
+    WXK_BROWSER_FORWARD,    ///< Since wxWidgets 3.1.0
+    WXK_BROWSER_REFRESH,    ///< Since wxWidgets 3.1.0
+    WXK_BROWSER_STOP,       ///< Since wxWidgets 3.1.0
+    WXK_BROWSER_SEARCH,     ///< Since wxWidgets 3.1.0
+    WXK_BROWSER_FAVORITES,  ///< Since wxWidgets 3.1.0
+    WXK_BROWSER_HOME,       ///< Since wxWidgets 3.1.0
+    WXK_VOLUME_MUTE,        ///< Since wxWidgets 3.1.0
+    WXK_VOLUME_DOWN,        ///< Since wxWidgets 3.1.0
+    WXK_VOLUME_UP,          ///< Since wxWidgets 3.1.0
+    WXK_MEDIA_NEXT_TRACK,   ///< Since wxWidgets 3.1.0
+    WXK_MEDIA_PREV_TRACK,   ///< Since wxWidgets 3.1.0
+    WXK_MEDIA_STOP,         ///< Since wxWidgets 3.1.0
+    WXK_MEDIA_PLAY_PAUSE,   ///< Since wxWidgets 3.1.0
+    WXK_LAUNCH_MAIL,        ///< Since wxWidgets 3.1.0
+
+    /**
+        First application launch key.
+
+        Note that this constant has the same value as WXK_LAUNCH_A.
+
+        @since 3.1.0
+     */
     WXK_LAUNCH_APP1,
-    WXK_LAUNCH_APP2
+    /**
+        Second application launch key.
+
+        Note that this constant has the same value as WXK_LAUNCH_B.
+
+        @since 3.1.0
+     */
+    WXK_LAUNCH_APP2,
+
+    WXK_LAUNCH_0, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_1, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_2, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_3, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_4, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_5, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_6, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_7, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_8, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_9, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_A, ///< Available since wxWidgets 3.1.6, generated by wxGTK and wxMSW.
+    WXK_LAUNCH_B, ///< Available since wxWidgets 3.1.6, generated by wxGTK and wxMSW.
+    WXK_LAUNCH_C, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_D, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_E, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+    WXK_LAUNCH_F, ///< Available since wxWidgets 3.1.6 and only generated by wxGTK.
+
+    /**
+        Key code corresponding to the event produced by the "5" key on the
+        numeric pad when Num Lock is off.
+
+        This constant has the same value as WXK_CLEAR under wxMSW and
+        WXK_NUMPAD_BEGIN in the other ports but using it is preferable in
+        portable code.
+
+        @since 3.3.0
+     */
+    WXK_NUMPAD_CENTER
 };
 
 /**
@@ -1324,7 +1367,7 @@ enum wxUpdateUI
     wxINTn_MAX and @c wxUINTc_MAX (@c wxUINTc_MIN is always 0 and so is not
     defined).
  */
-//@{
+///@{
 #define wxINT8_MIN CHAR_MIN
 #define wxINT8_MAX CHAR_MAX
 #define wxUINT8_MAX UCHAR_MAX
@@ -1340,7 +1383,7 @@ enum wxUpdateUI
 #define wxINT64_MIN LLONG_MIN
 #define wxINT64_MAX LLONG_MAX
 #define wxUINT64_MAX ULLONG_MAX
-//@}
+///@}
 
 // ----------------------------------------------------------------------------
 // types
@@ -1352,36 +1395,36 @@ typedef int wxCoord;
 /** A special value meaning "use default coordinate". */
 wxCoord wxDefaultCoord = -1;
 
-//@{
+///@{
 /** 8 bit type (the mapping is more complex than a simple @c typedef and is not shown here). */
 typedef signed char wxInt8;
 typedef unsigned char wxUint8;
 typedef wxUint8 wxByte;
-//@}
+///@}
 
-//@{
+///@{
 /** 16 bit type (the mapping is more complex than a simple @c typedef and is not shown here). */
 typedef signed short wxInt16;
 typedef unsigned short wxUint16;
 typedef wxUint16 wxWord;
 typedef wxUint16 wxChar16;
-//@}
+///@}
 
-//@{
+///@{
 /** 32 bit type (the mapping is more complex than a simple @c typedef and is not shown here). */
 typedef int wxInt32;
 typedef unsigned int wxUint32;
 typedef wxUint32 wxDword;
 typedef wxUint32 wxChar32;
-//@}
+///@}
 
-//@{
+///@{
 /** 64 bit type (the mapping is more complex than a simple @c typedef and is not shown here). */
 typedef wxLongLong_t wxInt64;
 typedef wxULongLong_t wxUint64;
-//@}
+///@}
 
-//@{
+///@{
 /**
     Signed and unsigned integral types big enough to contain all of @c long,
     @c size_t and @c void*.
@@ -1389,7 +1432,7 @@ typedef wxULongLong_t wxUint64;
 */
 typedef ssize_t wxIntPtr;
 typedef size_t wxUIntPtr;
-//@}
+///@}
 
 
 /**
@@ -1420,7 +1463,7 @@ typedef double wxDouble;
 
 
 /** @addtogroup group_funcmacro_byteorder */
-//@{
+///@{
 
 /**
     This macro will swap the bytes of the @a value variable from little endian
@@ -1434,10 +1477,10 @@ typedef double wxDouble;
 #define wxINT16_SWAP_ALWAYS( wxInt16_value )
 #define wxUINT16_SWAP_ALWAYS( wxUint16_value )
 
-//@}
+///@}
 
 /** @addtogroup group_funcmacro_byteorder */
-//@{
+///@{
 
 /**
     This macro will swap the bytes of the @a value variable from little endian
@@ -1455,10 +1498,10 @@ typedef double wxDouble;
 #define wxINT16_SWAP_ON_BE( wxInt16_value )
 #define wxUINT16_SWAP_ON_BE( wxUint16_value )
 
-//@}
+///@}
 
 /** @addtogroup group_funcmacro_byteorder */
-//@{
+///@{
 
 /**
     This macro will swap the bytes of the @a value variable from little endian
@@ -1476,12 +1519,43 @@ typedef double wxDouble;
 #define wxINT16_SWAP_ON_LE( wxInt16_value )
 #define wxUINT16_SWAP_ON_LE( wxUint16_value )
 
-//@}
+///@}
 
 
 
 /** @addtogroup group_funcmacro_misc */
-//@{
+///@{
+
+/**
+    Returns @true if the compiler being used supports the given C++ version.
+
+    The @a stdver parameter uses the same values as the standard @c \__cplusplus
+    macro, i.e.
+
+    - 201103L for C++11
+    - 201402L for C++14
+    - 201703L for C++17
+    - 202002L for C++20
+
+    Using this macro also works with MSVC, even when @c /Zc:\__cplusplus option
+    is not used, unlike checking for the value of @c \__cplusplus directly.
+
+    @since 3.1.7
+
+    @header{wx/defs.h}
+*/
+#define wxCHECK_CXX_STD(stdver)
+
+/**
+    Returns @true if the compiler is using the C++17 standard and the header @a header exists.
+    This is designed to guard inclusion of C++17 standard library headers, since MSVC will warn
+    if a header for a newer C++ standard is included when compiling for an older standard.
+
+    @since 3.3.0
+
+    @header{wx/defs.h}
+*/
+#define wxHAS_CXX17_INCLUDE(header)
 
 /**
     This macro can be used in a class declaration to disable the generation of
@@ -1492,9 +1566,28 @@ typedef double wxDouble;
     In such case, this macro can be used to disable the automatic assignment
     operator generation.
 
-    @see wxDECLARE_NO_COPY_CLASS()
+    @see wxDECLARE_NO_COPY_CLASS(), wxDECLARE_NO_ASSIGN_DEF_COPY()
  */
 #define wxDECLARE_NO_ASSIGN_CLASS(classname)
+
+/**
+    Macro disabling the generation of default assignment operator but
+    generating a default copy constructor.
+
+    This macro can be useful for the classes that can't be copied after
+    creation, but may be copy-constructed using the default compiler-generated
+    copy constructor.
+
+    Note that using wxDECLARE_NO_ASSIGN_CLASS() for such macros results in @c
+    -Wdeprecated-copy warning from clang 13, while this macro avoids such
+    warnings.
+
+    Default copy constructor is only generated when using C++11 or later,
+    otherwise this macro is identical to wxDECLARE_NO_ASSIGN_CLASS().
+
+    @since 3.1.6
+ */
+#define wxDECLARE_NO_ASSIGN_DEF_COPY(classname)
 
 /**
     This macro can be used in a class declaration to disable the generation of
@@ -1577,7 +1670,7 @@ typedef double wxDouble;
 
     @header{wx/defs.h}
 */
-template <typename T> wxDELETE(T*& ptr);
+template <typename T> void wxDELETE(T*& ptr);
 
 /**
     A function which deletes and nulls the pointer.
@@ -1597,7 +1690,18 @@ template <typename T> wxDELETE(T*& ptr);
 
     @header{wx/defs.h}
 */
-template <typename T> wxDELETEA(T*& array);
+template <typename T> void wxDELETEA(T*& array);
+
+/**
+    Expands to the standard C++14 [[deprecated]] attribute if supported.
+
+    If not supported by the compiler, expands to nothing. If support for such
+    compilers is important, use wxDEPRECATED_MSG() which is almost universally
+    available.
+
+    @since 3.1.6
+ */
+#define wxDEPRECATED_ATTR(msg) [[deprecated(msg)]]
 
 /**
     Generate deprecation warning with the given message when a function is
@@ -1614,11 +1718,6 @@ template <typename T> wxDELETEA(T*& array);
     wxString wxGetSomething();
     @endcode
 
-    For compilers other than clang, g++ 4.5 or later and MSVC 8 (MSVS 2005) or
-    later, the message is ignored and a generic deprecation warning is given if
-    possible, i.e. if the compiler is g++ (any supported version) or MSVC 7
-    (MSVS 2003) or later.
-
     @since 3.0
 
     @header{wx/defs.h}
@@ -1631,9 +1730,6 @@ template <typename T> wxDELETEA(T*& array);
     be removed in the future) when it is used.
 
     Notice that this macro itself is deprecated in favour of wxDEPRECATED_MSG()!
-
-    Only Visual C++ 7 and higher and g++ compilers currently support this
-    functionality.
 
     Example of use:
 
@@ -1721,31 +1817,16 @@ template <typename T> wxDELETEA(T*& array);
 #define wxDEPRECATED_BUT_USED_INTERNALLY_INLINE(func, body)
 
 /**
-    @c wxOVERRIDE expands to the C++11 @c override keyword if it's supported by
-    the compiler or nothing otherwise.
+    Expands to "override" keyword.
 
-    This macro is useful for writing code which may be compiled by both C++11
-    and non-C++11 compilers and still allow the use of @c override for the
-    former.
-
-    Example of using this macro:
-    @code
-        class MyApp : public wxApp {
-        public:
-            virtual bool OnInit() wxOVERRIDE;
-
-            // This would result in an error from a C++11 compiler as the
-            // method doesn't actually override the base class OnExit() due to
-            // a typo in its name.
-            //virtual int OnEzit() wxOVERRIDE;
-        };
-    @endcode
+    This macro is deprecated and exists only for compatibility, just use @c
+    override directly in the new code.
 
     @header{wx/defs.h}
 
     @since 3.1.0
  */
-#define wxOVERRIDE
+#define wxOVERRIDE override
 
 /**
     GNU C++ compiler gives a warning for any class whose destructor is private
@@ -1767,7 +1848,7 @@ template <typename T> wxDELETEA(T*& array);
         void DecRef() { if ( !--m_nRef ) delete this; }
 
     private:
-        ~RefCounted() { }
+        ~RefCounted() = default;
 
         wxSUPPRESS_GCC_PRIVATE_DTOR(RefCounted)
     };
@@ -1778,6 +1859,29 @@ template <typename T> wxDELETEA(T*& array);
     @header{wx/defs.h}
 */
 #define wxSUPPRESS_GCC_PRIVATE_DTOR_WARNING(name)
+
+/**
+    Expands to the "warn_unused" attribute (also known as [[gnu::warn_unused]])
+    on compilers supporting it (GCC and Clang), otherwise to nothing.
+
+    @header{wx/defs.h}
+
+    @since 3.3.0
+*/
+#define wxWARN_UNUSED __attribute__((warn_unused))
+
+/**
+    Return the size of the container as int.
+
+    This is similar to C++20 std::ssize() but can be used even even when not
+    using C++20 (if you do use it, please use the standard function).
+
+    @header{wx/defs.h}
+
+    @since 3.3.0
+ */
+template <class C>
+int wxSsize(const C& c);
 
 /**
     Swaps the contents of two variables.
@@ -1796,7 +1900,7 @@ template <typename T> wxDELETEA(T*& array);
         wxASSERT( x == 4 && y == 3 );
     @endcode
  */
-template <typename T> wxSwap(T& first, T& second);
+template <typename T> void wxSwap(T& first, T& second);
 
 /**
     This macro is the same as the standard C99 @c va_copy for the compilers
@@ -1811,6 +1915,6 @@ template <typename T> wxSwap(T& first, T& second);
 */
 void wxVaCopy(va_list argptrDst, va_list argptrSrc);
 
-//@}
+///@}
 
 

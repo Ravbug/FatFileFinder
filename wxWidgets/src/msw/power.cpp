@@ -2,7 +2,6 @@
 // Name:        src/msw/power.cpp
 // Purpose:     power management functions for MSW
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     2006-05-27
 // Copyright:   (c) 2006 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
@@ -19,9 +18,6 @@
 // for compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #ifndef WX_PRECOMP
 #endif //WX_PRECOMP
@@ -62,8 +58,15 @@ bool UpdatePowerResourceExecutionState()
 
 bool
 wxPowerResource::Acquire(wxPowerResourceKind kind,
-                         const wxString& WXUNUSED(reason))
+                         const wxString& WXUNUSED(reason),
+                         wxPowerBlockKind blockKind)
 {
+    if ( blockKind == wxPOWER_DELAY )
+    {
+        // We don't support this mode under MSW because it's not needed there.
+        return true;
+    }
+
     switch ( kind )
     {
         case wxPOWER_RESOURCE_SCREEN:

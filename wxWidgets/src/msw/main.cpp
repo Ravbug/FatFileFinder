@@ -2,7 +2,6 @@
 // Name:        src/msw/main.cpp
 // Purpose:     WinMain/DllMain
 // Author:      Julian Smart
-// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -19,9 +18,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #ifndef WX_PRECOMP
     #include "wx/event.h"
@@ -29,11 +25,9 @@
     #include "wx/utils.h"
 #endif //WX_PRECOMP
 
-// wxCmdLineParser is only used when we can't use ::CommandLineToArgvW().
-#if !wxUSE_UNICODE
-    #include "wx/cmdline.h"
-#endif
 #include "wx/dynlib.h"
+
+#include "wx/private/init.h"
 
 #include "wx/msw/private.h"
 #include "wx/msw/seh.h"
@@ -43,15 +37,8 @@
     #include "wx/msw/crashrpt.h"
 #endif // wxUSE_ON_FATAL_EXCEPTION
 
-#ifdef __BORLANDC__
-    // BC++ has to be special: its run-time expects the DLL entry point to be
-    // named DllEntryPoint instead of the (more) standard DllMain
-    #define DllMain DllEntryPoint
-#endif // __BORLANDC__
-
 // defined in common/init.cpp
 extern int wxEntryReal(int& argc, wxChar **argv);
-extern int wxEntryCleanupReal(int& argc, wxChar **argv);
 
 // ============================================================================
 // implementation: various entry points
@@ -69,16 +56,10 @@ extern int wxEntryCleanupReal(int& argc, wxChar **argv);
 
 // global pointer to exception information, only valid inside OnFatalException,
 // used by wxStackWalker and wxCrashReport
-extern EXCEPTION_POINTERS *wxGlobalSEInformation = NULL;
+extern EXCEPTION_POINTERS *wxGlobalSEInformation = nullptr;
 
 // flag telling us whether the application wants to handle exceptions at all
 static bool gs_handleExceptions = false;
-
-static void wxFatalExit()
-{
-    // use the same exit code as abort()
-    ::ExitProcess(3);
-}
 
 unsigned long wxGlobalSEHandler(EXCEPTION_POINTERS *pExcPtrs)
 {
@@ -94,7 +75,7 @@ unsigned long wxGlobalSEHandler(EXCEPTION_POINTERS *pExcPtrs)
         }
         wxSEH_IGNORE      // ignore any exceptions inside the exception handler
 
-        wxGlobalSEInformation = NULL;
+        wxGlobalSEInformation = nullptr;
 
         // this will execute our handler and terminate the process
         return EXCEPTION_EXECUTE_HANDLER;
@@ -111,13 +92,14 @@ void wxSETranslator(unsigned int WXUNUSED(code), EXCEPTION_POINTERS *ep)
     {
         default:
             wxFAIL_MSG( wxT("unexpected wxGlobalSEHandler() return value") );
-            // fall through
+            wxFALLTHROUGH;
 
         case EXCEPTION_EXECUTE_HANDLER:
             // if wxApp::OnFatalException() had been called we should exit the
             // application -- but we shouldn't kill our host when we're a DLL
 #ifndef WXMAKINGDLL
-            wxFatalExit();
+            // use the same exit code as abort()
+            ::ExitProcess(3);
 #endif // not a DLL
             break;
 
@@ -183,7 +165,7 @@ int wxEntry(int& argc, wxChar **argv)
     {
         return wxEntryReal(argc, argv);
     }
-    wxSEH_HANDLE(-1)
+    wxSEH_HANDLE(wxApp::GetFatalErrorExitCode())
 }
 
 #else // !wxUSE_ON_FATAL_EXCEPTION
@@ -201,71 +183,6 @@ int wxEntry(int& argc, wxChar **argv)
 // Windows-specific wxEntry
 // ----------------------------------------------------------------------------
 
-struct wxMSWCommandLineArguments
-{
-    wxMSWCommandLineArguments() { argc = 0; argv = NULL; }
-
-    // Initialize this object from the current process command line.
-    //
-    // In Unicode build prefer to use the standard function for tokenizing the
-    // command line, but we can't use it with narrow strings, so use our own
-    // approximation instead then.
-#if wxUSE_UNICODE
-    void Init()
-    {
-        argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
-    }
-
-    ~wxMSWCommandLineArguments()
-    {
-        if ( argc )
-            ::LocalFree(argv);
-    }
-#else // !wxUSE_UNICODE
-    void Init()
-    {
-        // Get the command line.
-        const wxChar* const cmdLine = ::GetCommandLine();
-        if ( !cmdLine )
-            return;
-
-        // And tokenize it.
-        const wxArrayString args = wxCmdLineParser::ConvertStringToArgs(cmdLine);
-
-        argc = args.size();
-
-        // +1 here for the terminating NULL
-        argv = new wxChar *[argc + 1];
-        for ( int i = 0; i < argc; i++ )
-        {
-            argv[i] = wxStrdup(args[i].t_str());
-        }
-
-        // argv[] must be NULL-terminated
-        argv[argc] = NULL;
-    }
-
-    ~wxMSWCommandLineArguments()
-    {
-        if ( !argc )
-            return;
-
-        for ( int i = 0; i < argc; i++ )
-        {
-            free(argv[i]);
-        }
-
-        wxDELETEA(argv);
-        argc = 0;
-    }
-#endif // wxUSE_UNICODE/!wxUSE_UNICODE
-
-    int argc;
-    wxChar **argv;
-};
-
-static wxMSWCommandLineArguments wxArgs;
-
 #if wxUSE_GUI
 
 // common part of wxMSW-specific wxEntryStart() and wxEntry() overloads
@@ -276,14 +193,16 @@ wxMSWEntryCommon(HINSTANCE hInstance, int nCmdShow)
     wxSetInstance(hInstance);
 #ifdef __WXMSW__
     wxApp::m_nCmdShow = nCmdShow;
+#else
+    wxUnusedVar(nCmdShow);
 #endif
 
-    wxArgs.Init();
+    wxInitData::Get().MSWInitialize();
 
     return true;
 }
 
-WXDLLEXPORT bool wxEntryStart(HINSTANCE hInstance,
+WXDLLIMPEXP_CORE bool wxEntryStart(HINSTANCE hInstance,
                               HINSTANCE WXUNUSED(hPrevInstance),
                               wxCmdLineArgType WXUNUSED(pCmdLine),
                               int nCmdShow)
@@ -291,18 +210,20 @@ WXDLLEXPORT bool wxEntryStart(HINSTANCE hInstance,
     if ( !wxMSWEntryCommon(hInstance, nCmdShow) )
        return false;
 
-    return wxEntryStart(wxArgs.argc, wxArgs.argv);
+    auto& initData = wxInitData::Get();
+    return wxEntryStart(initData.argc, initData.argv);
 }
 
-WXDLLEXPORT int wxEntry(HINSTANCE hInstance,
+WXDLLIMPEXP_CORE int wxEntry(HINSTANCE hInstance,
                         HINSTANCE WXUNUSED(hPrevInstance),
                         wxCmdLineArgType WXUNUSED(pCmdLine),
                         int nCmdShow)
 {
     if ( !wxMSWEntryCommon(hInstance, nCmdShow) )
-        return -1;
+        return wxApp::GetFatalErrorExitCode();
 
-    return wxEntry(wxArgs.argc, wxArgs.argv);
+    auto& initData = wxInitData::Get();
+    return wxEntry(initData.argc, initData.argv);
 }
 
 #endif // wxUSE_GUI
@@ -315,12 +236,13 @@ WXDLLEXPORT int wxEntry(HINSTANCE hInstance,
 
 int wxEntry()
 {
-    wxArgs.Init();
+    wxInitData::Get().MSWInitialize();
 
-    return wxEntry(wxArgs.argc, wxArgs.argv);
+    auto& initData = wxInitData::Get();
+    return wxEntry(initData.argc, initData.argv);
 }
 
-HINSTANCE wxhInstance = 0;
+static HINSTANCE wxhInstance;
 
 extern "C" HINSTANCE wxGetInstance()
 {

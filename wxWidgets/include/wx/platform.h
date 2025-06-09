@@ -56,7 +56,7 @@
 #    ifndef MAC_OS_X_VERSION_10_16
 #       define MAC_OS_X_VERSION_10_16 101600
 #    endif
-#    ifndef MAC_OS_X_VERSION_10_16
+#    ifndef MAC_OS_VERSION_11_0
 #       define MAC_OS_VERSION_11_0 110000
 #    endif
 #    if __MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_13
@@ -82,7 +82,6 @@
     define it ourselves if any of the following macros is defined:
 
     - MSVC _WIN32 (notice that this is also defined under Win64)
-    - Borland __WIN32__
     - Our __WXMSW__ which selects Windows as platform automatically
  */
 #if defined(_WIN32) || defined(__WIN32__) || defined(__WXMSW__)
@@ -93,7 +92,7 @@
 
 #if defined(__WINDOWS__)
     /* Select wxMSW under Windows if no other port is specified. */
-#   if !defined(__WXMSW__) && !defined(__WXMOTIF__) && !defined(__WXGTK__) && !defined(__WXX11__) && !defined(__WXQT__)
+#   if !defined(__WXMSW__) && !defined(__WXGTK__) && !defined(__WXX11__) && !defined(__WXQT__)
 #       define __WXMSW__
 #   endif
 
@@ -184,82 +183,29 @@
     #endif
 #endif /* ia64 */
 
-#if defined(_M_MPPC) || defined(__PPC__) || defined(__ppc__)
-    #ifndef __POWERPC__
-        #define __POWERPC__
-    #endif
-#endif /* alpha */
-
-#if defined(_M_ALPHA) || defined(__AXP__)
-    #ifndef __ALPHA__
-        #define __ALPHA__
-    #endif
-#endif /* alpha */
-
-
 /*
-   adjust the Unicode setting: wxUSE_UNICODE should be defined as 0 or 1
-   and is used by wxWidgets, _UNICODE and/or UNICODE may be defined or used by
-   the system headers so bring these settings in sync
+   Always define wxUSE_UNICODE as 1 for compatibility.
+
+   Additionally, define _UNICODE and UNICODE too: this is used by MSW SDK/CRT
+   headers and also may be used by wx applications code.
  */
 
-/* set wxUSE_UNICODE to 1 if UNICODE or _UNICODE is defined */
-#if defined(_UNICODE) || defined(UNICODE)
-#   undef wxUSE_UNICODE
+#ifdef wxUSE_UNICODE
+#   if wxUSE_UNICODE != 1
+#       error "wxUSE_UNICODE may be only defined as 1"
+#   endif
+#else
 #   define wxUSE_UNICODE 1
-#else /* !UNICODE */
-#   ifndef wxUSE_UNICODE
-#       define wxUSE_UNICODE 0
-#   endif
-#endif /* UNICODE/!UNICODE */
+#endif
 
-/* and vice versa: define UNICODE and _UNICODE if wxUSE_UNICODE is 1 */
-#if wxUSE_UNICODE
-#   ifndef _UNICODE
-#       define _UNICODE
-#   endif
-#   ifndef UNICODE
-#       define UNICODE
-#   endif
-#endif /* wxUSE_UNICODE */
+#ifndef _UNICODE
+#    define _UNICODE
+#endif
+#ifndef UNICODE
+#    define UNICODE
+#endif
 
 
-/*
-   test for old versions of Borland C, normally need at least 5.82, Turbo
-   explorer, available for free at http://www.turboexplorer.com/downloads
-*/
-
-
-/*
-    Older versions of Borland C have some compiler bugs that need
-    workarounds. Mostly pertains to the free command line compiler 5.5.1.
-*/
-#if defined(__BORLANDC__) && (__BORLANDC__ <= 0x551)
-    /*
-        The Borland free compiler is unable to handle overloaded enum
-        comparisons under certain conditions e.g. when any class has a
-        conversion ctor for an integral type and there's an overload to
-        compare between an integral type and that class type.
-    */
-#   define wxCOMPILER_NO_OVERLOAD_ON_ENUM
-
-    /*
-        This is needed to overcome bugs in 5.5.1 STL, linking errors will
-        result if it is not defined.
-     */
-#   define _RWSTD_COMPILE_INSTANTIATE
-
-    /*
-        Preprocessor in older Borland compilers have major problems
-        concatenating with ##. Specifically, if the string operands being
-        concatenated have special meaning (e.g. L"str", 123i64 etc)
-        then ## will not concatenate the operands correctly.
-
-        As a workaround, define wxPREPEND* and wxAPPEND* without using
-        wxCONCAT_HELPER.
-    */
-#   define wxCOMPILER_BROKEN_CONCAT_OPER
-#endif /* __BORLANDC__ */
 
 /*
    OS: then test for generic Unix defines, then for particular flavours and
@@ -289,12 +235,12 @@
 #       endif
 #    endif  /* SGI */
 
-#    if defined(__INNOTEK_LIBC__)
+#    if defined(__INNOTEK_LIBC__) && !defined(_GNU_SOURCE)
         /* Ensure visibility of strnlen declaration */
 #        define _GNU_SOURCE
 #    endif
 
-#    if defined(__CYGWIN__)
+#    if defined(__CYGWIN__) && !defined(_GNU_SOURCE)
         /* Ensure visibility of Dl_info and pthread_setconcurrency declarations */
 #        define _GNU_SOURCE
 #    endif
@@ -352,7 +298,7 @@
 #    define __UNIX__
 #endif /* Unix */
 
-#if defined(__WXMOTIF__) || defined(__WXX11__)
+#if defined(__WXX11__)
 #    define __X__
 #endif
 
@@ -369,17 +315,12 @@
 #   include "wx/msw/libraries.h"
 #endif
 
-#if defined(__BORLANDC__) || (defined(__GNUC__) && __GNUC__ < 3)
-#define wxNEEDS_CHARPP
-#endif
-
 /*
     Note that wx/msw/gccpriv.h must be included after defining UNICODE and
     _UNICODE macros as it includes _mingw.h which relies on them being set.
  */
 #if ( defined( __GNUWIN32__ ) || defined( __MINGW32__ ) || \
     ( defined( __CYGWIN__ ) && defined( __WINDOWS__ ) ) ) && \
-    !defined(__WXMOTIF__) && \
     !defined(__WXX11__)
 #    include "wx/msw/gccpriv.h"
 #else
@@ -456,6 +397,7 @@
 #ifdef __WXOSX__
 /* setup precise defines according to sdk used */
 #   include <TargetConditionals.h>
+#   include <Availability.h>
 #   if defined(__WXOSX_IPHONE__)
 #       if !( defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE )
 #           error "incorrect SDK for an iPhone build"
@@ -513,8 +455,20 @@
 #        ifndef MAC_OS_X_VERSION_10_16
 #           define MAC_OS_X_VERSION_10_16 101600
 #        endif
-#        ifndef MAC_OS_X_VERSION_10_16
+         /*
+            Note that since macOS 11 there is no more "X" in the names.
+          */
+#        ifndef MAC_OS_VERSION_11_0
 #           define MAC_OS_VERSION_11_0 110000
+#        endif
+#        ifndef MAC_OS_VERSION_12_0
+#           define MAC_OS_VERSION_12_0 120000
+#        endif
+#        ifndef MAC_OS_VERSION_13_0
+#           define MAC_OS_VERSION_13_0 130000
+#        endif
+#        ifndef MAC_OS_VERSION_14_0
+#           define MAC_OS_VERSION_14_0 140000
 #        endif
 #        if __MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_13
 #            ifndef NSAppKitVersionNumber10_10
@@ -538,8 +492,7 @@
 
 /*
    check the consistency of the settings in setup.h: note that this must be
-   done after setting wxUSE_UNICODE correctly as it is used in wx/chkconf.h
-   and after defining the compiler macros which are used in it too
+   done after defining the compiler macros used in wx/chkconf.h
  */
 #include "wx/chkconf.h"
 
@@ -559,11 +512,6 @@
 
 #ifdef __VMS
 #define XtDisplay XTDISPLAY
-#ifdef __WXMOTIF__
-#define XtParent XTPARENT
-#define XtScreen XTSCREEN
-#define XtWindow XTWINDOW
-#endif
 #endif
 
 /* Choose which method we will use for updating menus
@@ -618,7 +566,7 @@
 #       if !__has_feature(cxx_rtti)
 #           define wxNO_RTTI
 #       endif
-#   elif wxCHECK_GCC_VERSION(4, 3)
+#   elif defined(__GNUG__)
 #       ifndef __GXX_RTTI
 #           define wxNO_RTTI
 #       endif

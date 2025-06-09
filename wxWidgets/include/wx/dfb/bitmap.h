@@ -23,20 +23,24 @@ wxDFB_DECLARE_INTERFACE(IDirectFBSurface);
 class WXDLLIMPEXP_CORE wxBitmap : public wxBitmapBase
 {
 public:
-    wxBitmap() {}
+    wxBitmap() = default;
     wxBitmap(const wxIDirectFBSurfacePtr& surface) { Create(surface); }
     wxBitmap(int width, int height, int depth = -1) { Create(width, height, depth); }
     wxBitmap(const wxSize& sz, int depth = -1) { Create(sz, depth); }
+    wxBitmap(int width, int height, const wxDC& dc) { Create(width, height, dc); }
     wxBitmap(const char bits[], int width, int height, int depth = 1);
     wxBitmap(const wxString &filename, wxBitmapType type = wxBITMAP_DEFAULT_TYPE);
     wxBitmap(const char* const* bits);
 #if wxUSE_IMAGE
-    wxBitmap(const wxImage& image, int depth = -1, double WXUNUSED(scale) = 1.0);
+    wxBitmap(const wxImage& image, int depth = -1, double scale = 1.0)
+        { InitFromImage(image, depth, scale); }
+    wxBitmap(const wxImage& image, const wxDC& WXUNUSED(dc))
+        { InitFromImage(image, -1, 1.0); }
 #endif
 
     bool Create(const wxIDirectFBSurfacePtr& surface);
-    bool Create(int width, int height, int depth = wxBITMAP_SCREEN_DEPTH);
-    bool Create(const wxSize& sz, int depth = wxBITMAP_SCREEN_DEPTH)
+    bool Create(int width, int height, int depth = wxBITMAP_SCREEN_DEPTH) final;
+    bool Create(const wxSize& sz, int depth = wxBITMAP_SCREEN_DEPTH) final
         { return Create(sz.GetWidth(), sz.GetHeight(), depth); }
     bool Create(int width, int height, const wxDC& WXUNUSED(dc))
         { return Create(width,height); }
@@ -55,16 +59,13 @@ public:
     virtual wxBitmap GetSubBitmap(const wxRect& rect) const;
 
     virtual bool SaveFile(const wxString &name, wxBitmapType type,
-                          const wxPalette *palette = NULL) const;
+                          const wxPalette *palette = nullptr) const;
     virtual bool LoadFile(const wxString &name, wxBitmapType type = wxBITMAP_DEFAULT_TYPE);
 
 #if wxUSE_PALETTE
     virtual wxPalette *GetPalette() const;
     virtual void SetPalette(const wxPalette& palette);
 #endif
-
-    // copies the contents and mask of the given (colour) icon to the bitmap
-    virtual bool CopyFromIcon(const wxIcon& icon);
 
     static void InitStandardHandlers();
 
@@ -86,7 +87,9 @@ public:
 
 protected:
     virtual wxGDIRefData *CreateGDIRefData() const;
-    virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const;
+    wxNODISCARD virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const;
+
+    void InitFromImage(const wxImage& image, int depth, double scale);
 
     bool CreateWithFormat(int width, int height, int dfbFormat);
 

@@ -29,7 +29,7 @@ wxString ConcatenateDataViewItemValues(wxDataViewCtrl const* dataViewCtrlPtr, wx
 // for the carbon and cocoa environment.
 // ATTENTION
 //  All methods assume that the passed column pointers are
-//  valid (unless a NULL pointer is explicitly allowed
+//  valid (unless a null pointer is explicitly allowed
 //  to be passed)!
 // ATTENTION
 // ---------------------------------------------------------
@@ -61,7 +61,7 @@ public:
   virtual bool         Add          (wxDataViewItem const& parent, wxDataViewItem const& item)       = 0; // adds an item to the native control
   virtual bool         Add          (wxDataViewItem const& parent, wxDataViewItemArray const& items) = 0; // adds items to the native control
   virtual void         Collapse     (wxDataViewItem const& item)                                     = 0; // collapses the passed item in the native control
-  virtual void         EnsureVisible(wxDataViewItem const& item, wxDataViewColumn const* columnPtr)  = 0; // ensures that the passed item's value in the passed column is visible (column pointer can be NULL)
+  virtual void         EnsureVisible(wxDataViewItem const& item, wxDataViewColumn const* columnPtr)  = 0; // ensures that the passed item's value in the passed column is visible (column pointer can be null)
   virtual unsigned int GetCount() const                                                              = 0; // returns the number of items in the native control
   virtual int          GetCountPerPage() const                                                       = 0; // get number of items that fit into a single page
   virtual wxRect       GetRectangle (wxDataViewItem const& item, wxDataViewColumn const* columnPtr)  = 0; // returns the rectangle that is used by the passed item and column in the native control
@@ -90,6 +90,7 @@ public:
   virtual int  GetSelections(wxDataViewItemArray& sel)   const = 0; // returns all selected items in the native control
   virtual bool IsSelected   (wxDataViewItem const& item) const = 0; // checks if the passed item is selected in the native control
   virtual void Select       (wxDataViewItem const& item)       = 0; // selects the passed item in the native control
+  virtual void Select       (wxDataViewItemArray const& items) = 0; // selects the passed items in the native control
   virtual void SelectAll()                                     = 0; // selects all items in the native control
   virtual void Unselect     (wxDataViewItem const& item)       = 0; // unselects the passed item in the native control
   virtual void UnselectAll()                                   = 0; // unselects all items in the native control
@@ -104,7 +105,7 @@ public:
  // other methods
  //
   virtual void DoSetIndent (int indent)                                                                     = 0; // sets the indentation in the native control
-  virtual void DoExpand    (wxDataViewItem const& item)                                                     = 0; // expands the passed item in the native control
+  virtual void DoExpand    (wxDataViewItem const& item, bool expandChildren)                                = 0; // expands the passed item in the native control
 
   virtual void HitTest     (wxPoint const& point, wxDataViewItem& item, wxDataViewColumn*& columnPtr) const = 0; // return the item and column pointer that contains with the passed point
   virtual void SetRowHeight(int height)                                                                     = 0; // sets the height of all rows

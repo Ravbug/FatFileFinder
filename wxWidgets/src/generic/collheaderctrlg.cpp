@@ -13,10 +13,6 @@
 
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
 #include "wx/defs.h"
 
 #if wxUSE_COLLPANE
@@ -85,7 +81,7 @@ wxSize wxGenericCollapsibleHeaderCtrl::DoGetBestClientSize() const
         self = const_cast<wxGenericCollapsibleHeaderCtrl*>(this);
 
     // The code here parallels that of OnPaint() -- except without drawing.
-    wxClientDC dc(self);
+    wxInfoDC dc(self);
 
     wxSize size = wxRendererNative::Get().GetCollapseButtonSize(self, dc);
 

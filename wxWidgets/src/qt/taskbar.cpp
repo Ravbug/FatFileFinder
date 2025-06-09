@@ -8,6 +8,8 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
+#if wxUSE_TASKBARICON
+
 #include "wx/taskbar.h"
 
 #include <QtWidgets/QSystemTrayIcon>
@@ -33,7 +35,7 @@ wxTaskBarIcon::~wxTaskBarIcon()
     delete m_qtSystemTrayIcon;
 }
 
-bool wxTaskBarIcon::SetIcon(const wxIcon& WXUNUSED(icon),
+bool wxTaskBarIcon::SetIcon(const wxBitmapBundle& WXUNUSED(icon),
              const wxString& WXUNUSED(tooltip))
 {
     return false;
@@ -49,3 +51,4 @@ bool wxTaskBarIcon::PopupMenu(wxMenu *WXUNUSED(menu))
     return false;
 }
 
+#endif // wxUSE_TASKBARICON

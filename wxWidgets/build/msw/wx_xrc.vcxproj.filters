@@ -43,6 +43,9 @@
     <ClCompile Include="..\..\src\xrc\xh_bmpcbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\xrc\xh_bookctrlbase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\xrc\xh_bttn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -220,6 +223,9 @@
     <ClCompile Include="..\..\src\xrc\xh_unkwn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\xrc\xh_vlistbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\xrc\xh_wizrd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -255,6 +261,9 @@
       <Filter>Common Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\wx\xrc\xh_bmpcbox.h">
+      <Filter>Common Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\wx\xrc\xh_bookctrlbase.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\wx\xrc\xh_bttn.h">
@@ -432,6 +441,9 @@
       <Filter>Common Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\wx\xrc\xh_unkwn.h">
+      <Filter>Common Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\wx\xrc\xh_vlistbox.h">
       <Filter>Common Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\wx\xrc\xh_wizrd.h">

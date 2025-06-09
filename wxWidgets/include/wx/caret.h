@@ -2,7 +2,6 @@
 // Name:        wx/caret.h
 // Purpose:     wxCaretBase class - the interface of wxCaret
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     23.05.99
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
@@ -15,18 +14,12 @@
 
 #if wxUSE_CARET
 
-// ---------------------------------------------------------------------------
-// forward declarations
-// ---------------------------------------------------------------------------
-
-class WXDLLIMPEXP_FWD_CORE wxWindow;
-class WXDLLIMPEXP_FWD_CORE wxWindowBase;
-
 // ----------------------------------------------------------------------------
 // headers we have to include
 // ----------------------------------------------------------------------------
 
 #include "wx/gdicmn.h"  // for wxPoint, wxSize
+#include "wx/window.h"
 
 // ----------------------------------------------------------------------------
 // A caret is a blinking cursor showing the position where the typed text will
@@ -57,7 +50,7 @@ public:
     }
 
     // a virtual dtor has been provided since this class has virtual members
-    virtual ~wxCaretBase() { }
+    virtual ~wxCaretBase() = default;
 
     // Create() functions - same as ctor but returns the success code
     // --------------------------------------------------------------
@@ -95,7 +88,7 @@ public:
     wxSize GetSize() const { return wxSize(m_width, m_height); }
 
         // get the window we're associated with
-    wxWindow *GetWindow() const { return (wxWindow *)m_window; }
+    wxWindow *GetWindow() const { return static_cast<wxWindow *>(m_window); }
 
         // change the size of the caret
     void SetSize(int width, int height) {
@@ -153,6 +146,7 @@ protected:
         m_window = window;
         m_width = width;
         m_height = height;
+        DoSize();
 
         return true;
     }
@@ -162,15 +156,6 @@ protected:
     virtual void DoHide() = 0;
     virtual void DoMove() = 0;
     virtual void DoSize() { }
-
-    // the common initialization
-    void Init()
-    {
-        m_window = NULL;
-        m_x = m_y = 0;
-        m_width = m_height = 0;
-        m_countVisible = 0;
-    }
 
     // the size of the caret
     int m_width, m_height;
@@ -185,6 +170,14 @@ protected:
     int m_countVisible;
 
 private:
+    void Init()
+    {
+        m_window = nullptr;
+        m_x = m_y = 0;
+        m_width = m_height = 0;
+        m_countVisible = 0;
+    }
+
     wxDECLARE_NO_COPY_CLASS(wxCaretBase);
 };
 

@@ -182,8 +182,8 @@ description for each, such as:
 
 Classes: wxDirDialog
 
-This dialog shows a directory selector dialog, allowing the user to select a
-single directory.
+This dialog shows a directory selector dialog, allowing the user to select
+one or multiple directories.
 
 
 
@@ -211,6 +211,16 @@ Classes: wxNumberEntryDialog
 
 This is a dialog with a numeric entry field. The value that the user entered
 is obtained using wxNumberEntryDialog::GetValue().
+
+
+
+@section overview_cmndlg_cred wxCredentialEntryDialog Overview
+
+Classes: wxCredentialEntryDialog
+
+This is a dialog with user and password entry fields. The values that the
+user entered are obtained using wxCredentialEntryDialog::GetUser() and
+wxCredentialEntryDialog::GetPassword().
 
 
 

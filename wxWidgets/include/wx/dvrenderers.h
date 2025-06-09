@@ -37,19 +37,24 @@ class WXDLLIMPEXP_CORE wxDataViewIconText : public wxObject
 {
 public:
     wxDataViewIconText( const wxString &text = wxEmptyString,
-                        const wxIcon& icon = wxNullIcon )
+                        const wxBitmapBundle& bitmap = wxBitmapBundle() )
         : m_text(text),
-          m_icon(icon)
+          m_bitmap(bitmap)
     { }
 
     void SetText( const wxString &text ) { m_text = text; }
     wxString GetText() const             { return m_text; }
-    void SetIcon( const wxIcon &icon )   { m_icon = icon; }
-    const wxIcon &GetIcon() const        { return m_icon; }
+
+    void SetBitmapBundle(const wxBitmapBundle& bitmap) { m_bitmap = bitmap; }
+    const wxBitmapBundle& GetBitmapBundle() const { return m_bitmap; }
+
+    // These methods exist for compatibility, prefer using the methods above.
+    void SetIcon( const wxIcon &icon ) { m_bitmap = wxBitmapBundle(icon); }
+    wxIcon GetIcon() const { return m_bitmap.GetIcon(wxDefaultSize); }
 
     bool IsSameAs(const wxDataViewIconText& other) const
     {
-        return m_text == other.m_text && m_icon.IsSameAs(other.m_icon);
+        return m_text == other.m_text && m_bitmap.IsSameAs(other.m_bitmap);
     }
 
     bool operator==(const wxDataViewIconText& other) const
@@ -62,14 +67,14 @@ public:
         return !IsSameAs(other);
     }
 
+    wxDECLARE_VARIANT_OBJECT_EXPORTED(wxDataViewIconText, WXDLLIMPEXP_CORE);
+
 private:
     wxString    m_text;
-    wxIcon      m_icon;
+    wxBitmapBundle m_bitmap;
 
     wxDECLARE_DYNAMIC_CLASS(wxDataViewIconText);
 };
-
-DECLARE_VARIANT_OBJECT_EXPORTED(wxDataViewIconText, WXDLLIMPEXP_CORE)
 
 // ----------------------------------------------------------------------------
 // wxDataViewCheckIconText: value class used by wxDataViewCheckIconTextRenderer
@@ -79,7 +84,7 @@ class WXDLLIMPEXP_CORE wxDataViewCheckIconText : public wxDataViewIconText
 {
 public:
     wxDataViewCheckIconText(const wxString& text = wxString(),
-                            const wxIcon& icon = wxNullIcon,
+                            const wxBitmapBundle& icon = wxBitmapBundle(),
                             wxCheckBoxState checkedState = wxCHK_UNDETERMINED)
         : wxDataViewIconText(text, icon),
           m_checkedState(checkedState)
@@ -89,13 +94,13 @@ public:
     wxCheckBoxState GetCheckedState() const { return m_checkedState; }
     void SetCheckedState(wxCheckBoxState state) { m_checkedState = state; }
 
+    wxDECLARE_VARIANT_OBJECT_EXPORTED(wxDataViewCheckIconText, WXDLLIMPEXP_CORE);
+
 private:
     wxCheckBoxState m_checkedState;
 
     wxDECLARE_DYNAMIC_CLASS(wxDataViewCheckIconText);
 };
-
-DECLARE_VARIANT_OBJECT_EXPORTED(wxDataViewCheckIconText, WXDLLIMPEXP_CORE)
 
 // ----------------------------------------------------------------------------
 // wxDataViewRendererBase
@@ -120,7 +125,7 @@ enum wxDataViewCellRenderState
 class WXDLLIMPEXP_CORE wxDataViewValueAdjuster
 {
 public:
-    virtual ~wxDataViewValueAdjuster() {}
+    virtual ~wxDataViewValueAdjuster() = default;
 
     // changes the value to have appearance suitable for highlighted rows
     virtual wxVariant MakeHighlighted(const wxVariant& value) const { return value; }
@@ -150,6 +155,15 @@ public:
 
     wxString GetVariantType() const             { return m_variantType; }
 
+    // Check if the given variant type is compatible with the type expected by
+    // this renderer: by default, just compare it with GetVariantType(), but
+    // can be overridden to accept other types that can be converted to the
+    // type needed by the renderer.
+    virtual bool IsCompatibleVariantType(const wxString& variantType) const
+    {
+        return variantType == GetVariantType();
+    }
+
     // Prepare for rendering the value of the corresponding item in the given
     // column taken from the provided non-null model.
     //
@@ -158,8 +172,9 @@ public:
     // it and should probably be removed in the future.
     //
     // Return true if this cell is non-empty or false otherwise (and also if
-    // the model returned a value of the wrong, i.e. different from our
-    // GetVariantType(), type, in which case a debug error is also logged).
+    // the model returned a value of the wrong type, i.e. such that our
+    // IsCompatibleVariantType() returned false for it, in which case a debug
+    // error is also logged).
     bool PrepareForItem(const wxDataViewModel *model,
                         const wxDataViewItem& item,
                         unsigned column);
@@ -188,7 +203,7 @@ public:
     virtual wxWindow* CreateEditorCtrl(wxWindow * WXUNUSED(parent),
                                        wxRect WXUNUSED(labelRect),
                                        const wxVariant& WXUNUSED(value))
-        { return NULL; }
+        { return nullptr; }
     virtual bool GetValueFromEditorCtrl(wxWindow * WXUNUSED(editor),
                                         wxVariant& WXUNUSED(value))
         { return false; }
@@ -278,7 +293,7 @@ private:
     // make classes hierarchy non linear and arguably even more complex)
     #define wxDataViewCustomRendererRealBase wxDataViewRendererBase
 #else
-    #if defined(__WXGTK20__)
+    #if defined(__WXGTK__)
         #include "wx/gtk/dvrenderer.h"
     #elif defined(__WXMAC__)
         #include "wx/osx/dvrenderer.h"
@@ -361,12 +376,12 @@ public:
 
     // Override the base class virtual method to simply store the attribute so
     // that it can be accessed using GetAttr() from Render() if needed.
-    virtual void SetAttr(const wxDataViewItemAttr& attr) wxOVERRIDE { m_attr = attr; }
+    virtual void SetAttr(const wxDataViewItemAttr& attr) override { m_attr = attr; }
     const wxDataViewItemAttr& GetAttr() const { return m_attr; }
 
     // Store the enabled state of the item so that it can be accessed from
     // Render() via GetEnabled() if needed.
-    virtual void SetEnabled(bool enabled) wxOVERRIDE;
+    virtual void SetEnabled(bool enabled) override;
     bool GetEnabled() const { return m_enabled; }
 
 
@@ -382,7 +397,7 @@ public:
     // Prepare DC to use attributes and call Render().
     void WXCallRender(wxRect rect, wxDC *dc, int state);
 
-    virtual bool IsCustomRenderer() const wxOVERRIDE { return true; }
+    virtual bool IsCustomRenderer() const override { return true; }
 
 protected:
     // helper for GetSize() implementations, respects attributes
@@ -404,7 +419,7 @@ private:
     // declaration as for the native ports
     #include "wx/generic/dvrenderer.h"
     #include "wx/generic/dvrenderers.h"
-#elif defined(__WXGTK20__)
+#elif defined(__WXGTK__)
     #include "wx/gtk/dvrenderers.h"
 #elif defined(__WXMAC__)
     #include "wx/osx/dvrenderers.h"
@@ -426,15 +441,15 @@ public:
     wxDataViewSpinRenderer( int min, int max,
                             wxDataViewCellMode mode = wxDATAVIEW_CELL_EDITABLE,
                             int alignment = wxDVR_DEFAULT_ALIGNMENT );
-    virtual bool HasEditorCtrl() const wxOVERRIDE { return true; }
-    virtual wxWindow* CreateEditorCtrl( wxWindow *parent, wxRect labelRect, const wxVariant &value ) wxOVERRIDE;
-    virtual bool GetValueFromEditorCtrl( wxWindow* editor, wxVariant &value ) wxOVERRIDE;
-    virtual bool Render( wxRect rect, wxDC *dc, int state ) wxOVERRIDE;
-    virtual wxSize GetSize() const wxOVERRIDE;
-    virtual bool SetValue( const wxVariant &value ) wxOVERRIDE;
-    virtual bool GetValue( wxVariant &value ) const wxOVERRIDE;
+    virtual bool HasEditorCtrl() const override { return true; }
+    virtual wxWindow* CreateEditorCtrl( wxWindow *parent, wxRect labelRect, const wxVariant &value ) override;
+    virtual bool GetValueFromEditorCtrl( wxWindow* editor, wxVariant &value ) override;
+    virtual bool Render( wxRect rect, wxDC *dc, int state ) override;
+    virtual wxSize GetSize() const override;
+    virtual bool SetValue( const wxVariant &value ) override;
+    virtual bool GetValue( wxVariant &value ) const override;
 #if wxUSE_ACCESSIBILITY
-    virtual wxString GetAccessibleDescription() const wxOVERRIDE;
+    virtual wxString GetAccessibleDescription() const override;
 #endif // wxUSE_ACCESSIBILITY
 
 private:
@@ -456,15 +471,15 @@ public:
     wxDataViewChoiceRenderer( const wxArrayString &choices,
                             wxDataViewCellMode mode = wxDATAVIEW_CELL_EDITABLE,
                             int alignment = wxDVR_DEFAULT_ALIGNMENT );
-    virtual bool HasEditorCtrl() const wxOVERRIDE { return true; }
-    virtual wxWindow* CreateEditorCtrl( wxWindow *parent, wxRect labelRect, const wxVariant &value ) wxOVERRIDE;
-    virtual bool GetValueFromEditorCtrl( wxWindow* editor, wxVariant &value ) wxOVERRIDE;
-    virtual bool Render( wxRect rect, wxDC *dc, int state ) wxOVERRIDE;
-    virtual wxSize GetSize() const wxOVERRIDE;
-    virtual bool SetValue( const wxVariant &value ) wxOVERRIDE;
-    virtual bool GetValue( wxVariant &value ) const wxOVERRIDE;
+    virtual bool HasEditorCtrl() const override { return true; }
+    virtual wxWindow* CreateEditorCtrl( wxWindow *parent, wxRect labelRect, const wxVariant &value ) override;
+    virtual bool GetValueFromEditorCtrl( wxWindow* editor, wxVariant &value ) override;
+    virtual bool Render( wxRect rect, wxDC *dc, int state ) override;
+    virtual wxSize GetSize() const override;
+    virtual bool SetValue( const wxVariant &value ) override;
+    virtual bool GetValue( wxVariant &value ) const override;
 #if wxUSE_ACCESSIBILITY
-    virtual wxString GetAccessibleDescription() const wxOVERRIDE;
+    virtual wxString GetAccessibleDescription() const override;
 #endif // wxUSE_ACCESSIBILITY
 
     wxString GetChoice(size_t index) const { return m_choices[index]; }
@@ -486,13 +501,13 @@ public:
                               wxDataViewCellMode mode = wxDATAVIEW_CELL_EDITABLE,
                               int alignment = wxDVR_DEFAULT_ALIGNMENT );
 
-    virtual wxWindow* CreateEditorCtrl( wxWindow *parent, wxRect labelRect, const wxVariant &value ) wxOVERRIDE;
-    virtual bool GetValueFromEditorCtrl( wxWindow* editor, wxVariant &value ) wxOVERRIDE;
+    virtual wxWindow* CreateEditorCtrl( wxWindow *parent, wxRect labelRect, const wxVariant &value ) override;
+    virtual bool GetValueFromEditorCtrl( wxWindow* editor, wxVariant &value ) override;
 
-    virtual bool SetValue( const wxVariant &value ) wxOVERRIDE;
-    virtual bool GetValue( wxVariant &value ) const wxOVERRIDE;
+    virtual bool SetValue( const wxVariant &value ) override;
+    virtual bool GetValue( wxVariant &value ) const override;
 #if wxUSE_ACCESSIBILITY
-    virtual wxString GetAccessibleDescription() const wxOVERRIDE;
+    virtual wxString GetAccessibleDescription() const override;
 #endif // wxUSE_ACCESSIBILITY
 };
 
@@ -515,18 +530,20 @@ public:
                            wxDataViewCellMode mode = wxDATAVIEW_CELL_EDITABLE,
                            int align = wxDVR_DEFAULT_ALIGNMENT);
 
-    virtual bool HasEditorCtrl() const wxOVERRIDE { return true; }
-    virtual wxWindow *CreateEditorCtrl(wxWindow *parent, wxRect labelRect, const wxVariant &value) wxOVERRIDE;
-    virtual bool GetValueFromEditorCtrl(wxWindow* editor, wxVariant &value) wxOVERRIDE;
-    virtual bool SetValue(const wxVariant &value) wxOVERRIDE;
-    virtual bool GetValue(wxVariant& value) const wxOVERRIDE;
+    virtual bool HasEditorCtrl() const override { return true; }
+    virtual wxWindow *CreateEditorCtrl(wxWindow *parent, wxRect labelRect, const wxVariant &value) override;
+    virtual bool GetValueFromEditorCtrl(wxWindow* editor, wxVariant &value) override;
+    virtual bool SetValue(const wxVariant &value) override;
+    virtual bool GetValue(wxVariant& value) const override;
 #if wxUSE_ACCESSIBILITY
-    virtual wxString GetAccessibleDescription() const wxOVERRIDE;
+    virtual wxString GetAccessibleDescription() const override;
 #endif // wxUSE_ACCESSIBILITY
-    virtual bool Render( wxRect cell, wxDC *dc, int state ) wxOVERRIDE;
-    virtual wxSize GetSize() const wxOVERRIDE;
+    virtual bool Render( wxRect cell, wxDC *dc, int state ) override;
+    virtual wxSize GetSize() const override;
 
 private:
+    wxString FormatDate() const;
+
     wxDateTime    m_date;
 };
 #else // !wxUSE_DATEPICKCTRL
@@ -559,20 +576,20 @@ public:
     // this to happen.
     void Allow3rdStateForUser(bool allow = true);
 
-    virtual bool SetValue(const wxVariant& value) wxOVERRIDE;
-    virtual bool GetValue(wxVariant& value) const wxOVERRIDE;
+    virtual bool SetValue(const wxVariant& value) override;
+    virtual bool GetValue(wxVariant& value) const override;
 
 #if wxUSE_ACCESSIBILITY
-    virtual wxString GetAccessibleDescription() const wxOVERRIDE;
+    virtual wxString GetAccessibleDescription() const override;
 #endif // wxUSE_ACCESSIBILITY
 
-    virtual wxSize GetSize() const wxOVERRIDE;
-    virtual bool Render(wxRect cell, wxDC* dc, int state) wxOVERRIDE;
+    virtual wxSize GetSize() const override;
+    virtual bool Render(wxRect cell, wxDC* dc, int state) override;
     virtual bool ActivateCell(const wxRect& cell,
                               wxDataViewModel *model,
                               const wxDataViewItem & item,
                               unsigned int col,
-                              const wxMouseEvent *mouseEvent) wxOVERRIDE;
+                              const wxMouseEvent *mouseEvent) override;
 
 private:
     wxSize GetCheckSize() const;

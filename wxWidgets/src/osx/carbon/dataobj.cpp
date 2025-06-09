@@ -2,7 +2,6 @@
 // Name:        src/osx/carbon/dataobj.cpp
 // Purpose:     implementation of wxDataObject class
 // Author:      Stefan Csomor
-// Modified by:
 // Created:     10/21/99
 // Copyright:   (c) 1999 Stefan Csomor
 // Licence:     wxWindows licence
@@ -32,7 +31,11 @@
 #include "wx/osx/private.h"
 #include "wx/osx/private/datatransfer.h"
 
+#include <memory>
+
 static CFStringRef kUTTypeTraditionalMacText = CFSTR("com.apple.traditional-mac-plain-text");
+
+static wxString privateUTIPrefix = "org.wxwidgets.private.";
 
 // ----------------------------------------------------------------------------
 // wxDataFormat
@@ -65,6 +68,7 @@ wxDataFormat::wxDataFormat(const wxDataFormat& rFormat)
 {
     m_format = rFormat.m_format;
     m_type = rFormat.m_type;
+    m_id = rFormat.m_id;
 }
 
 wxDataFormat::wxDataFormat(NativeFormat format)
@@ -80,12 +84,13 @@ wxDataFormat& wxDataFormat::operator=(const wxDataFormat& rFormat)
 {
     m_format = rFormat.m_format;
     m_type = rFormat.m_type;
+    m_id = rFormat.m_id;
     return *this;
 }
 
 wxDataFormat::NativeFormat wxDataFormat::GetFormatForType(wxDataFormatId type)
 {
-    wxDataFormat::NativeFormat f = NULL;
+    wxDataFormat::NativeFormat f = nullptr;
     switch (type)
     {
         case wxDF_TEXT:
@@ -128,7 +133,8 @@ wxDataFormat::NativeFormat wxDataFormat::GetFormatForType(wxDataFormatId type)
 void wxDataFormat::SetType( wxDataFormatId dataType )
 {
     m_type = dataType;
-    m_format = GetFormatForType(dataType);
+    m_format = wxCFRetain(GetFormatForType(dataType));
+    m_id = wxCFStringRef( m_format ).AsString();
 }
 
 void wxDataFormat::AddSupportedTypesForSetting(CFMutableArrayRef types) const
@@ -171,12 +177,16 @@ void wxDataFormat::DoAddSupportedTypes(CFMutableArrayRef cfarray, bool forSettin
 
 wxString wxDataFormat::GetId() const
 {
-    return wxCFStringRef(wxCFRetain((CFStringRef)m_format)).AsString();
+    return m_id;
 }
 
 void wxDataFormat::SetId( NativeFormat format )
 {
-    m_format = format;
+    m_format = wxCFRetain(format);
+    m_id = wxCFStringRef( m_format ).AsString();
+    if ( m_id.StartsWith(privateUTIPrefix) )
+        m_id = m_id.Mid(privateUTIPrefix.length());
+
     if ( UTTypeConformsTo( (CFStringRef)format, kUTTypeHTML ) )
     {
         m_type = wxDF_HTML;
@@ -219,8 +229,27 @@ void wxDataFormat::SetId( NativeFormat format )
 void wxDataFormat::SetId( const wxString& zId )
 {
     m_type = wxDF_PRIVATE;
-    // since it is private, no need to conform to anything ...
-    m_format = wxCFStringRef(zId);
+    // in newer macOS version this must conform to a UTI
+    // https://developer.apple.com/library/archive/documentation/General/Conceptual/DevPedia-CocoaCore/UniformTypeIdentifier.html
+
+    // first filter characters
+    wxString utiString = zId;
+    wxString::iterator it;
+    for (it = utiString.begin(); it != utiString.end(); ++it)
+    {
+        wxUniChar c = *it;
+        if ( !( c >= 'A' && c <='Z') && !( c >= 'a' && c <='z') && !( c >= '0' && c <='9') &&
+            c != '.' && c !='-' )
+            *it= '-';
+    }
+
+    m_id = utiString;
+
+    // make sure it follows a reverse DNS notation
+    if ( utiString.Find('.') != wxNOT_FOUND )
+        m_format = wxCFStringRef(utiString);
+    else
+        m_format = wxCFStringRef(privateUTIPrefix+utiString);
 }
 
 bool wxDataFormat::operator==(const wxDataFormat& format) const
@@ -272,7 +301,7 @@ void wxDataObject::WriteToSink(wxOSXDataSink * datatransfer) const
     wxScopedArray<wxDataFormat> array(GetFormatCount());
     GetAllFormats( array.get() );
 
-    wxOSXDataSinkItem* sinkItem = NULL;
+    wxOSXDataSinkItem* sinkItem = nullptr;
 
     for (size_t i = 0; i < GetFormatCount(); i++)
     {
@@ -307,7 +336,7 @@ void wxDataObject::WriteToSink(wxOSXDataSink * datatransfer) const
         size_t sz = datasize + 4;
         wxMemoryBuffer databuf( datasize+4 );
         void* buf = databuf.GetWriteBuf(datasize+4);
-        if ( buf != NULL )
+        if ( buf != nullptr )
         {
             // empty the buffer because in some case GetDataHere does not fill buf
             memset( buf, 0, sz );
@@ -322,11 +351,7 @@ void wxDataObject::WriteToSink(wxOSXDataSink * datatransfer) const
                 {
                     wxString filenames;
                     
-#if wxUSE_UNICODE
                     filenames = wxString( (const char*)buf, *wxConvFileName );
-#else
-                    filenames = wxString (wxConvLocal.cWC2WX(wxConvFileName->cMB2WC( (const char*)buf)));
-#endif
                     wxArrayString files = wxStringTokenize( filenames, wxT("\n"), wxTOKEN_STRTOK );
 
                     for ( size_t j = 0 ; j < files.GetCount(); ++j )
@@ -363,7 +388,7 @@ bool wxDataObject::ReadFromSource(wxDataObject * source)
             
             if (size == 0)
             {
-                SetData( format, 0, 0 );
+                SetData( format, 0, nullptr );
             }
             else
             {
@@ -399,7 +424,7 @@ bool wxDataObject::ReadFromSource(wxOSXDataSource * source)
             
             for ( size_t itemIndex = 0; itemIndex < itemCount && !transferred; ++itemIndex)
             {
-                wxScopedPtr<const wxOSXDataSourceItem> sitem(source->GetItem(itemIndex));
+                std::unique_ptr<const wxOSXDataSourceItem> sitem(source->GetItem(itemIndex));
                 
                 wxDataFormat::NativeFormat nativeFormat = sitem->AvailableType(typesarray);
                 CFDataRef flavorData = sitem->DoGetData(nativeFormat);
@@ -440,10 +465,10 @@ bool wxDataObject::ReadFromSource(wxOSXDataSource * source)
                         {
                             // revert the translation and decomposition to arrive at a proper utf8 string again
                             
-                            wxCFRef<CFURLRef> url = CFURLCreateWithBytes(kCFAllocatorDefault, (UInt8*) buf, flavorDataSize, kCFStringEncodingUTF8, NULL);
+                            wxCFRef<CFURLRef> url = CFURLCreateWithBytes(kCFAllocatorDefault, (UInt8*) buf, flavorDataSize, kCFStringEncodingUTF8, nullptr);
                             wxCFStringRef cfString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
                                 
-                            CFMutableStringRef cfMutableString = CFStringCreateMutableCopy(NULL, 0, cfString);
+                            CFMutableStringRef cfMutableString = CFStringCreateMutableCopy(nullptr, 0, cfString);
                             CFStringNormalize(cfMutableString, kCFStringNormalizationFormC);
                             // cfMutableString is released by the wxCFStringRef
                             wxString path = wxCFStringRef(cfMutableString).AsString();
@@ -541,9 +566,9 @@ bool wxDataObject::CanReadFromSource( wxDataObject * source ) const
 
 void wxDataObject::AddSupportedTypes( CFMutableArrayRef cfarray, Direction dir) const
 {
-    size_t nFormats = GetFormatCount(wxDataObject::Set);
-    wxScopedArray<wxDataFormat> array(GetFormatCount());
-    GetAllFormats(array.get(), wxDataObject::Set);
+    size_t nFormats = GetFormatCount(dir);
+    wxScopedArray<wxDataFormat> array(nFormats);
+    GetAllFormats(array.get(), dir);
 
     for (size_t i = 0; i < nFormats; i++)
     {
@@ -553,19 +578,6 @@ void wxDataObject::AddSupportedTypes( CFMutableArrayRef cfarray, Direction dir) 
             array[i].AddSupportedTypesForSetting(cfarray);
     }
 }
-
-// ----------------------------------------------------------------------------
-// wxTextDataObject
-// ----------------------------------------------------------------------------
-
-#if wxUSE_UNICODE
-void wxTextDataObject::GetAllFormats(wxDataFormat *formats,
-                                     wxDataObjectBase::Direction WXUNUSED(dir)) const
-{
-    *formats++ = wxDataFormat(wxDF_UNICODETEXT);
-    *formats = wxDataFormat(wxDF_TEXT);
-}
-#endif
 
 // ----------------------------------------------------------------------------
 // wxFileDataObject
@@ -586,7 +598,7 @@ void wxFileDataObject::GetFileNames( wxCharBuffer &buf ) const
 
 bool wxFileDataObject::GetDataHere( void *pBuf ) const
 {
-    if (pBuf == NULL)
+    if (pBuf == nullptr)
         return false;
 
     wxCharBuffer buf;
@@ -614,11 +626,7 @@ bool wxFileDataObject::SetData( size_t WXUNUSED(nSize), const void *pBuf )
 {
     wxString filenames;
 
-#if wxUSE_UNICODE
     filenames = wxString( (const char*)pBuf, *wxConvFileName );
-#else
-    filenames = wxString (wxConvLocal.cWC2WX(wxConvFileName->cMB2WC( (const char*)pBuf)));
-#endif
 
     m_filenames = wxStringTokenize( filenames, wxT("\n"), wxTOKEN_STRTOK );
 
@@ -664,10 +672,10 @@ void wxBitmapDataObject::SetBitmap( const wxBitmap& rBitmap )
         CGImageRef cgImageRef = (CGImageRef) m_bitmap.CreateCGImage();
 
         CFMutableDataRef data = CFDataCreateMutable(kCFAllocatorDefault, 0);
-        CGImageDestinationRef destination = CGImageDestinationCreateWithData( data , kUTTypeTIFF , 1 , NULL );
+        CGImageDestinationRef destination = CGImageDestinationCreateWithData( data , kUTTypeTIFF , 1 , nullptr );
         if ( destination )
         {
-            CGImageDestinationAddImage( destination, cgImageRef, NULL );
+            CGImageDestinationAddImage( destination, cgImageRef, nullptr );
             CGImageDestinationFinalize( destination );
             CFRelease( destination );
         }
@@ -679,27 +687,27 @@ void wxBitmapDataObject::SetBitmap( const wxBitmap& rBitmap )
 
 void wxBitmapDataObject::Init()
 {
-    m_pictData = NULL;
+    m_pictData = nullptr;
 }
 
 void wxBitmapDataObject::Clear()
 {
-    if (m_pictData != NULL)
+    if (m_pictData != nullptr)
     {
         CFRelease( m_pictData );
-        m_pictData = NULL;
+        m_pictData = nullptr;
     }
 }
 
 bool wxBitmapDataObject::GetDataHere( void *pBuf ) const
 {
-    if (m_pictData == NULL)
+    if (m_pictData == nullptr)
     {
         wxFAIL_MSG( wxT("attempt to copy empty bitmap failed") );
         return false;
     }
 
-    if (pBuf == NULL)
+    if (pBuf == nullptr)
         return false;
 
     memcpy( pBuf, (const char *)CFDataGetBytePtr(m_pictData), CFDataGetLength(m_pictData) );
@@ -709,7 +717,7 @@ bool wxBitmapDataObject::GetDataHere( void *pBuf ) const
 
 size_t wxBitmapDataObject::GetDataSize() const
 {
-    if (m_pictData != NULL)
+    if (m_pictData != nullptr)
         return CFDataGetLength(m_pictData);
     else
         return 0;
@@ -719,16 +727,16 @@ bool wxBitmapDataObject::SetData( size_t nSize, const void *pBuf )
 {
     Clear();
 
-    if ((pBuf == NULL) || (nSize == 0))
+    if ((pBuf == nullptr) || (nSize == 0))
         return false;
 
-    CGImageRef cgImageRef = NULL;
+    CGImageRef cgImageRef = nullptr;
 
     CFDataRef data = CFDataCreate( kCFAllocatorDefault, (const UInt8*) pBuf, nSize);
-    CGImageSourceRef source = CGImageSourceCreateWithData( data, NULL );
+    CGImageSourceRef source = CGImageSourceCreateWithData( data, nullptr );
     if ( source )
     {
-        cgImageRef = CGImageSourceCreateImageAtIndex(source, 0, NULL);
+        cgImageRef = CGImageSourceCreateImageAtIndex(source, 0, nullptr);
         CFRelease( source );
     }
     m_pictData = data;
@@ -737,7 +745,7 @@ bool wxBitmapDataObject::SetData( size_t nSize, const void *pBuf )
     {
         m_bitmap.Create( cgImageRef );
         CGImageRelease(cgImageRef);
-        cgImageRef = NULL;
+        cgImageRef = nullptr;
     }
 
     return m_bitmap.IsOk();

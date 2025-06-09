@@ -2,7 +2,6 @@
 // Name:        src/common/pickerbase.cpp
 // Purpose:     wxPickerBase class implementation
 // Author:      Francesco Montorsi
-// Modified by:
 // Created:     15/04/2006
 // Copyright:   (c) Francesco Montorsi
 // Licence:     wxWindows licence
@@ -19,9 +18,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_COLOURPICKERCTRL || \
     wxUSE_DIRPICKERCTRL    || \
@@ -93,7 +89,6 @@ bool wxPickerBase::CreateBase(wxWindow *parent,
 
         m_text->Bind(wxEVT_TEXT, &wxPickerBase::OnTextCtrlUpdate, this);
         m_text->Bind(wxEVT_KILL_FOCUS, &wxPickerBase::OnTextCtrlKillFocus, this);
-        m_text->Bind(wxEVT_DESTROY, &wxPickerBase::OnTextCtrlDelete, this);
 
         m_sizer->Add(m_text,
                      wxSizerFlags(1).CentreVertical().Border(wxRIGHT));
@@ -110,18 +105,22 @@ void wxPickerBase::PostCreation()
 
     // For aesthetic reasons, make sure the picker is at least as high as the
     // associated text control and is always at least square, unless we are
-    // explicitly using wxPB_SMALL style to force it to take as little space as
-    // possible.
-    if ( !HasFlag(wxPB_SMALL) )
+    // explicitly using wxPB_SMALL style to force it to take as little
+    // horizontal space as possible.
+    const wxSize pickerBestSize(m_picker->GetBestSize());
+    const wxSize textBestSize( HasTextCtrl() ? m_text->GetBestSize() : wxSize());
+    wxSize pickerMinSize;
+    pickerMinSize.y = wxMax(pickerBestSize.y, textBestSize.y);
+    if ( HasFlag(wxPB_SMALL) )
     {
-        const wxSize pickerBestSize(m_picker->GetBestSize());
-        const wxSize textBestSize( HasTextCtrl() ? m_text->GetBestSize() : wxSize());
-        wxSize pickerMinSize;
-        pickerMinSize.y = wxMax(pickerBestSize.y, textBestSize.y);
-        pickerMinSize.x = wxMax(pickerBestSize.x, pickerMinSize.y);
-        if ( pickerMinSize != pickerBestSize )
-            m_picker->SetMinSize(pickerMinSize);
+        pickerMinSize.x = pickerBestSize.x;
     }
+    else
+    {
+        pickerMinSize.x = wxMax(pickerBestSize.x, pickerMinSize.y);
+    }
+    if ( pickerMinSize != pickerBestSize )
+        m_picker->SetMinSize(pickerMinSize);
 
     SetSizer(m_sizer);
 
@@ -141,7 +140,7 @@ void wxPickerBase::DoSetToolTip(wxToolTip *tip)
 
     // do a copy as wxWindow will own the pointer we pass
     if ( m_text )
-        m_text->SetToolTip(tip ? new wxToolTip(tip->GetTip()) : NULL);
+        m_text->SetToolTip(tip ? new wxToolTip(tip->GetTip()) : nullptr);
 }
 
 #endif // wxUSE_TOOLTIPS
@@ -177,12 +176,6 @@ void wxPickerBase::OnTextCtrlKillFocus(wxFocusEvent& event)
     // don't leave the textctrl empty
     if (m_text && m_text->GetValue().empty())
         UpdateTextCtrlFromPicker();
-}
-
-void wxPickerBase::OnTextCtrlDelete(wxWindowDestroyEvent &)
-{
-    // the textctrl has been deleted; our pointer is invalid!
-    m_text = NULL;
 }
 
 void wxPickerBase::OnTextCtrlUpdate(wxCommandEvent &)

@@ -2,7 +2,6 @@
 // Name:        src/osx/cocoa/combobox.mm
 // Purpose:     wxChoice
 // Author:      Stefan Csomor
-// Modified by:
 // Created:     1998-01-01
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -48,33 +47,6 @@
     }
 }
 
-- (void) dealloc
-{
-    [fieldEditor release];
-    [super dealloc];
-}
-
-// Over-riding NSComboBox onKeyDown method doesn't work for key events.
-// Ensure that we can use our own wxNSTextFieldEditor to catch key events.
-// See windowWillReturnFieldEditor in nonownedwnd.mm.
-// Key events will be caught and handled via wxNSTextFieldEditor onkey...
-// methods in textctrl.mm.
-
-- (void) setFieldEditor:(wxNSTextFieldEditor*) editor
-{
-    if ( editor != fieldEditor )
-    {
-        [editor retain];
-        [fieldEditor release];
-        fieldEditor = editor;
-    }
-}
-
-- (wxNSTextFieldEditor*) fieldEditor
-{
-    return fieldEditor;
-}
-
 - (void)controlTextDidChange:(NSNotification *)aNotification
 {
     wxUnusedVar(aNotification);
@@ -99,7 +71,7 @@
     {
         wxNSTextFieldControl* timpl = dynamic_cast<wxNSTextFieldControl*>(impl);
         if ( timpl )
-            timpl->UpdateInternalSelectionFromEditor(fieldEditor);
+            timpl->UpdateInternalSelectionFromEditor(self.WXFieldEditor);
         impl->DoNotifyFocusLost();
     }
 }
@@ -139,23 +111,30 @@
 - (void)comboBoxSelectionDidChange:(NSNotification *)notification
 {
     wxUnusedVar(notification);
-    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
+    wxNSComboBoxControl* const
+        impl = (wxNSComboBoxControl* ) wxWidgetImpl::FindFromWXWidget( self );
     if ( impl && impl->ShouldSendEvents())
     {
         wxComboBox* wxpeer = static_cast<wxComboBox*>(impl->GetWXPeer());
         if ( wxpeer ) {
             const int sel = wxpeer->GetSelection();
+            const wxString& val = wxpeer->GetString(sel);
+
+            // We need to manually set the new value because at this time it
+            // still contains the old value, but we want GetValue() to return
+            // the new one if it's called from an event handler invoked below.
+            impl->SetStringValue(val);
 
             wxCommandEvent event(wxEVT_COMBOBOX, wxpeer->GetId());
             event.SetEventObject( wxpeer );
             event.SetInt( sel );
-            event.SetString( wxpeer->GetString(sel) );
-            // For some reason, wxComboBox::GetValue will not return the newly selected item 
-            // while we're inside this callback, so use AddPendingEvent to make sure
-            // GetValue() returns the right value.
+            event.SetString( val );
+            wxpeer->HandleWindowEvent( event );
 
-            wxpeer->GetEventHandler()->AddPendingEvent( event );
-
+            wxCommandEvent eventText(wxEVT_TEXT, wxpeer->GetId());
+            eventText.SetEventObject( wxpeer );
+            eventText.SetString( val );
+            wxpeer->HandleWindowEvent( eventText );
         }
     }
 }
@@ -218,7 +197,7 @@ void wxNSComboBoxControl::mouseEvent(WX_NSEvent event, WXWidget slf, void *_cmd)
     bool reset = false;
     wxEventLoop* const loop = (wxEventLoop*) wxEventLoopBase::GetActive();
 
-    if ( loop != NULL && [event type] == NSLeftMouseDown )
+    if ( loop != nullptr && [event type] == NSLeftMouseDown )
     {
         reset = true;
         loop->OSXUseLowLevelWakeup(true);
@@ -265,7 +244,7 @@ int wxNSComboBoxControl::GetNumberOfItems() const
 
 void wxNSComboBoxControl::InsertItem(int pos, const wxString& item)
 {
-    wxCFStringRef itemLabel(  item, m_wxPeer->GetFont().GetEncoding() );
+    wxCFStringRef itemLabel( item );
     NSString* const cocoaStr = itemLabel.AsNSString();
 
     if ( m_wxPeer->HasFlag(wxCB_SORT) )
@@ -287,6 +266,14 @@ void wxNSComboBoxControl::InsertItem(int pos, const wxString& item)
 void wxNSComboBoxControl::RemoveItem(int pos)
 {
     SendEvents(false);
+
+    // Explicitly deselect item being removed
+    int selIdx = [m_comboBox indexOfSelectedItem];
+    if (selIdx!= -1 && selIdx == pos)
+    {
+        [m_comboBox deselectItemAtIndex:selIdx];
+    }
+
     [m_comboBox removeItemAtIndex:pos];
     SendEvents(true);
 }
@@ -301,12 +288,12 @@ void wxNSComboBoxControl::Clear()
 
 wxString wxNSComboBoxControl::GetStringAtIndex(int pos) const
 {
-    return wxCFStringRef::AsString([m_comboBox itemObjectValueAtIndex:pos], m_wxPeer->GetFont().GetEncoding());
+    return wxCFStringRef::AsString([m_comboBox itemObjectValueAtIndex:pos]);
 }
 
 int wxNSComboBoxControl::FindString(const wxString& text) const
 {
-    NSInteger nsresult = [m_comboBox indexOfItemWithObjectValue:wxCFStringRef( text , m_wxPeer->GetFont().GetEncoding() ).AsNSString()];
+    NSInteger nsresult = [m_comboBox indexOfItemWithObjectValue:wxCFStringRef( text ).AsNSString()];
 
     int result;
     if (nsresult == NSNotFound)
@@ -330,11 +317,11 @@ void wxNSComboBoxControl::Dismiss()
 
 void wxNSComboBoxControl::SetEditable(bool editable)
 {
-    // TODO: unfortunately this does not work, setEditable just means the same as CB_READONLY
-    // I don't see a way to access the text field directly
-    
-    // Behavior NONE <- SELECTECTABLE
     [m_comboBox setEditable:editable];
+
+    // When the combobox isn't editable, make sure it is still selectable so the text can be copied
+    if ( !editable )
+        [m_comboBox setSelectable:YES];
 }
 
 wxWidgetImplType* wxWidgetImpl::CreateComboBox( wxComboBox* wxpeer, 
@@ -352,9 +339,12 @@ wxWidgetImplType* wxWidgetImpl::CreateComboBox( wxComboBox* wxpeer,
         [v setNumberOfVisibleItems:999];
     else
         [v setNumberOfVisibleItems:13];
-    if (style & wxCB_READONLY)
-        [v setEditable:NO];
+
     wxNSComboBoxControl* c = new wxNSComboBoxControl( wxpeer, v );
+
+    if (style & wxCB_READONLY)
+        c->SetEditable(false);
+
     return c;
 }
 
@@ -366,7 +356,7 @@ wxSize wxComboBox::DoGetBestSize() const
     int wLine;
     
     {
-        wxClientDC dc(const_cast<wxComboBox*>(this));
+        wxInfoDC dc(const_cast<wxComboBox*>(this));
         
         // Find the widest line
         for(unsigned int i = 0; i < GetCount(); i++)

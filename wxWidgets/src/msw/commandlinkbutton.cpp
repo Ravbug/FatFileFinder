@@ -14,9 +14,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_COMMANDLINKBUTTON
 
@@ -48,7 +45,7 @@ namespace
 
 inline bool HasNativeCommandLinkButton()
 {
-    return wxGetWinVersion() >= wxWinVersion_6;
+    return wxApp::GetComCtl32Version() >= 610;
 }
 
 } // anonymous namespace
@@ -148,7 +145,7 @@ wxSize wxCommandLinkButton::DoGetBestSize() const
 
         wxCommandLinkButton *thisButton =
             const_cast<wxCommandLinkButton *>(this);
-        wxClientDC dc(thisButton);
+        wxInfoDC dc(thisButton);
 
         wxFont noteFont = dc.GetFont();
 

@@ -22,9 +22,6 @@
 // for compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if defined(__BORLANDC__)
-    #pragma hdrstop
-#endif
 
 #if wxUSE_GLCANVAS
 
@@ -103,23 +100,14 @@ bool wxGLCanvas::Create(wxWindow *parent,
 
 unsigned long wxGLCanvas::GetXWindow() const
 {
-    return (unsigned long)
-#ifdef __WXMOTIF__
-        GetClientXWindow();
-#else
-        GetClientAreaWindow();
-#endif
+    return (unsigned long)GetClientAreaWindow();
 }
 
 int wxGLCanvas::GetColourIndex(const wxColour& col_)
 {
     wxColour& col = const_cast<wxColour&>(col_);
 
-#ifdef __WXMOTIF__
-    col.AllocColour(GetXDisplay());
-#else
     col.CalcPixel(wxTheApp->GetMainColormap(wxGetDisplay()));
-#endif
 
     return col.GetPixel();
 }

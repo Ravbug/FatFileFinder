@@ -2,7 +2,6 @@
 // Name:        src/common/ctrlcmn.cpp
 // Purpose:     wxControl common interface
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     26.07.99
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
@@ -19,9 +18,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_CONTROLS
 
@@ -281,7 +277,7 @@ namespace
 
 struct EllipsizeCalculator
 {
-    EllipsizeCalculator(const wxString& s, const wxDC& dc,
+    EllipsizeCalculator(const wxString& s, const wxReadOnlyDC& dc,
                         int maxFinalWidthPx, int replacementWidthPx,
                         int flags)
         :
@@ -293,7 +289,9 @@ struct EllipsizeCalculator
           m_maxFinalWidthPx(maxFinalWidthPx),
           m_replacementWidthPx(replacementWidthPx)
     {
+#if wxDEBUG_LEVEL
         size_t expectedOffsetsCount = s.length();
+#endif
 
         // Where ampersands are used as mnemonic indicator they should not
         // affect the overall width of the string and must be removed from the
@@ -325,15 +323,16 @@ struct EllipsizeCalculator
                         m_charOffsetsPx.Insert(w, n);
                         lastWasMnemonic = true;
                     }
+#if wxDEBUG_LEVEL
                     else // Last character is an ampersand.
                     {
                         // This ampersand is removed by RemoveMnemonics() and
-                        // won't be displayed when this string is drawn
-                        // neither, so we intentionally don't use it for our
-                        // calculations neither -- just account for this in the
-                        // assert below.
+                        // won't be displayed when this string is drawn, so we
+                        // intentionally don't use it for our calculations --
+                        // just account for this in the assert below.
                         expectedOffsetsCount--;
                     }
+#endif // wxDEBUG_LEVEL
                 }
                 else // Not an ampersand used to introduce a mnemonic.
                 {
@@ -450,7 +449,7 @@ struct EllipsizeCalculator
 
     // inputs:
     wxString m_str;
-    const wxDC& m_dc;
+    const wxReadOnlyDC& m_dc;
     int m_maxFinalWidthPx;
     int m_replacementWidthPx;
     wxArrayInt m_charOffsetsPx;
@@ -458,7 +457,7 @@ struct EllipsizeCalculator
     bool m_isOk;
 };
 
-wxString DoEllipsizeSingleLine(const wxString& curLine, const wxDC& dc,
+wxString DoEllipsizeSingleLine(const wxString& curLine, const wxReadOnlyDC& dc,
                                wxEllipsizeMode mode, int maxFinalWidthPx,
                                int replacementWidthPx, int flags)
 {
@@ -576,7 +575,7 @@ wxString DoEllipsizeSingleLine(const wxString& curLine, const wxDC& dc,
 
 
 /* static */
-wxString wxControlBase::Ellipsize(const wxString& label, const wxDC& dc,
+wxString wxControlBase::Ellipsize(const wxString& label, const wxReadOnlyDC& dc,
                                   wxEllipsizeMode mode, int maxFinalWidth,
                                   int flags)
 {
@@ -622,25 +621,5 @@ wxString wxControlBase::Ellipsize(const wxString& label, const wxDC& dc,
 
     return ret;
 }
-
-// ----------------------------------------------------------------------------
-// wxStaticBitmap
-// ----------------------------------------------------------------------------
-
-#if wxUSE_STATBMP
-
-wxStaticBitmapBase::~wxStaticBitmapBase()
-{
-    // this destructor is required for Darwin
-}
-
-wxSize wxStaticBitmapBase::DoGetBestSize() const
-{
-    // the fall back size is completely arbitrary
-    const wxBitmap bmp = GetBitmap();
-    return bmp.IsOk() ? bmp.GetScaledSize() : wxSize(16, 16);
-}
-
-#endif // wxUSE_STATBMP
 
 #endif // wxUSE_CONTROLS

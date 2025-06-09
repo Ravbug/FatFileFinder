@@ -17,9 +17,6 @@
 
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_BITMAPCOMBOBOX
 
@@ -30,6 +27,11 @@
 #endif
 
 #include "wx/gtk/private.h"
+#include "wx/gtk/private/value.h"
+#include "wx/gtk/private/gtk3-compat.h"
+#if GTK_CHECK_VERSION(3,10,0)
+    #include <cairo-gobject.h>
+#endif
 
 // ============================================================================
 // implementation
@@ -112,7 +114,21 @@ void wxBitmapComboBox::GTKCreateComboBoxWidget()
 {
     GtkListStore *store;
 
-    store = gtk_list_store_new( 2, G_TYPE_OBJECT, G_TYPE_STRING );
+    GType imageType;
+    const char* imageAttr;
+#if GTK_CHECK_VERSION(3,10,0)
+    if (wx_is_at_least_gtk3(10))
+    {
+        imageType = CAIRO_GOBJECT_TYPE_SURFACE;
+        imageAttr = "surface";
+    }
+    else
+#endif
+    {
+        imageType = G_TYPE_OBJECT;
+        imageAttr = "pixbuf";
+    }
+    store = gtk_list_store_new(2, imageType, G_TYPE_STRING);
 
     if ( HasFlag(wxCB_READONLY) )
     {
@@ -140,7 +156,7 @@ void wxBitmapComboBox::GTKCreateComboBoxWidget()
     gtk_cell_layout_pack_start( GTK_CELL_LAYOUT(m_widget),
                                 imageRenderer, FALSE);
     gtk_cell_layout_add_attribute( GTK_CELL_LAYOUT(m_widget),
-                                   imageRenderer, "pixbuf", 0);
+                                   imageRenderer, imageAttr, 0);
 
     GtkCellRenderer* textRenderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_end( GTK_CELL_LAYOUT(m_widget),
@@ -153,7 +169,7 @@ wxBitmapComboBox::~wxBitmapComboBox()
 {
 }
 
-GtkWidget* wxBitmapComboBox::GetConnectWidget()
+GtkWidget* wxBitmapComboBox::GetConnectWidget() const
 {
     if ( GetEntry() )
         return wxComboBox::GetConnectWidget();
@@ -184,28 +200,42 @@ wxSize wxBitmapComboBox::DoGetBestSize() const
 // Item manipulation
 // ----------------------------------------------------------------------------
 
-void wxBitmapComboBox::SetItemBitmap(unsigned int n, const wxBitmap& bitmap)
+void wxBitmapComboBox::SetItemBitmap(unsigned int n, const wxBitmapBundle& bitmap)
 {
-    if ( bitmap.IsOk() )
+    wxBitmap bmp = bitmap.GetBitmapFor(this);
+    if ( bmp.IsOk() )
     {
         if ( m_bitmapSize.x < 0 )
         {
-            m_bitmapSize.x = bitmap.GetWidth();
-            m_bitmapSize.y = bitmap.GetHeight();
+            m_bitmapSize = bmp.GetLogicalSize();
         }
 
         GtkComboBox* combobox = GTK_COMBO_BOX( m_widget );
         GtkTreeModel *model = gtk_combo_box_get_model( combobox );
         GtkTreeIter iter;
 
-        if ( gtk_tree_model_iter_nth_child( model, &iter, NULL, n ) )
+        if ( gtk_tree_model_iter_nth_child( model, &iter, nullptr, n ) )
         {
-            GValue value0 = G_VALUE_INIT;
-            g_value_init( &value0, G_TYPE_OBJECT );
-            g_value_set_object( &value0, bitmap.GetPixbuf() );
+            wxGtkValue value0;
+#if GTK_CHECK_VERSION(3,10,0)
+            if (wx_is_at_least_gtk3(10))
+            {
+                g_value_init(value0, CAIRO_GOBJECT_TYPE_SURFACE);
+                cairo_surface_t* surface = gdk_cairo_surface_create_from_pixbuf(
+                    bmp.GetPixbuf(), 1, gtk_widget_get_window(m_widget));
+                const double scaleFactor = bmp.GetScaleFactor();
+                cairo_surface_set_device_scale(surface, scaleFactor, scaleFactor);
+                g_value_set_boxed(value0, surface);
+                cairo_surface_destroy(surface);
+            }
+            else
+#endif
+            {
+                g_value_init(value0, G_TYPE_OBJECT);
+                g_value_set_object( value0, bmp.GetPixbuf() );
+            }
             gtk_list_store_set_value( GTK_LIST_STORE(model), &iter,
-                                      m_bitmapCellIndex, &value0 );
-            g_value_unset( &value0 );
+                                      m_bitmapCellIndex, value0 );
         }
     }
 }
@@ -218,24 +248,41 @@ wxBitmap wxBitmapComboBox::GetItemBitmap(unsigned int n) const
     GtkTreeModel *model = gtk_combo_box_get_model( combobox );
     GtkTreeIter iter;
 
-    if (gtk_tree_model_iter_nth_child (model, &iter, NULL, n))
+    if (gtk_tree_model_iter_nth_child (model, &iter, nullptr, n))
     {
-        GValue value = G_VALUE_INIT;
+        wxGtkValue value;
         gtk_tree_model_get_value( model, &iter,
-                                  m_bitmapCellIndex, &value );
-        GdkPixbuf* pixbuf = (GdkPixbuf*) g_value_get_object( &value );
-        if ( pixbuf )
+                                  m_bitmapCellIndex, value );
+#if GTK_CHECK_VERSION(3,10,0)
+        if (wx_is_at_least_gtk3(10))
         {
-            g_object_ref( pixbuf );
-            bitmap = wxBitmap(pixbuf);
+            cairo_surface_t* surface = static_cast<cairo_surface_t*>(g_value_get_boxed(value));
+            if (surface)
+            {
+                const int w = cairo_image_surface_get_width(surface);
+                const int h = cairo_image_surface_get_height(surface);
+                bitmap = wxBitmap(gdk_pixbuf_get_from_surface(surface, 0, 0, w, h));
+                double sx, sy;
+                cairo_surface_get_device_scale(surface, &sx, &sy);
+                bitmap.SetScaleFactor(sx);
+            }
         }
-        g_value_unset( &value );
+        else
+#endif
+        {
+            GdkPixbuf* pixbuf = (GdkPixbuf*) g_value_get_object( value );
+            if ( pixbuf )
+            {
+                g_object_ref( pixbuf );
+                bitmap = wxBitmap(pixbuf);
+            }
+        }
     }
 
     return bitmap;
 }
 
-int wxBitmapComboBox::Append(const wxString& item, const wxBitmap& bitmap)
+int wxBitmapComboBox::Append(const wxString& item, const wxBitmapBundle& bitmap)
 {
     const int n = wxComboBox::Append(item);
     if ( n != wxNOT_FOUND )
@@ -243,7 +290,7 @@ int wxBitmapComboBox::Append(const wxString& item, const wxBitmap& bitmap)
     return n;
 }
 
-int wxBitmapComboBox::Append(const wxString& item, const wxBitmap& bitmap,
+int wxBitmapComboBox::Append(const wxString& item, const wxBitmapBundle& bitmap,
                              void *clientData)
 {
     const int n = wxComboBox::Append(item, clientData);
@@ -252,7 +299,7 @@ int wxBitmapComboBox::Append(const wxString& item, const wxBitmap& bitmap,
     return n;
 }
 
-int wxBitmapComboBox::Append(const wxString& item, const wxBitmap& bitmap,
+int wxBitmapComboBox::Append(const wxString& item, const wxBitmapBundle& bitmap,
                              wxClientData *clientData)
 {
     const int n = wxComboBox::Append(item, clientData);
@@ -262,7 +309,7 @@ int wxBitmapComboBox::Append(const wxString& item, const wxBitmap& bitmap,
 }
 
 int wxBitmapComboBox::Insert(const wxString& item,
-                             const wxBitmap& bitmap,
+                             const wxBitmapBundle& bitmap,
                              unsigned int pos)
 {
     const int n = wxComboBox::Insert(item, pos);
@@ -271,7 +318,7 @@ int wxBitmapComboBox::Insert(const wxString& item,
     return n;
 }
 
-int wxBitmapComboBox::Insert(const wxString& item, const wxBitmap& bitmap,
+int wxBitmapComboBox::Insert(const wxString& item, const wxBitmapBundle& bitmap,
                              unsigned int pos, wxClientData *clientData)
 {
     const int n = wxComboBox::Insert(item, pos, clientData);
@@ -280,29 +327,13 @@ int wxBitmapComboBox::Insert(const wxString& item, const wxBitmap& bitmap,
     return n;
 }
 
-int wxBitmapComboBox::Insert(const wxString& item, const wxBitmap& bitmap,
+int wxBitmapComboBox::Insert(const wxString& item, const wxBitmapBundle& bitmap,
                              unsigned int pos, void *clientData)
 {
     const int n = wxComboBox::Insert(item, pos, clientData);
     if ( n != wxNOT_FOUND )
         SetItemBitmap(n, bitmap);
     return n;
-}
-
-void wxBitmapComboBox::GTKInsertComboBoxTextItem( unsigned int n, const wxString& text )
-{
-    GtkComboBox* combobox = GTK_COMBO_BOX( m_widget );
-    GtkTreeModel *model = gtk_combo_box_get_model( combobox );
-    GtkListStore *store = GTK_LIST_STORE( model );
-    GtkTreeIter iter;
-
-    gtk_list_store_insert( store, &iter, n );
-
-    GValue value = G_VALUE_INIT;
-    g_value_init( &value, G_TYPE_STRING );
-    g_value_set_string( &value, wxGTK_CONV( text ) );
-    gtk_list_store_set_value( store, &iter, m_stringCellIndex, &value );
-    g_value_unset( &value );
 }
 
 // ----------------------------------------------------------------------------

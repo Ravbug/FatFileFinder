@@ -2,7 +2,6 @@
 // Name:        src/common/utilscmn.cpp
 // Purpose:     Miscellaneous utility functions and classes
 // Author:      Julian Smart
-// Modified by:
 // Created:     29/01/98
 // Copyright:   (c) 1998 Julian Smart
 // Licence:     wxWindows licence
@@ -21,9 +20,6 @@
 
 #include "wx/debug.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 // This is a needed to get the declaration of the global "environ" variable
 // from MinGW headers which don't declare it there when in strict ANSI mode. We
@@ -108,10 +104,8 @@
 
 #if wxUSE_GUI
     // Include the definitions of GTK_XXX_VERSION constants.
-    #ifdef __WXGTK20__
+    #ifdef __WXGTK__
         #include "wx/gtk/private/wrapgtk.h"
-    #elif defined(__WXGTK__)
-        #include <gtk/gtk.h>
     #elif defined(__WXQT__)
         #include <QtCore/QtGlobal>       // for QT_VERSION_STR constants
     #endif
@@ -129,7 +123,7 @@ static const char hexArray[] = "0123456789ABCDEF";
 // Convert 2-digit hex number to decimal
 int wxHexToDec(const wxString& str)
 {
-    wxCHECK_MSG( str.Length() >= 2, -1, wxS("Invalid argument") );
+    wxCHECK_MSG( str.length() >= 2, -1, wxS("Invalid argument") );
 
     char buf[2];
     buf[0] = str.GetChar(0);
@@ -169,25 +163,18 @@ wxString wxDecToHex(unsigned char dec)
 // Return the current date/time
 wxString wxNow()
 {
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     char *date = ctime(&now);
     date[24] = '\0';
     return wxString::FromAscii(date);
 }
 
-#if WXWIN_COMPATIBILITY_2_8
-void wxUsleep(unsigned long milliseconds)
-{
-    wxMilliSleep(milliseconds);
-}
-#endif
-
-const wxChar *wxGetInstallPrefix()
+wxString wxGetInstallPrefix()
 {
     wxString prefix;
 
     if ( wxGetEnv(wxT("WXPREFIX"), &prefix) )
-        return prefix.c_str();
+        return prefix;
 
 #ifdef wxINSTALL_PREFIX
     return wxT(wxINSTALL_PREFIX);
@@ -225,7 +212,7 @@ bool wxIsPlatformLittleEndian()
  * Class to make it easier to specify platform-dependent values
  */
 
-wxArrayInt*  wxPlatform::sm_customPlatforms = NULL;
+wxArrayInt*  wxPlatform::sm_customPlatforms = nullptr;
 
 void wxPlatform::Copy(const wxPlatform& platform)
 {
@@ -398,7 +385,7 @@ bool wxPlatform::Is(int platform)
 bool wxGetEmailAddress(wxChar *address, int maxSize)
 {
     wxString email = wxGetEmailAddress();
-    if ( !email )
+    if ( email.empty() )
         return false;
 
     wxStrlcpy(address, email.t_str(), maxSize);
@@ -492,7 +479,7 @@ wxString wxGetCurrentDir()
     bool ok;
     do
     {
-        ok = getcwd(dir.GetWriteBuf(len + 1), len) != NULL;
+        ok = getcwd(dir.GetWriteBuf(len + 1), len) != nullptr;
         dir.UngetWriteBuf();
 
         if ( !ok )
@@ -529,7 +516,7 @@ wxString wxGetCurrentDir()
 
 bool wxGetEnvMap(wxEnvVariableHashMap *map)
 {
-    wxCHECK_MSG( map, false, wxS("output pointer can't be NULL") );
+    wxCHECK_MSG( map, false, wxS("output pointer can't be null") );
 
 #if defined(__VISUALC__)
     // This variable only exists to force the CRT to fill the wide char array,
@@ -541,7 +528,7 @@ bool wxGetEnvMap(wxEnvVariableHashMap *map)
 #elif defined(__VMS)
    // Now this routine wil give false for OpenVMS
    // TODO : should we do something with logicals?
-    char **env=NULL;
+    char **env=nullptr;
 #elif defined(__DARWIN__)
 #if wxOSX_USE_COCOA_OR_CARBON
     // Under Mac shared libraries don't have access to the global environ
@@ -552,7 +539,7 @@ bool wxGetEnvMap(wxEnvVariableHashMap *map)
         return false;
     char **env = *penv;
 #else
-    char **env=NULL;
+    char **env=nullptr;
     // todo translate NSProcessInfo environment into map
 #endif
 #else // non-MSVC non-Mac
@@ -602,7 +589,7 @@ bool wxGetEnvMap(wxEnvVariableHashMap *map)
 // ----------------------------------------------------------------------------
 
 // wxDoExecuteWithCapture() helper: reads an entire stream into one array if
-// the stream is non-NULL (it doesn't do anything if it's NULL).
+// the stream is non-null (it doesn't do anything if it's null).
 //
 // returns true if ok, false if error
 #if wxUSE_STREAMS
@@ -680,7 +667,7 @@ static long wxDoExecuteWithCapture(const wxString& command,
 long wxExecute(const wxString& command, wxArrayString& output, int flags,
                const wxExecuteEnv *env)
 {
-    return wxDoExecuteWithCapture(command, output, NULL, flags, env);
+    return wxDoExecuteWithCapture(command, output, nullptr, flags, env);
 }
 
 long wxExecute(const wxString& command,
@@ -717,6 +704,8 @@ wxRegisterId (wxWindowID id)
   if (id >= wxCurrentId)
     wxCurrentId = id + 1;
 }
+
+#if WXWIN_COMPATIBILITY_3_2
 
 // ----------------------------------------------------------------------------
 // wxQsort, adapted by RR to allow user_data
@@ -819,7 +808,7 @@ void wxQsort(void* pbase, size_t total_elems,
       stack_node stack[STACK_SIZE];
       stack_node *top = stack;
 
-      PUSH (NULL, NULL);
+      PUSH (nullptr, nullptr);
 
       while (STACK_NOT_EMPTY)
         {
@@ -961,6 +950,8 @@ void wxQsort(void* pbase, size_t total_elems,
   }
 }
 
+#endif // WXWIN_COMPATIBILITY_3_2
+
 // ----------------------------------------------------------------------------
 // wxGCD
 // Compute the greatest common divisor of two positive integers
@@ -1031,6 +1022,64 @@ unsigned int wxCTZ(wxUint32 x)
 #endif
 }
 
+wxVersionInfo wxGetLibraryVersionInfo()
+{
+    // Only add the last build component to the version if it's non-zero, it's
+    // pretty useless otherwise.
+    wxString ver = wxString::Format
+                   (
+                        wxS("%d.%d.%d"),
+                        wxMAJOR_VERSION,
+                        wxMINOR_VERSION,
+                        wxRELEASE_NUMBER
+                   );
+    if ( wxSUBRELEASE_NUMBER )
+        ver += wxString::Format(wxS(".%d"), wxSUBRELEASE_NUMBER);
+
+    // don't translate these strings, they're for diagnostics purposes only
+    wxString msg;
+    msg.Printf(wxS("wxWidgets Library (%s port)\n")
+               wxS("Version %s (Unicode: %s, debug level: %d),\n")
+#if !wxUSE_REPRODUCIBLE_BUILD
+               wxS("compiled at %s %s\n\n")
+#endif
+               wxS("Runtime version of toolkit used is %d.%d.%d.\n"),
+               wxPlatformInfo::Get().GetPortIdName(),
+               ver,
+#if wxUSE_UNICODE_UTF8
+               "UTF-8",
+#else
+               "wchar_t",
+#endif
+               wxDEBUG_LEVEL,
+#if !wxUSE_REPRODUCIBLE_BUILD
+               // As explained in the comment near these macros definitions,
+               // ccache has special logic for detecting the use of __DATE__
+               // and __TIME__ macros, which doesn't apply to our own versions
+               // of them, hence this comment is needed just to mention the
+               // standard macro names and to ensure that ccache does _not_
+               // cache the results of compiling this file.
+               __TDATE__,
+               __TTIME__,
+#endif
+               wxPlatformInfo::Get().GetToolkitMajorVersion(),
+               wxPlatformInfo::Get().GetToolkitMinorVersion(),
+               wxPlatformInfo::Get().GetToolkitMicroVersion()
+              );
+
+    msg += wxPlatformInfo::Get().GetPlatformDescription();
+
+    const wxString copyrightSign = wxString::FromUTF8("\xc2\xa9");
+
+    return wxVersionInfo(wxS("wxWidgets"),
+                         wxMAJOR_VERSION,
+                         wxMINOR_VERSION,
+                         wxRELEASE_NUMBER,
+                         msg,
+                         wxString::Format(wxS("Copyright %s 1992-2025 wxWidgets team"),
+                                          copyrightSign));
+}
+
 
 #endif // wxUSE_BASE
 
@@ -1040,22 +1089,20 @@ unsigned int wxCTZ(wxUint32 x)
 
 #if wxUSE_GUI
 
-// this function is only really implemented for X11-based ports, including GTK1
-// (GTK2 sets detectable auto-repeat automatically anyhow)
-#if !(defined(__WXX11__) || defined(__WXMOTIF__) || \
-        (defined(__WXGTK__) && !defined(__WXGTK20__)))
+// this function is only really implemented for wxX11.
+#if !defined(__WXX11__)
 bool wxSetDetectableAutoRepeat( bool WXUNUSED(flag) )
 {
     return true;
 }
-#endif // !X11-based port
+#endif // !wxX11
 
 // ----------------------------------------------------------------------------
 // Launch default browser
 // ----------------------------------------------------------------------------
 
 #if defined(__WINDOWS__) && !defined(__WXQT__) || \
-    defined(__WXX11__) || defined(__WXGTK__) || defined(__WXMOTIF__) || \
+    defined(__WXX11__) || defined(__WXGTK__) || \
     defined(__WXOSX__)
 
 // implemented in a port-specific utils source file:
@@ -1197,7 +1244,7 @@ wxString wxStripMenuCodes(const wxString& in, int flags)
 
     for ( wxString::const_iterator it = in.begin(); it != in.end(); ++it )
     {
-        wxChar ch = *it;
+        wxUniChar ch = *it;
         if ( (flags & wxStrip_Mnemonics) && ch == wxT('&') )
         {
             // skip it, it is used to introduce the accel char (or to quote
@@ -1205,7 +1252,7 @@ wxString wxStripMenuCodes(const wxString& in, int flags)
             // can't be the last character of the string
             if ( ++it == in.end() )
             {
-                wxLogDebug(wxT("Invalid menu string '%s'"), in.c_str());
+                wxLogDebug(wxT("Invalid menu string '%s'"), in);
                 break;
             }
             else
@@ -1231,8 +1278,8 @@ wxString wxStripMenuCodes(const wxString& in, int flags)
 // ----------------------------------------------------------------------------
 
 /*
- * If parent is non-NULL, look through children for a label or title
- * matching the specified string. If NULL, look through all top-level windows.
+ * If parent is non-nullptr, look through children for a label or title
+ * matching the specified string. If null, look through all top-level windows.
  *
  */
 
@@ -1244,8 +1291,8 @@ wxFindWindowByLabel (const wxString& title, wxWindow * parent)
 
 
 /*
- * If parent is non-NULL, look through children for a name
- * matching the specified string. If NULL, look through all top-level windows.
+ * If parent is non-null, look through children for a name
+ * matching the specified string. If null, look through all top-level windows.
  *
  */
 
@@ -1282,7 +1329,7 @@ wxFindMenuItemId(wxFrame *frame,
 wxWindow* wxFindWindowAtPoint(wxWindow* win, const wxPoint& pt)
 {
     if (!win->IsShown())
-        return NULL;
+        return nullptr;
 
     // Hack for wxNotebook case: at least in wxGTK, all pages
     // claim to be shown, so we must only deal with the selected one.
@@ -1322,7 +1369,7 @@ wxWindow* wxFindWindowAtPoint(wxWindow* win, const wxPoint& pt)
     if (rect.Contains(pt))
         return win;
 
-    return NULL;
+    return nullptr;
 }
 
 wxWindow* wxGenericFindWindowAtPoint(const wxPoint& pt)
@@ -1339,7 +1386,7 @@ wxWindow* wxGenericFindWindowAtPoint(const wxPoint& pt)
             return found;
         node = node->GetPrevious();
     }
-    return NULL;
+    return nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -1383,56 +1430,6 @@ int wxMessageBox(const wxString& message, const wxString& caption, long style,
     wxFAIL_MSG( wxT("unexpected return code from wxMessageDialog") );
 
     return wxCANCEL;
-}
-
-wxVersionInfo wxGetLibraryVersionInfo()
-{
-    // don't translate these strings, they're for diagnostics purposes only
-    wxString msg;
-    msg.Printf(wxS("wxWidgets Library (%s port)\n")
-               wxS("Version %d.%d.%d (Unicode: %s, debug level: %d),\n")
-#if !wxUSE_REPRODUCIBLE_BUILD
-               wxS("compiled at %s %s\n\n")
-#endif
-               wxS("Runtime version of toolkit used is %d.%d.\n"),
-               wxPlatformInfo::Get().GetPortIdName(),
-               wxMAJOR_VERSION,
-               wxMINOR_VERSION,
-               wxRELEASE_NUMBER,
-#if wxUSE_UNICODE_UTF8
-               "UTF-8",
-#elif wxUSE_UNICODE
-               "wchar_t",
-#else
-               "none",
-#endif
-               wxDEBUG_LEVEL,
-#if !wxUSE_REPRODUCIBLE_BUILD
-               __TDATE__,
-               __TTIME__,
-#endif
-               wxPlatformInfo::Get().GetToolkitMajorVersion(),
-               wxPlatformInfo::Get().GetToolkitMinorVersion()
-              );
-
-#ifdef __WXGTK__
-    msg += wxString::Format("Compile-time GTK+ version is %d.%d.%d.\n",
-                            GTK_MAJOR_VERSION,
-                            GTK_MINOR_VERSION,
-                            GTK_MICRO_VERSION);
-#endif // __WXGTK__
-
-#ifdef __WXQT__
-    msg += wxString::Format("Compile-time QT version is %s.\n",
-                            QT_VERSION_STR);
-#endif // __WXQT__
-
-    return wxVersionInfo(wxS("wxWidgets"),
-                         wxMAJOR_VERSION,
-                         wxMINOR_VERSION,
-                         wxRELEASE_NUMBER,
-                         msg,
-                         wxS("Copyright (c) 1995-2020 wxWidgets team"));
 }
 
 void wxInfoMessageBox(wxWindow* parent)
@@ -1510,36 +1507,44 @@ void wxEnableTopLevelWindows(bool enable)
         node->GetData()->Enable(enable);
 }
 
-#if defined(__WXOSX__) && wxOSX_USE_COCOA
-
-// defined in evtloop.mm
-
-#else
-
 wxWindowDisabler::wxWindowDisabler(bool disable)
 {
     m_disabled = disable;
     if ( disable )
+    {
         DoDisable();
+
+#if defined(__WXOSX__) && wxOSX_USE_COCOA
+        AfterDisable(nullptr);
+#endif
+    }
 }
 
-wxWindowDisabler::wxWindowDisabler(wxWindow *winToSkip)
+wxWindowDisabler::wxWindowDisabler(wxWindow *winToSkip, wxWindow *winToSkip2)
 {
     m_disabled = true;
-    DoDisable(winToSkip);
+
+    if ( winToSkip )
+        m_windowsToSkip.push_back(winToSkip);
+    if ( winToSkip2 )
+        m_windowsToSkip.push_back(winToSkip2);
+
+    DoDisable();
+
+#if defined(__WXOSX__) && wxOSX_USE_COCOA
+    AfterDisable(winToSkip);
+#endif
 }
 
-void wxWindowDisabler::DoDisable(wxWindow *winToSkip)
+void wxWindowDisabler::DoDisable()
 {
     // remember the top level windows which were already disabled, so that we
     // don't reenable them later
-    m_winDisabled = NULL;
-
     wxWindowList::compatibility_iterator node;
     for ( node = wxTopLevelWindows.GetFirst(); node; node = node->GetNext() )
     {
         wxWindow *winTop = node->GetData();
-        if ( winTop == winToSkip )
+        if ( wxVectorContains(m_windowsToSkip, winTop) )
             continue;
 
         // we don't need to disable the hidden or already disabled windows
@@ -1549,12 +1554,7 @@ void wxWindowDisabler::DoDisable(wxWindow *winToSkip)
         }
         else
         {
-            if ( !m_winDisabled )
-            {
-                m_winDisabled = new wxWindowList;
-            }
-
-            m_winDisabled->Append(winTop);
+            m_windowsToSkip.push_back(winTop);
         }
     }
 }
@@ -1564,21 +1564,21 @@ wxWindowDisabler::~wxWindowDisabler()
     if ( !m_disabled )
         return;
 
+#if defined(__WXOSX__) && wxOSX_USE_COCOA
+    BeforeEnable();
+#endif
+
     wxWindowList::compatibility_iterator node;
     for ( node = wxTopLevelWindows.GetFirst(); node; node = node->GetNext() )
     {
         wxWindow *winTop = node->GetData();
-        if ( !m_winDisabled || !m_winDisabled->Find(winTop) )
+        if ( !wxVectorContains(m_windowsToSkip, winTop) )
         {
             winTop->Enable();
         }
-        //else: had been already disabled, don't reenable
+        //else: we didn't disable this window, so don't reenable it either
     }
-
-    delete m_winDisabled;
 }
-
-#endif
 
 // Yield to other apps/messages and disable user input to all windows except
 // the given one

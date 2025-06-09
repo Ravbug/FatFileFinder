@@ -19,6 +19,7 @@
 #include "wx/stockitem.h"
 
 #include "wx/gtk/private/wrapgtk.h"
+#include "wx/gtk/private/image.h"
 
 // ----------------------------------------------------------------------------
 // GTK callbacks
@@ -181,69 +182,85 @@ void wxAnyButton::GTKUpdateBitmap()
     }
 }
 
-void wxAnyButton::GTKDoShowBitmap(const wxBitmap& bitmap)
+void wxAnyButton::GTKDoShowBitmap(const wxBitmapBundle& bitmap)
 {
-    wxASSERT_MSG( bitmap.IsOk(), "invalid bitmap" );
+    wxCHECK_RET(bitmap.IsOk(), "invalid bitmap");
 
-    GtkWidget *image;
-    if ( DontShowLabel() )
-    {
+    GtkWidget* image = gtk_button_get_image(GTK_BUTTON(m_widget));
+    if (image == nullptr)
         image = gtk_bin_get_child(GTK_BIN(m_widget));
-    }
-    else // have both label and bitmap
-    {
-        image = gtk_button_get_image(GTK_BUTTON(m_widget));
-    }
 
-    wxCHECK_RET( image && GTK_IS_IMAGE(image), "must have image widget" );
+    wxCHECK_RET(WX_GTK_IS_IMAGE(image), "must have image widget");
 
-    gtk_image_set_from_pixbuf(GTK_IMAGE(image), bitmap.GetPixbuf());
+    WX_GTK_IMAGE(image)->Set(bitmap);
 }
 
 wxBitmap wxAnyButton::DoGetBitmap(State which) const
 {
-    return m_bitmaps[which];
+    return m_bitmaps[which].GetBitmap(wxDefaultSize);
 }
 
-void wxAnyButton::DoSetBitmap(const wxBitmap& bitmap, State which)
+void wxAnyButton::SetLabel(const wxString& label)
+{
+    BaseType::SetLabel(label);
+
+    if (HasFlag(wxBU_NOTEXT))
+        return;
+
+    GtkWidget* child = gtk_bin_get_child(GTK_BIN(m_widget));
+    if (WX_GTK_IS_IMAGE(child))
+    {
+        // Widget hierarchy is different for image-only and label+image.
+        // Direct-child image must be moved into label+image configuration.
+        gtk_button_set_image(GTK_BUTTON(m_widget), child);
+    }
+}
+
+void wxAnyButton::DoSetBitmap(const wxBitmapBundle& bitmap, State which)
 {
     switch ( which )
     {
         case State_Normal:
-            if ( DontShowLabel() )
-            {
-                // we only have the bitmap in this button, never remove it but
-                // do invalidate the best size when the bitmap (and presumably
-                // its size) changes
-                InvalidateBestSize();
-            }
             // normal image is special: setting it enables images for the button and
             // resetting it to nothing disables all of them
+            if (bitmap.IsOk())
+            {
+                GtkWidget* child = gtk_bin_get_child(GTK_BIN(m_widget));
+                if (!child)
+                {
+                    GtkWidget* image = wxGtkImage::New(this);
+                    gtk_widget_show(image);
+                    gtk_container_add(GTK_CONTAINER(m_widget), image);
+                }
+                else if (!WX_GTK_IS_IMAGE(child))
+                {
+                    GtkWidget* image = gtk_button_get_image(GTK_BUTTON(m_widget));
+                    if (!WX_GTK_IS_IMAGE(image))
+                    {
+                        // Either there is no image or it's a GtkImage created for stock
+                        // buttons, which we want to replace with wxGtkImage for HiDPI
+                        image = wxGtkImage::New(this);
+                        gtk_button_set_image(GTK_BUTTON(m_widget), image);
+
+                        // Setting the image recreates the label, so we need to
+                        // reapply the styles to it to preserve the existing text
+                        // font and colour if they're different from defaults.
+                        GTKApplyWidgetStyle();
+                    }
+                }
+            }
             else
             {
-                GtkWidget *image = gtk_button_get_image(GTK_BUTTON(m_widget));
-                if ( image && !bitmap.IsOk() )
+                GtkWidget* child = gtk_bin_get_child(GTK_BIN(m_widget));
+                if (WX_GTK_IS_IMAGE(child))
+                    gtk_container_remove(GTK_CONTAINER(m_widget), child);
+                else if (gtk_button_get_image(GTK_BUTTON(m_widget)))
                 {
-                    gtk_container_remove(GTK_CONTAINER(m_widget), image);
-                }
-                else if ( !image && bitmap.IsOk() )
-                {
-                    image = gtk_image_new();
-                    gtk_button_set_image(GTK_BUTTON(m_widget), image);
-
-                    // Setting the image recreates the label, so we need to
-                    // reapply the styles to it to preserve the existing text
-                    // font and colour if they're different from defaults.
+                    gtk_button_set_image(GTK_BUTTON(m_widget), nullptr);
                     GTKApplyWidgetStyle();
                 }
-                else // image presence or absence didn't change
-                {
-                    // don't invalidate best size below
-                    break;
-                }
-
-                InvalidateBestSize();
             }
+            InvalidateBestSize();
             break;
 
         case State_Pressed:
@@ -373,6 +390,12 @@ void wxAnyButton::DoSetBitmap(const wxBitmap& bitmap, State which)
 
     m_bitmaps[which] = bitmap;
 
+#if GTK_CHECK_VERSION(3,6,0) && !defined(__WXGTK4__)
+    // Allow explicitly set bitmaps to be shown regardless of theme setting
+    if (gtk_check_version(3,6,0) == nullptr && bitmap.IsOk())
+        gtk_button_set_always_show_image(GTK_BUTTON(m_widget), true);
+#endif
+
     // update the bitmap immediately if necessary, otherwise it will be done
     // when the bitmap for the corresponding state is needed the next time by
     // GTKUpdateBitmap()
@@ -392,7 +415,7 @@ void wxAnyButton::DoSetBitmapPosition(wxDirection dir)
         {
             default:
                 wxFAIL_MSG( "invalid position" );
-                // fall through
+                wxFALLTHROUGH;
 
             case wxLEFT:
                 gtkpos = GTK_POS_LEFT;

@@ -10,9 +10,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #include "wx/cursor.h"
 #include "wx/bitmap.h"
@@ -56,6 +53,25 @@ void wxCursor::InitFromStock(wxStockCursor cursorId)
 #warning "FIXME -- implement the cursor as bitmaps (that's what DFB uses)"
 }
 
+wxCursor::wxCursor(const wxBitmap& bitmap, int hotSpotX, int hotSpotY)
+{
+#warning "FIXME"
+}
+
+#if wxUSE_IMAGE
+
+wxCursor::wxCursor(const wxImage& image)
+{
+#warning "FIXME"
+}
+
+wxCursor::wxCursor(const char* const* xpmData)
+{
+#warning "FIXME"
+}
+
+#endif // wxUSE_IMAGE
+
 wxCursor::wxCursor(const wxString& cursor_file,
                    wxBitmapType type,
                    int WXUNUSED(hotSpotX), int WXUNUSED(hotSpotY))
@@ -78,7 +94,7 @@ wxGDIRefData *wxCursor::CloneGDIRefData(const wxGDIRefData *data) const
 // Global cursor setting
 // ----------------------------------------------------------------------------
 
-void wxSetCursor(const wxCursor& cursor)
+void wxSetCursor(const wxCursorBundle& cursors)
 {
 #warning "FIXME: implement"
 }
@@ -90,20 +106,6 @@ void wxSetCursor(const wxCursor& cursor)
 //-----------------------------------------------------------------------------
 
 #warning "FIXME: this should be common code"
-#if 0
-static wxCursor  gs_savedCursor = wxNullCursor;
-static int       gs_busyCount = 0;
-
-const wxCursor &wxBusyCursor::GetStoredCursor()
-{
-    return gs_savedCursor;
-}
-
-const wxCursor wxBusyCursor::GetBusyCursor()
-{
-    return gs_globalCursor;
-}
-#endif
 
 void wxEndBusyCursor()
 {

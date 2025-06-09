@@ -79,10 +79,9 @@ paragraphs, but here are some of the benefits:
 wxWidgets first-tier "ports", ie implementations of wxWidgets API, are:
 
 @li wxMSW: This is the native port for Microsoft Windows systems (from Windows
-XP up to Windows 10), either 32 or 64 bits. The primarily supported compilers
-are Microsoft Visual C++ (versions 2003 up to 2019 are supported, at least 2005
-is recommended) and GNU g++ (either from the traditional MinGW, TDM-GCC or
-MinGW-w64 distributions).
+7 up to Windows 11), either 32 or 64 bits. The primarily supported compilers
+are Microsoft Visual C++ (versions 2015 up to 2022 are supported) and GNU g++
+(either MinGW-w64 or TDM-GCC).
 
 @li wxGTK: wxGTK2 and wxGTK3 are the ports using GTK+ library version 2.x and
 3.x respectively. They are very similar, with wxGTK2 being, however, more
@@ -91,12 +90,12 @@ NetBSD, Solaris, AIX, ...) and require GTK+ 2.6 or later or GTK+ 3.x. The
 primary supported compiler is GNU g++.
 
 @li wxOSX/Cocoa: This is the native port for Apple computers. wxOSX/Cocoa
-supports 32 or 64 bit Intel Macs running macOS 10.10 or later. The port can be
-built either with g++ or clang.
+supports 32 or 64 bit Intel Macs running macOS 10.10 or later. The port can
+currently be only built using Apple clang.
 
-Other platforms (e.g. iOS - with a minimum requirement of iOS 13), compilers (Borland C++
-under Windows, Sun CC, HP-UX aCC, IBM xlC or SGI mipsPro under Unix) and ports (
-wxQT, wxGTK1, wxX11, wxDFB...) are also supported but to a lesser extent.
+Other platforms (e.g. iOS - with a minimum requirement of iOS 13), compilers
+(Sun CC, HP-UX aCC, IBM xlC or SGI mipsPro under Unix) and ports (wxQT, wxGTK1,
+wxX11, wxDFB...) are also supported but to a lesser extent.
 Please see the @subpage page_port "platform details page" for more information.
 
 There are no CPU speed requirements but the faster (and more) CPU(s) you have,

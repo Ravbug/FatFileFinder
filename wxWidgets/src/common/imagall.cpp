@@ -9,9 +9,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_IMAGE
 
@@ -57,6 +54,9 @@ void wxInitAllImageHandlers()
 #endif
 #if wxUSE_XPM
   wxImage::AddHandler( new wxXPMHandler );
+#endif
+#if wxUSE_LIBWEBP
+  wxImage::AddHandler( new wxWEBPHandler );
 #endif
 }
 

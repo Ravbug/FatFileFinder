@@ -23,9 +23,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_WIZARDDLG
 
@@ -53,10 +50,10 @@ class wxWizardSizer : public wxSizer
 public:
     wxWizardSizer(wxWizard *owner);
 
-    virtual wxSizerItem *Insert(size_t index, wxSizerItem *item) wxOVERRIDE;
+    virtual wxSizerItem *Insert(size_t index, wxSizerItem *item) override;
 
-    virtual void RecalcSizes() wxOVERRIDE;
-    virtual wxSize CalcMin() wxOVERRIDE;
+    virtual void RecalcSizes() override;
+    virtual wxSize CalcMin() override;
 
     // get the max size of all wizard pages
     wxSize GetMaxChildSize();
@@ -64,10 +61,6 @@ public:
     // return the border which can be either set using wxWizard::SetBorder() or
     // have default value
     int GetBorder() const;
-
-    // hide the pages which we temporarily "show" when they're added to this
-    // sizer (see Insert())
-    void HidePages();
 
 private:
     wxSize SiblingSize(wxSizerItem *child);
@@ -124,17 +117,17 @@ wxIMPLEMENT_DYNAMIC_CLASS(wxWizardEvent, wxNotifyEvent);
 
 void wxWizardPage::Init()
 {
-    m_bitmap = wxNullBitmap;
+    m_bitmap = wxBitmapBundle();
 }
 
 wxWizardPage::wxWizardPage(wxWizard *parent,
-                           const wxBitmap& bitmap)
+                           const wxBitmapBundle& bitmap)
 {
     Create(parent, bitmap);
 }
 
 bool wxWizardPage::Create(wxWizard *parent,
-                          const wxBitmap& bitmap)
+                          const wxBitmapBundle& bitmap)
 {
     if ( !wxPanel::Create(parent, wxID_ANY) )
         return false;
@@ -175,27 +168,11 @@ wxSizerItem *wxWizardSizer::Insert(size_t index, wxSizerItem *item)
 {
     m_owner->m_usingSizer = true;
 
-    if ( item->IsWindow() )
-    {
-        // we must pretend that the window is shown as otherwise it wouldn't be
-        // taken into account for the layout -- but avoid really showing it, so
-        // just set the internal flag instead of calling wxWindow::Show()
-        item->GetWindow()->wxWindowBase::Show();
-    }
+    // We want to take account of the pages for the layout even when
+    // they're hidden, so always add the corresponding flag.
+    item->SetFlag(item->GetFlag() | wxRESERVE_SPACE_EVEN_IF_HIDDEN);
 
     return wxSizer::Insert(index, item);
-}
-
-void wxWizardSizer::HidePages()
-{
-    for ( wxSizerItemList::compatibility_iterator node = GetChildren().GetFirst();
-          node;
-          node = node->GetNext() )
-    {
-        wxSizerItem * const item = node->GetData();
-        if ( item->IsWindow() )
-            item->GetWindow()->wxWindowBase::Show(false);
-    }
 }
 
 void wxWizardSizer::RecalcSizes()
@@ -270,12 +247,12 @@ wxSize wxWizardSizer::SiblingSize(wxSizerItem *child)
 void wxWizard::Init()
 {
     m_posWizard = wxDefaultPosition;
-    m_page = NULL;
-    m_firstpage = NULL;
-    m_btnPrev = m_btnNext = NULL;
-    m_statbmp = NULL;
-    m_sizerBmpAndPage = NULL;
-    m_sizerPage = NULL;
+    m_page = nullptr;
+    m_firstpage = nullptr;
+    m_btnPrev = m_btnNext = nullptr;
+    m_statbmp = nullptr;
+    m_sizerBmpAndPage = nullptr;
+    m_sizerPage = nullptr;
     m_border = 5;
     m_started = false;
     m_wasModal = false;
@@ -283,12 +260,14 @@ void wxWizard::Init()
     m_bitmapBackgroundColour = *wxWHITE;
     m_bitmapPlacement = 0;
     m_bitmapMinimumWidth = 115;
+
+    Bind(wxEVT_DPI_CHANGED, &wxWizard::WXHandleDPIChanged, this);
 }
 
 bool wxWizard::Create(wxWindow *parent,
                       int id,
                       const wxString& title,
-                      const wxBitmap& bitmap,
+                      const wxBitmapBundle& bitmap,
                       const wxPoint& pos,
                       long style)
 {
@@ -319,7 +298,7 @@ void wxWizard::AddBitmapRow(wxBoxSizer *mainColumn)
         1, // Vertically stretchable
         wxEXPAND // Horizontal stretching, no border
     );
-    mainColumn->Add(0,5,
+    mainColumn->Add(0, FromDIP(5),
         0, // No vertical stretching
         wxEXPAND // No border, (mostly useless) horizontal stretching
     );
@@ -336,10 +315,10 @@ void wxWizard::AddBitmapRow(wxBoxSizer *mainColumn)
             m_statbmp,
             0, // No horizontal stretching
             wxALL, // Border all around, top alignment
-            5 // Border width
+            FromDIP(5) // Border width
         );
         m_sizerBmpAndPage->Add(
-            5,0,
+            FromDIP(5), 0,
             0, // No horizontal stretching
             wxEXPAND // No border, (mostly useless) vertical stretching
         );
@@ -357,9 +336,9 @@ void wxWizard::AddStaticLine(wxBoxSizer *mainColumn)
         new wxStaticLine(this, wxID_ANY),
         0, // Vertically unstretchable
         wxEXPAND | wxALL, // Border all around, horizontally stretchable
-        5 // Border width
+        FromDIP(5) // Border width
     );
-    mainColumn->Add(0,5,
+    mainColumn->Add(0, FromDIP(5),
         0, // No vertical stretching
         wxEXPAND // No border, (mostly useless) horizontal stretching
     );
@@ -379,11 +358,11 @@ void wxWizard::AddBackNextPair(wxBoxSizer *buttonRow)
         backNextPair,
         0, // No horizontal stretching
         wxALL, // Border all around
-        5 // Border width
+        FromDIP(5) // Border width
     );
 
     backNextPair->Add(m_btnPrev);
-    backNextPair->Add(10, 0,
+    backNextPair->Add(FromDIP(10), 0,
         0, // No horizontal stretching
         wxEXPAND // No border, (mostly useless) vertical stretching
     );
@@ -423,7 +402,7 @@ void wxWizard::AddButtonRow(wxBoxSizer *mainColumn)
 
     // Desired TAB order is 'next', 'cancel', 'help', 'back'. This makes the 'back' button the last control on the page.
     // Create the buttons in the right order...
-    wxButton *btnHelp=0;
+    wxButton *btnHelp=nullptr;
 #ifdef __WXMAC__
     if (GetExtraStyle() & wxWIZARD_EX_HELPBUTTON)
         btnHelp=new wxButton(this, wxID_HELP, wxEmptyString, wxDefaultPosition, wxDefaultSize, buttonStyle);
@@ -440,13 +419,44 @@ void wxWizard::AddButtonRow(wxBoxSizer *mainColumn)
 #endif
     m_btnPrev = new wxButton(this, wxID_BACKWARD, _("< &Back"), wxDefaultPosition, wxDefaultSize, buttonStyle);
 
+    // compute the maximum width of the buttons and use it for all of them
+    // (except for the "Help" button under Mac which is special there)
+    wxSize buttonSize;
+    buttonSize.IncTo(m_btnPrev->GetBestSize());
+    buttonSize.IncTo(m_btnNext->GetBestSize());
+    buttonSize.IncTo(btnCancel->GetBestSize());
+
+    // use the other possible label for the "Next" button temporarily, so that
+    // we could make it big enough to fit it too if it's longer
+    m_btnNext->SetLabel(m_finishLabel);
+    buttonSize.IncTo(m_btnNext->GetBestSize());
+
+#ifndef __WXMAC__
+    if (btnHelp)
+        buttonSize.IncTo(btnHelp->GetBestSize());
+#endif
+
+    // now do make all buttons of the same (and big enough) size
+    m_btnPrev->SetMinSize(buttonSize);
+    m_btnNext->SetMinSize(buttonSize);
+    btnCancel->SetMinSize(buttonSize);
+
+#ifndef __WXMAC__
+    if (btnHelp)
+        btnHelp->SetMinSize(buttonSize);
+#endif
+
+    // restore the initial label of the 'next' button after temporarily
+    // changing it above
+    m_btnNext->SetLabel(m_nextLabel);
+
     if (btnHelp)
     {
         buttonRow->Add(
             btnHelp,
             0, // Horizontally unstretchable
             wxALL, // Border all around, top aligned
-            5 // Border width
+            FromDIP(5) // Border width
             );
 #ifdef __WXMAC__
         // Put stretchable space between help button and others
@@ -460,7 +470,7 @@ void wxWizard::AddButtonRow(wxBoxSizer *mainColumn)
         btnCancel,
         0, // Horizontally unstretchable
         wxALL, // Border all around, top aligned
-        5 // Border width
+        FromDIP(5) // Border width
     );
 }
 
@@ -483,7 +493,7 @@ void wxWizard::DoCreateControls()
         mainColumn,
         1, // Vertical stretching
         mainColumnSizerFlags,
-        5 // Border width
+        FromDIP(5) // Border width
     );
 
     AddBitmapRow(mainColumn);
@@ -528,10 +538,6 @@ bool wxWizard::ShowPage(wxWizardPage *page, bool goingForward)
         if ( m_usingSizer )
         {
             m_sizerBmpAndPage->Add(m_sizerPage, flags);
-
-            // now that our layout is computed correctly, hide the pages
-            // artificially shown in wxWizardSizer::Insert() back again
-            m_sizerPage->HidePages();
         }
     }
 
@@ -579,7 +585,7 @@ bool wxWizard::ShowPage(wxWizardPage *page, bool goingForward)
         wxWizardEvent event(wxEVT_WIZARD_FINISHED, GetId(), false, m_page);
         (void)GetEventHandler()->ProcessEvent(event);
 
-        m_page = NULL;
+        m_page = nullptr;
 
         return true;
     }
@@ -609,10 +615,10 @@ bool wxWizard::ShowPage(wxWizardPage *page, bool goingForward)
     {
         bmp = m_page->GetBitmap();
         if ( !bmp.IsOk() )
-            bmp = m_bitmap;
+            bmp = m_bitmap.GetBitmapFor(this);
 
         if ( !bmpPrev.IsOk() )
-            bmpPrev = m_bitmap;
+            bmpPrev = m_bitmap.GetBitmapFor(this);
 
         if (!GetBitmapPlacement())
         {
@@ -732,7 +738,7 @@ wxSize wxWizard::GetPageSize() const
     if ( m_statbmp )
     {
         // make the page at least as tall as the bitmap
-        pageSize.IncTo(wxSize(0, m_bitmap.GetScaledHeight()));
+        pageSize.IncTo(wxSize(0, m_bitmap.GetPreferredLogicalSizeFor(this).GetHeight()));
     }
 
     if ( m_usingSizer )
@@ -825,7 +831,7 @@ void wxWizard::OnHelp(wxCommandEvent& WXUNUSED(event))
 {
     // this function probably can never be called when we don't have an active
     // page, but a small extra check won't hurt
-    if(m_page != NULL)
+    if(m_page != nullptr)
     {
         // Create and send the help event to the specific page handler
         // event data contains the active page so that context-sensitive
@@ -865,11 +871,28 @@ void wxWizard::OnWizEvent(wxWizardEvent& event)
     }
 }
 
-void wxWizard::SetBitmap(const wxBitmap& bitmap)
+void wxWizard::SetBitmap(const wxBitmapBundle& bitmap)
 {
     m_bitmap = bitmap;
     if (m_statbmp)
         m_statbmp->SetBitmap(m_bitmap);
+}
+
+void wxWizard::WXHandleDPIChanged(wxDPIChangedEvent& event)
+{
+    if ( m_statbmp )
+    {
+        wxBitmap bmp;
+        if ( m_page )
+            bmp = m_page->GetBitmap();
+        if ( !bmp.IsOk() )
+            bmp = m_bitmap.GetBitmapFor(this);
+
+        ResizeBitmap(bmp);
+        m_statbmp->SetBitmap(bmp);
+    }
+
+    event.Skip();
 }
 
 // ----------------------------------------------------------------------------
@@ -946,12 +969,13 @@ bool wxWizard::ResizeBitmap(wxBitmap& bmp)
         wxSize pageSize = m_sizerPage->GetSize();
         if (pageSize == wxSize(0,0))
             pageSize = GetPageSize();
-        int bitmapWidth = wxMax(bmp.GetScaledWidth(), GetMinimumBitmapWidth());
+        int bitmapWidth = wxMax(bmp.GetLogicalWidth(), GetMinimumBitmapWidth());
         int bitmapHeight = pageSize.y;
 
-        if (!m_statbmp->GetBitmap().IsOk() || m_statbmp->GetBitmap().GetScaledHeight() != bitmapHeight)
+        if (!m_statbmp->GetBitmap().IsOk() || m_statbmp->GetBitmap().GetLogicalHeight() != bitmapHeight)
         {
-            wxBitmap bitmap(bitmapWidth, bitmapHeight);
+            wxBitmap bitmap;
+            bitmap.CreateWithLogicalSize(bitmapWidth, bitmapHeight, bmp.GetScaleFactor(), bmp.GetDepth());
             {
                 wxMemoryDC dc;
                 dc.SelectObject(bitmap);
@@ -969,16 +993,16 @@ bool wxWizard::ResizeBitmap(wxBitmap& bmp)
                     if (GetBitmapPlacement() & wxWIZARD_HALIGN_LEFT)
                         x = 0;
                     else if (GetBitmapPlacement() & wxWIZARD_HALIGN_RIGHT)
-                        x = bitmapWidth - bmp.GetScaledWidth();
+                        x = bitmapWidth - bmp.GetLogicalWidth();
                     else
-                        x = (bitmapWidth - bmp.GetScaledWidth())/2;
+                        x = (bitmapWidth - bmp.GetLogicalWidth())/2;
 
                     if (GetBitmapPlacement() & wxWIZARD_VALIGN_TOP)
                         y = 0;
                     else if (GetBitmapPlacement() & wxWIZARD_VALIGN_BOTTOM)
-                        y = bitmapHeight - bmp.GetScaledHeight();
+                        y = bitmapHeight - bmp.GetLogicalHeight();
                     else
-                        y = (bitmapHeight - bmp.GetScaledHeight())/2;
+                        y = (bitmapHeight - bmp.GetLogicalHeight())/2;
 
                     dc.DrawBitmap(bmp, x, y, true);
                     dc.SelectObject(wxNullBitmap);
@@ -994,8 +1018,8 @@ bool wxWizard::ResizeBitmap(wxBitmap& bmp)
 
 bool wxWizard::TileBitmap(const wxRect& rect, wxDC& dc, const wxBitmap& bitmap)
 {
-    int w = bitmap.GetScaledWidth();
-    int h = bitmap.GetScaledHeight();
+    int w = bitmap.GetLogicalWidth();
+    int h = bitmap.GetLogicalHeight();
 
     wxMemoryDC dcMem;
 
@@ -1005,7 +1029,7 @@ bool wxWizard::TileBitmap(const wxRect& rect, wxDC& dc, const wxBitmap& bitmap)
     for (i = rect.x; i < rect.x + rect.width; i += w)
     {
         for (j = rect.y; j < rect.y + rect.height; j+= h)
-            dc.Blit(i, j, bitmap.GetScaledWidth(), bitmap.GetScaledHeight(), & dcMem, 0, 0);
+            dc.Blit(i, j, bitmap.GetLogicalWidth(), bitmap.GetLogicalHeight(), & dcMem, 0, 0);
     }
     dcMem.SelectObject(wxNullBitmap);
 

@@ -18,9 +18,6 @@
 // for compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_HEADERCTRL
 
@@ -116,9 +113,9 @@ int wxHeaderCtrlBase::GetColumnTitleWidth(const wxHeaderColumn& col)
     w += wxRendererNative::Get().GetHeaderButtonMargin(this);
 
     // if a bitmap is used, add space for it and 2px border:
-    wxBitmap bmp = col.GetBitmap();
+    wxBitmapBundle bmp = col.GetBitmapBundle();
     if ( bmp.IsOk() )
-        w += bmp.GetWidth() + 2;
+        w += bmp.GetPreferredLogicalSizeFor(this).GetWidth() + 2;
 
     return w;
 }
@@ -320,6 +317,7 @@ bool wxHeaderCtrlBase::ShowColumnsMenu(const wxPoint& pt, const wxString& title)
     {
         const int columnIndex = rc - wxID_COLUMNS_BASE;
         UpdateColumnVisibility(columnIndex, !GetColumn(columnIndex).IsShown());
+        UpdateColumn(columnIndex);
     }
 
     return true;
@@ -470,6 +468,19 @@ wxHeaderCtrlSimple::UpdateColumnWidthToFit(unsigned int idx, int widthTitle)
     m_cols[idx].SetWidth(wxMax(widthContents, widthTitle));
 
     return true;
+}
+
+void
+wxHeaderCtrlSimple::UpdateColumnVisibility(unsigned int idx, bool show)
+{
+    ShowColumn(idx, show);
+}
+
+void
+wxHeaderCtrlSimple::UpdateColumnsOrder(const wxArrayInt& WXUNUSED(order))
+{
+    // Nothing to do here, we only override this function to prevent the base
+    // class version from asserting that it should be implemented.
 }
 
 void wxHeaderCtrlSimple::OnHeaderResizing(wxHeaderCtrlEvent& evt)

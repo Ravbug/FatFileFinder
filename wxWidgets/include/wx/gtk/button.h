@@ -16,7 +16,7 @@
 class WXDLLIMPEXP_CORE wxButton : public wxButtonBase
 {
 public:
-    wxButton() {}
+    wxButton() = default;
     wxButton(wxWindow *parent, wxWindowID id,
            const wxString& label = wxEmptyString,
            const wxPoint& pos = wxDefaultPosition,
@@ -34,8 +34,8 @@ public:
            const wxValidator& validator = wxDefaultValidator,
            const wxString& name = wxASCII_STR(wxButtonNameStr));
 
-    virtual wxWindow *SetDefault() wxOVERRIDE;
-    virtual void SetLabel( const wxString &label ) wxOVERRIDE;
+    virtual wxWindow *SetDefault() override;
+    virtual void SetLabel( const wxString &label ) override;
 
     // implementation
     // --------------
@@ -54,11 +54,11 @@ public:
     void GTKReleased();
 
 protected:
-    virtual wxSize DoGetBestSize() const wxOVERRIDE;
-    virtual void DoApplyWidgetStyle(GtkRcStyle *style) wxOVERRIDE;
+    virtual wxSize DoGetBestSize() const override;
+    virtual void DoApplyWidgetStyle(GtkRcStyle *style) override;
 
 #if wxUSE_MARKUP
-    virtual bool DoSetLabelMarkup(const wxString& markup) wxOVERRIDE;
+    virtual bool DoSetLabelMarkup(const wxString& markup) override;
 #endif // wxUSE_MARKUP
 
 private:
@@ -66,6 +66,12 @@ private:
 
     // Return the GtkLabel used by this button.
     GtkLabel *GTKGetLabel() const;
+
+#ifndef __WXGTK3__
+    // To mark if special GTK style for buttons with wxBU_EXACTFIT flag
+    // was already defined.
+    static bool m_exactFitStyleDefined;
+#endif // !__WXGTK3__
 
     wxDECLARE_DYNAMIC_CLASS(wxButton);
 };

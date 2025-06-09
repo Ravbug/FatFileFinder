@@ -26,10 +26,10 @@
     class MyCar : public wxObject
     {
     public:
-        MyCar() { }
+        MyCar() = default;
         MyCar( int price );
 
-        bool IsOk() const { return m_refData != NULL; }
+        bool IsOk() const { return m_refData != nullptr; }
 
         bool operator == ( const MyCar& car ) const;
         bool operator != (const MyCar& car) const { return !(*this == car); }
@@ -337,7 +337,7 @@ public:
 
     /**
         The @e delete operator is defined for debugging versions of the library only,
-        when the identifier @c __WXDEBUG__ is defined.
+        when the identifier @c \__WXDEBUG__ is defined.
 
         It takes over memory deallocation, allowing wxDebugContext operations.
     */
@@ -345,11 +345,11 @@ public:
 
     /**
         The @e new operator is defined for debugging versions of the library only, when
-        the identifier @c __WXDEBUG__ is defined.
+        the identifier @c \__WXDEBUG__ is defined.
 
         It takes over memory allocation, allowing wxDebugContext operations.
     */
-    void* operator new(size_t size, const wxString& filename = NULL, int lineNum = 0);
+    void* operator new(size_t size, const wxString& filename = nullptr, int lineNum = 0);
 
 protected:
     /**
@@ -481,7 +481,7 @@ public:
 
 /**
 
-    This is an helper template class primarily written to avoid memory leaks because
+    This is a helper template class primarily written to avoid memory leaks because
     of missing calls to wxRefCounter::DecRef() and wxObjectRefData::DecRef().
 
     Despite the name this template can actually be used as a smart pointer for any
@@ -581,21 +581,27 @@ public:
         Constructor.
 
         @a ptr is a pointer to the reference counted object to which this class points.
-        If @a ptr is not NULL @b T::IncRef() will be called on the object.
+        If @a ptr is not null @b T::IncRef() will be called on the object.
     */
-    wxObjectDataPtr<T>(T* ptr = NULL);
+    wxObjectDataPtr(T* ptr = nullptr);
 
+    ///@{
     /**
         This copy constructor increases the count of the reference counted object to
         which @a tocopy points and then this class will point to, as well.
+
+        Using @a U different from @c T is only supported since wxWidgets 3.1.5.
     */
-    wxObjectDataPtr<T>(const wxObjectDataPtr<T>& tocopy);
+    template <typename U>
+    wxObjectDataPtr(const wxObjectDataPtr<U>& tocopy);
+    wxObjectDataPtr(const wxObjectDataPtr<T>& tocopy);
+    ///@}
 
 
     /**
         Decreases the reference count of the object to which this class points.
     */
-    ~wxObjectDataPtr<T>();
+    ~wxObjectDataPtr();
 
     /**
         Gets a pointer to the reference counted object to which this class points.
@@ -646,13 +652,17 @@ public:
     */
     T* operator->() const;
 
-    //@{
+    ///@{
     /**
         Assignment operator.
+
+        Using @a U different from @c T is only supported since wxWidgets 3.1.5.
     */
+    template <typename U>
+    wxObjectDataPtr<T>& operator=(const wxObjectDataPtr<U>& tocopy);
     wxObjectDataPtr<T>& operator=(const wxObjectDataPtr<T>& tocopy);
     wxObjectDataPtr<T>& operator=(T* ptr);
-    //@}
+    ///@}
 };
 
 
@@ -662,7 +672,7 @@ public:
 // ============================================================================
 
 /** @addtogroup group_funcmacro_rtti */
-//@{
+///@{
 
 /**
     Returns a pointer to the wxClassInfo object associated with this class.
@@ -857,8 +867,11 @@ public:
 /**
     This macro is equivalent to <tt>wxDynamicCast(this, classname)</tt> but the latter provokes
     spurious compilation warnings from some compilers (because it tests whether
-    @c this pointer is non-@NULL which is always true), so this macro should be
+    @c this pointer is non-null which is always true), so this macro should be
     used to avoid them.
+
+    Note that @a ptr must be an object of wxObject-derived class, otherwise
+    using this macro results in undefined behaviour.
 
     @header{wx/object.h}
 
@@ -870,6 +883,9 @@ public:
     This macro checks that the cast is valid in debug mode (an assert failure
     will result if wxDynamicCast(ptr, classname) == @NULL) and then returns the
     result of executing an equivalent of <tt>static_cast<classname *>(ptr)</tt>.
+
+    Note that @a ptr must be an object of wxObject-derived class, otherwise
+    using this macro results in undefined behaviour.
 
     @header{wx/object.h}
 
@@ -886,10 +902,10 @@ public:
 */
 wxObject *wxCreateDynamicObject(const wxString& className);
 
-//@}
+///@}
 
 /** @addtogroup group_funcmacro_debug */
-//@{
+///@{
 
 /**
     This is defined in debug mode to be call the redefined new operator
@@ -905,5 +921,5 @@ wxObject *wxCreateDynamicObject(const wxString& className);
 */
 #define WXDEBUG_NEW( arg )
 
-//@}
+///@}
 

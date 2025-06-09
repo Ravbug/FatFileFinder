@@ -15,6 +15,7 @@
 #ifndef WX_PRECOMP
     #include "wx/utils.h"
     #include "wx/gdicmn.h"
+    #include "wx/math.h"
 #endif
 
 #include "wx/osx/core/private.h"
@@ -122,12 +123,14 @@ wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
         sysColor = [NSColor controlBackgroundColor];
         break;
     case wxSYS_COLOUR_BTNSHADOW:
+    case wxSYS_COLOUR_3DDKSHADOW:
         sysColor = [NSColor controlShadowColor];
         break;
     case wxSYS_COLOUR_BTNTEXT:
     case wxSYS_COLOUR_MENUTEXT:
     case wxSYS_COLOUR_WINDOWTEXT:
     case wxSYS_COLOUR_CAPTIONTEXT:
+    case wxSYS_COLOUR_INACTIVECAPTIONTEXT:
     case wxSYS_COLOUR_INFOTEXT:
     case wxSYS_COLOUR_LISTBOXTEXT:
         sysColor = [NSColor controlTextColor];
@@ -138,12 +141,8 @@ wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
     case wxSYS_COLOUR_BTNHIGHLIGHT:
         sysColor = [NSColor controlHighlightColor];
         break;
-    case wxSYS_COLOUR_INACTIVECAPTIONTEXT:
     case wxSYS_COLOUR_GRAYTEXT:
         sysColor = [NSColor disabledControlTextColor];
-        break;
-    case wxSYS_COLOUR_3DDKSHADOW:
-        sysColor = [NSColor controlShadowColor];
         break;
     case wxSYS_COLOUR_3DLIGHT:
         sysColor = [NSColor controlHighlightColor];
@@ -206,16 +205,14 @@ wxFont wxSystemSettingsNative::GetFont(wxSystemFont index)
         case wxSYS_DEFAULT_GUI_FONT :
             {
                 return wxFont(wxOSX_SYSTEM_FONT_SMALL) ;
-            } ;
-            break ;
+            }
         case wxSYS_OEM_FIXED_FONT :
         case wxSYS_ANSI_FIXED_FONT :
         case wxSYS_SYSTEM_FIXED_FONT :
         default :
             {
                 return wxFont(wxOSX_SYSTEM_FONT_FIXED) ;
-            } ;
-            break ;
+            }
 
     }
     return *wxNORMAL_FONT;
@@ -224,6 +221,19 @@ wxFont wxSystemSettingsNative::GetFont(wxSystemFont index)
 // ----------------------------------------------------------------------------
 // system metrics/features
 // ----------------------------------------------------------------------------
+
+static float GetCursorScale()
+{
+    NSDictionary *dict = [[NSUserDefaults standardUserDefaults] persistentDomainForName:@"com.apple.universalaccess"];
+
+    /* See https://developer.apple.com/documentation/devicemanagement/accessibility?language=objc */
+    if ([dict objectForKey: @"mouseDriverCursorSize"])
+    {
+        return [dict[@"mouseDriverCursorSize"] floatValue];
+    }
+
+    return 1.0f;
+}
 
 // Get a system metric, e.g. scrollbar size
 int wxSystemSettingsNative::GetMetric(wxSystemMetric index, const wxWindow* WXUNUSED(win))
@@ -237,14 +247,17 @@ int wxSystemSettingsNative::GetMetric(wxSystemMetric index, const wxWindow* WXUN
 
         // TODO case wxSYS_BORDER_X:
         // TODO case wxSYS_BORDER_Y:
-        // TODO case wxSYS_CURSOR_X:
-        // TODO case wxSYS_CURSOR_Y:
         // TODO case wxSYS_DCLICK_X:
         // TODO case wxSYS_DCLICK_Y:
         // TODO case wxSYS_DRAG_X:
         // TODO case wxSYS_DRAG_Y:
         // TODO case wxSYS_EDGE_X:
         // TODO case wxSYS_EDGE_Y:
+
+        case wxSYS_CURSOR_X:
+            return wxRound(float([[[NSCursor arrowCursor] image] size].width) * GetCursorScale());
+        case wxSYS_CURSOR_Y:
+            return wxRound(float([[[NSCursor arrowCursor] image] size].height) * GetCursorScale());
 
         case wxSYS_HSCROLL_ARROW_X:
             return 16;
@@ -261,11 +274,11 @@ int wxSystemSettingsNative::GetMetric(wxSystemMetric index, const wxWindow* WXUN
         // TODO case wxSYS_WINDOWMIN_Y:
 
         case wxSYS_SCREEN_X:
-            wxDisplaySize(&value, NULL);
+            wxDisplaySize(&value, nullptr);
             return value;
 
         case wxSYS_SCREEN_Y:
-            wxDisplaySize(NULL, &value);
+            wxDisplaySize(nullptr, &value);
             return value;
 
         // TODO case wxSYS_FRAMESIZE_X:
@@ -328,9 +341,9 @@ int wxSystemSettingsNative::GetMetric(wxSystemMetric index, const wxWindow* WXUN
              return -1;
 
         default:
-            return -1;  // unsupported metric
+            break;
     }
-    return 0;
+    return -1;  // unsupported metric
 }
 
 bool wxSystemSettingsNative::HasFeature(wxSystemFeature index)

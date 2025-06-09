@@ -2,7 +2,6 @@
 // Name:        src/generic/combog.cpp
 // Purpose:     Generic wxComboCtrl
 // Author:      Jaakko Salli
-// Modified by:
 // Created:     Apr-30-2006
 // Copyright:   (c) 2005 Jaakko Salli
 // Licence:     wxWindows licence
@@ -18,9 +17,6 @@
 
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_COMBOCTRL
 
@@ -180,9 +176,6 @@ bool wxGenericComboCtrl::Create(wxWindow *parent,
     // Create textctrl, if necessary
     CreateTextCtrl( tcBorder );
 
-    // Add keyboard input handlers for main control and textctrl
-    InstallInputHandlers();
-
     // Set background style for double-buffering, when needed
     // (cannot use when system draws background automatically)
     if ( !HasTransparentBackground() )
@@ -322,12 +315,10 @@ void wxGenericComboCtrl::OnPaintEvent( wxPaintEvent& WXUNUSED(event) )
         dc.SetPen(tcCol);
         dc.DrawRectangle(tcRect);
 
-        // this is intentionally here to allow drawed rectangle's
+        // this is intentionally here to allow drawn rectangle's
         // right edge to be hidden
         if ( m_text )
             tcRect.width = m_widthCustomPaint;
-
-        dc.SetFont( GetFont() );
 
         dc.SetClippingRegion(tcRect);
         if ( m_popupInterface )
@@ -422,12 +413,7 @@ void wxGenericComboCtrl::SetCustomPaintWidth( int width )
         // Common textctrl re-creation code
         if ( tcCreateStyle != -1 )
         {
-            tc->RemoveEventHandler(m_textEvtHandler);
-            delete m_textEvtHandler;
-
             CreateTextCtrl( tcCreateStyle );
-
-            InstallInputHandlers();
         }
     }
 #endif // UNRELIABLE_TEXTCTRL_BORDER
@@ -461,7 +447,7 @@ bool wxGenericComboCtrl::IsKeyPopupToggle(const wxKeyEvent& event) const
 #if defined(__WXOSX__)
 wxTextWidgetImpl * wxGenericComboCtrl::GetTextPeer() const
 {
-    return m_text ? m_text->GetTextPeer() : NULL;
+    return m_text ? m_text->GetTextPeer() : nullptr;
 }
 #endif
 

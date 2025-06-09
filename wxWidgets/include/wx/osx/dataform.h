@@ -2,7 +2,6 @@
 // Name:        wx/osx/dataform.h
 // Purpose:     declaration of the wxDataFormat class
 // Author:      Stefan Csomor (lifted from dnd.h)
-// Modified by:
 // Created:     10/21/99
 // Copyright:   (c) 1999 Stefan Csomor
 // Licence:     wxWindows licence
@@ -72,6 +71,7 @@ private:
     void ClearNativeFormat();
 
     wxDataFormatId  m_type;
+    wxString        m_id;
     wxCFStringRef   m_format;
 };
 

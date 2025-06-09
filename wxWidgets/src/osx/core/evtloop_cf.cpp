@@ -19,9 +19,6 @@
 // for compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #include "wx/evtloop.h"
 
@@ -252,10 +249,8 @@ int wxCFEventLoop::DoDispatchTimeout(unsigned long timeout)
             break;
         case kCFRunLoopRunStopped:
             return 0;
-            break;
         case kCFRunLoopRunTimedOut:
             return -1;
-            break;
         case kCFRunLoopRunHandledSource:
         default:
             break;
@@ -360,12 +355,9 @@ int wxCFEventLoop::DoRun()
     return m_exitcode;
 }
 
-// sets the "should exit" flag and wakes up the loop so that it terminates
-// soon
-void wxCFEventLoop::ScheduleExit(int rc)
+void wxCFEventLoop::DoStop(int rc)
 {
     m_exitcode = rc;
-    m_shouldExit = true;
     OSXDoStop();
 }
 
@@ -402,10 +394,10 @@ static bool gs_bGuiOwnedByMainThread = true;
 // critical section which controls access to all GUI functions: any secondary
 // thread (i.e. except the main one) must enter this crit section before doing
 // any GUI calls
-static wxCriticalSection *gs_critsectGui = NULL;
+static wxCriticalSection *gs_critsectGui = nullptr;
 
 // critical section which protects gs_nWaitingForGui variable
-static wxCriticalSection *gs_critsectWaitingForGui = NULL;
+static wxCriticalSection *gs_critsectWaitingForGui = nullptr;
 
 // number of threads waiting for GUI in wxMutexGuiEnter()
 static size_t gs_nWaitingForGui = 0;

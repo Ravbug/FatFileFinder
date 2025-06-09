@@ -14,7 +14,7 @@
 class wxPGWindowList
 {
 public:
-    wxPGWindowList(wxWindow* primary, wxWindow* secondary = NULL);
+    wxPGWindowList(wxWindow* primary, wxWindow* secondary = nullptr);
 
     void SetSecondary(wxWindow* secondary);
 
@@ -91,9 +91,8 @@ public:
             Initial size for control(s).
 
         @remarks
-        - Unlike in previous version of wxPropertyGrid, it is no longer
-          necessary to call wxEvtHandler::Connect() for interesting editor
-          events. Instead, all events from control are now automatically
+        - It is not necessary to call wxEvtHandler::Bind() for interesting
+          editor events. All events from controls are automatically
           forwarded to wxPGEditor::OnEvent() and wxPGProperty::OnEvent().
     */
     virtual wxPGWindowList CreateControls( wxPropertyGrid* propgrid,
@@ -251,7 +250,7 @@ public:
 class wxPGChoiceEditor : public wxPGEditor
 {
 public:
-    wxPGChoiceEditor()
+    wxPGChoiceEditor();
     virtual ~wxPGChoiceEditor();
 
     virtual wxPGWindowList CreateControls(wxPropertyGrid* propgrid,
@@ -442,8 +441,8 @@ public:
         wxDECLARE_DYNAMIC_CLASS(wxSampleMultiButtonEditor);
 
     public:
-        wxSampleMultiButtonEditor() {}
-        virtual ~wxSampleMultiButtonEditor() {}
+        wxSampleMultiButtonEditor() = default;
+        virtual ~wxSampleMultiButtonEditor() = default;
 
         virtual wxString GetName() const { return "SampleMultiButtonEditor"; }
 
@@ -544,7 +543,7 @@ public:
     /**
         Destructor.
     */
-    virtual ~wxPGMultiButton() { }
+    virtual ~wxPGMultiButton() = default;
 
     /**
         Adds new button, with given label.
@@ -554,7 +553,7 @@ public:
     /**
         Adds new bitmap button.
     */
-    void Add( const wxBitmap& bitmap, int id = -2 );
+    void Add( const wxBitmapBundle& bitmap, int id = -2 );
 
     /**
         Call this in CreateControls() of your custom editor class

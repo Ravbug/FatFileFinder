@@ -47,17 +47,17 @@ public:
     // reimplement adding a tree so that it does not use
     // kqueue at all
     bool AddTree(const wxFileName& path, int events = wxFSW_EVENT_ALL,
-                const wxString& filespec = wxEmptyString) wxOVERRIDE;
+                const wxString& filespec = wxEmptyString) override;
 
     // reimplement removing a tree so that we
     // cleanup the opened fs streams
-    bool RemoveTree(const wxFileName& path) wxOVERRIDE;
+    bool RemoveTree(const wxFileName& path) override;
 
     // reimplement remove all so that we cleanup
     // watches from kqeueue and from FSEvents
-    bool RemoveAll() wxOVERRIDE;
+    bool RemoveAll() override;
 
-    // post an file change event to the owner
+    // post a file change event to the owner
     void PostChange(const wxFileName& oldFileName,
       const wxFileName& newFileName, int event);
 

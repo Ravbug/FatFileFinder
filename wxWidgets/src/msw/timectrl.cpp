@@ -17,9 +17,6 @@
 
 #include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
 
 #if wxUSE_TIMEPICKCTRL
 
@@ -30,11 +27,35 @@
 #include "wx/timectrl.h"
 #include "wx/dateevt.h"
 
+#include "wx/msw/private/uilocale.h"
+
 wxIMPLEMENT_DYNAMIC_CLASS(wxTimePickerCtrl, wxControl);
 
 // ============================================================================
 // wxTimePickerCtrl implementation
 // ============================================================================
+
+bool
+wxTimePickerCtrl::Create(wxWindow *parent,
+                         wxWindowID id,
+                         const wxDateTime& dt,
+                         const wxPoint& pos,
+                         const wxSize& size,
+                         long style,
+                         const wxValidator& validator,
+                         const wxString& name)
+{
+    if ( !MSWCreateDateTimePicker(parent, id, dt,
+                                  pos, size, style,
+                                  validator, name) )
+        return false;
+
+#if wxUSE_INTL
+    MSWSetTimeFormat(wxLOCALE_TIME_FMT);
+#endif
+
+    return true;
+}
 
 WXDWORD wxTimePickerCtrl::MSWGetStyle(long style, WXDWORD *exstyle) const
 {
