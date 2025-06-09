@@ -269,7 +269,8 @@ static inline void reveal(const std::string& fspath){
 		path p(fspath);
 		str = p.parent_path().string();
 	}
-	wxExecute(wxT("open \"" + str + "\""),wxEXEC_ASYNC);
+	auto command = std::string("open \"") + str + "\"";
+	wxExecute(command, wxEXEC_ASYNC);
 }
 
 /**
