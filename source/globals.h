@@ -318,7 +318,8 @@ static inline void reveal(const std::string& path){
 		std::filesystem::path p(path);
 		str = p.parent_path().string();
 	}
-	wxExecute(wxT("xdg-open \"" + str + "\""), wxEXEC_ASYNC);
+	auto command = std::string("xdg-open \"") + str + "\"";
+	wxExecute(command, wxEXEC_ASYNC);
 }
 
 /**
